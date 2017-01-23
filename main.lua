@@ -1,4 +1,4 @@
-Alphabirth = RegisterMod("Alphabirth Pack 2", 1)
+local Alphabirth = RegisterMod("Alphabirth Pack 2", 1)
 
 ---------------------------------------
 -- Config
@@ -13,7 +13,7 @@ math.random();math.random();math.random();
 ---------------------------------------
 -- Costume Declaration
 ---------------------------------------
-
+local CRACKED_ROCK_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_crackedrock.anm2")
 ---------------------------------------
 -- Entity Flag Declaration
 ---------------------------------------
@@ -28,13 +28,14 @@ math.random();math.random();math.random();
 -- Active Declaration
 ---------------------------------------
 -- use ACTIVE_YOUR_ITEM = ItemID
-ACTIVE_CAULDRON = Isaac.GetItemIdByName("Cauldron")
-ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
+local ACTIVE_CAULDRON = Isaac.GetItemIdByName("Cauldron")
+local ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
 
 ---------------------------------------
 -- Passive Declaration
 ---------------------------------------
 -- use PASSIVE_YOUR_ITEM = ItemID
+local PASSIVE_CRACKED_ROCK = Isaac.GetItemIdByName("Cracked Rock")
 
 ---------------------------------------
 -- Trinket Declaration
@@ -102,6 +103,37 @@ end
 -------------------------------------------------------------------------------
 ---- PASSIVE ITEM LOGIC
 -------------------------------------------------------------------------------
+---------------------------------------
+-- Cracked Rock Logic
+---------------------------------------
+function Alphabirth:triggerCrackedRockEffect(dmg_target, dmg_amount, dmg_source, dmg_dealer)
+    local player = Isaac.GetPlayer(0)
+    if player:HasCollectible(PASSIVE_CRACKED_ROCK) and dmg_source == 0 and dmg_target:IsActiveEnemy() then
+        local upper_limit_luck_modifier = 100 - math.ceil(player.Luck * 1.5)
+        if(math.random(1, upper_limit_luck_modifier) <= 10) then
+            Isaac.Spawn(
+                EntityType.ENTITY_EFFECT,
+                EffectVariant.SHOCKWAVE_RANDOM,
+                0,            -- Entity Subtype
+                dmg_target.Position,
+                Vector(0, 0), -- Velocity
+                player
+            )
+        end
+    end
+end
+
+local function applyCrackedRockCache(player, cache_flag)
+    if player:HasCollectible(PASSIVE_CRACKED_ROCK) and cache_flag == CacheFlag.CACHE_TEARCOLOR then
+        player:AddNullCostume(CRACKED_ROCK_COSTUME)
+        player.TearColor = Color(
+            0.666, 0.666, 0.666,    -- RGB
+            1, 		                -- Alpha
+            0, 0, 0                 -- RGB Offset
+        )
+    end
+end
+
 
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
@@ -160,6 +192,11 @@ function Alphabirth:reset()
     cauldron_points = 0
 end
 
+function Alphabirth:evaluateCache(player, cache_flag)
+    local player = Isaac.GetPlayer(0)
+    applyCrackedRockCache(player, cache_flag)
+end
+
 -------------------
 -- Active Handling
 -------------------
@@ -177,6 +214,7 @@ Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerSurgeonSimula
 -------------------
 -- Take Damage Updates
 -------------------
+Alphabirth:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerCrackedRockEffect)
 
 -------------------
 -- Entity Handling
@@ -185,6 +223,8 @@ Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerSurgeonSimula
 -------------------
 -- Mod Updates
 -------------------
+
 Alphabirth:AddCallback(ModCallbacks.MC_POST_UPDATE, Alphabirth.modUpdate)
 Alphabirth:AddCallback(ModCallbacks.MC_POST_RENDER, Alphabirth.cauldronUpdate)
 Alphabirth:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, Alphabirth.reset)
+Alphabirth:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, Alphabirth.evaluateCache)
