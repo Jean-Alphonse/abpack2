@@ -2,6 +2,7 @@
 	<Info CreatedBy="robot" CreatedOn="2017-01-23 11:55:18 AM" Version="117" Fps="30"/>
 	<Content>
 		<Spritesheets>
+			<Spritesheet Path="../items/collectibles/collectible_cauldron1.png" Id="0"/>
 		</Spritesheets>
 		<Layers>
 			<Layer Name="extra" Id="0" SpritesheetId="0"/>
