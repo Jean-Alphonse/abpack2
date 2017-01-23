@@ -1,3 +1,3 @@
 <items gfxroot = "gfx/items/" version = "1">
-    <active gfx = "collectible_cauldron.png" maxcharges = "0" name = "Cauldron" />
+    <active gfx = "collectible_empty.png" maxcharges = "0" name = "Cauldron" />
 </items>
