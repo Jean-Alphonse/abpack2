@@ -19,27 +19,27 @@ math.random();math.random();math.random();
 ----------------------------------------
 -- Entity Flag Declaration
 ----------------------------------------
--- use EntityFlag.FLAG_YOUR_FLAG = 1 << FlagID
+-- use FLAG_YOUR_FLAG = 1 << FlagID
 
 ----------------------------------------
 -- Curse Declaration
 ----------------------------------------
--- use LevelCurse.CURSE_YOUR_CURSE = 1 << CurseID
+-- use CURSE_YOUR_CURSE = 1 << CurseID
 
 ----------------------------------------
 -- Active Declaration
 ----------------------------------------
--- use CollectibleType.COLLECTIBLE_YOUR_ITEM = ItemID
+-- use ACTIVE_YOUR_ITEM = ItemID
 
 ----------------------------------------
 -- Passive Declaration
 ----------------------------------------
--- use CollectibleType.COLLECTIBLE_YOUR_ITEM = ItemID
+-- use PASSIVE_YOUR_ITEM = ItemID
 
 ----------------------------------------
 -- Trinket Declaration
 ----------------------------------------
--- use TrinketType.TRINKET_YOUR_ITEM = TrinketID
+-- use TRINKET_YOUR_ITEM = TrinketID
 
 ----------------------------------------
 -- Variables that need to be loaded early
