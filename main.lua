@@ -80,7 +80,7 @@ function Alphabirth:triggerCauldron()
             player)
         cauldron_points = cauldron_points - 30
     end
-
+  
     return true
 end
 
@@ -117,7 +117,42 @@ end
 -- Post-Update Callback
 ---------------------------------------
 function Alphabirth:modUpdate()
-    return true
+	local player = Isaac.GetPlayer(0)
+	for _, entity in ipairs(Isaac.GetRoomEntities()) do
+		if entity.Type == EntityType.ENTITY_PICKUP and 
+                entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and 
+                entity.SubType == ACTIVE_CAULDRON then
+			local sprite = entity:GetSprite()
+            if cauldron_points <= 10 then
+                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_cauldron1.png")
+            elseif cauldron_points <= 20 and cauldron_points > 10 then
+                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_cauldron2.png")
+            else
+                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_cauldron3.png")
+            end
+			sprite:LoadGraphics()
+		end
+	end
+end
+
+function Alphabirth:cauldronUpdate()
+    local player = Isaac.GetPlayer(0)
+    if player:HasCollectible(ACTIVE_CAULDRON) then
+        local sprite = Sprite()
+        sprite:Load("gfx/animations/animation_sprite_cauldron.anm2", true)
+        if cauldron_points <= 10 then
+            sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_cauldron1.png")
+        elseif cauldron_points <= 20 and cauldron_points > 10 then
+            sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_cauldron2.png")
+        else
+            sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_cauldron3.png")
+        end
+        
+        sprite:LoadGraphics()
+        sprite:Play("Idle", true)
+        sprite.Offset = Vector(16,16)
+        sprite:RenderLayer(0, Vector(0, 0))
+    end
 end
 
 ---------------------------------------
@@ -153,4 +188,5 @@ Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerSurgeonSimula
 -- Mod Updates
 -------------------
 Alphabirth:AddCallback(ModCallbacks.MC_POST_UPDATE, Alphabirth.modUpdate)
+Alphabirth:AddCallback(ModCallbacks.MC_POST_RENDER, Alphabirth.cauldronUpdate)
 Alphabirth:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, Alphabirth.reset)
