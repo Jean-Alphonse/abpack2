@@ -30,6 +30,7 @@ math.random();math.random();math.random();
 -- use ACTIVE_YOUR_ITEM = ItemID
 ACTIVE_CAULDRON = Isaac.GetItemIdByName("Cauldron")
 ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
+ACTIVE_MIRROR = Isaac.GetItemIdByName("Mirror")
 
 ---------------------------------------
 -- Passive Declaration
@@ -101,6 +102,40 @@ function Alphabirth:triggerSurgeonSimulator()
     return true
 end
 
+----------------------------------------
+-- Mirror Logic
+----------------------------------------
+function Alphabirth:triggerMirror()
+	Isaac.DebugString("Mirror:")
+    local player = Isaac.GetPlayer(0)
+
+    -- Get room entities.
+    local ents = Isaac.GetRoomEntities()
+
+    -- Get number of entities, and generate a random number between 1 and the number of entities.
+    local num_ents = #ents
+
+    local rand_key = math.random(num_ents)
+
+    -- Make sure the entity is an enemy, not a fire, and not a portal.
+    -- Switch Isaac's position with the entity's position.
+    -- Animate the teleportation.
+    -- Further randomize the selection.
+    for rand_key, entity in pairs(Isaac.GetRoomEntities()) do
+        if entity:IsActiveEnemy() and entity.Type ~= 306 then
+        	local player_pos = player.Position
+        	local entity_pos = entity.Position
+
+        	player.Position = entity_pos
+        	entity.Position = player_pos
+
+        	player:AnimateTeleport()
+
+        	rand_key = math.random(1, num_ents)
+        end
+    end
+end
+
 -------------------------------------------------------------------------------
 ---- PASSIVE ITEM LOGIC
 -------------------------------------------------------------------------------
@@ -167,6 +202,7 @@ end
 -------------------
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerCauldron, ACTIVE_CAULDRON)
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerSurgeonSimulator, ACTIVE_SURGEON_SIMULATOR)
+Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerMirror, ACTIVE_MIRROR)
 
 -------------------
 -- Passive Handling
@@ -190,3 +226,4 @@ Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerSurgeonSimula
 Alphabirth:AddCallback(ModCallbacks.MC_POST_UPDATE, Alphabirth.modUpdate)
 Alphabirth:AddCallback(ModCallbacks.MC_POST_RENDER, Alphabirth.cauldronUpdate)
 Alphabirth:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, Alphabirth.reset)
+
