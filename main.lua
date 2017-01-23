@@ -55,22 +55,7 @@ ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
 local cauldron_points = 0
 function Alphabirth:triggerCauldron()
     local player = Isaac.GetPlayer(0)
-    for _, entity in ipairs(Isaac.GetRoomEntities()) do
-        if entity.Type == EntityType.ENTITY_PICKUP then
-            if entity.Variant ~= PickupVariant.PICKUP_COLLECTIBLE then
-                if entity.Variant == PickupVariant.PICKUP_TRINKET then
-                    cauldron_points = cauldron_points + 5
-                else
-                    cauldron_points = cauldron_points + 1
-                end
-
-                pickup_entity = entity:ToPickup()
-                pickup_entity.Timeout = 1
-            end
-        end
-    end
-
-    while cauldron_points >= 30 do
+    if cauldron_points >= 30 then
         free_position = Game():GetRoom():FindFreePickupSpawnPosition(player.Position, 1, true)
         Isaac.Spawn(EntityType.ENTITY_PICKUP,
             PickupVariant.PICKUP_COLLECTIBLE,
@@ -79,9 +64,22 @@ function Alphabirth:triggerCauldron()
             Vector(0,0),
             player)
         cauldron_points = cauldron_points - 30
+    else
+        for _, entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity.Type == EntityType.ENTITY_PICKUP then
+                if entity.Variant ~= PickupVariant.PICKUP_COLLECTIBLE then
+                    if entity.Variant == PickupVariant.PICKUP_TRINKET then
+                        cauldron_points = cauldron_points + 5
+                    else
+                        cauldron_points = cauldron_points + 1
+                    end
+
+                    pickup_entity = entity:ToPickup()
+                    pickup_entity.Timeout = 1
+                end
+            end
+        end
     end
-  
-    return true
 end
 
 ---------------------------------------
@@ -123,9 +121,9 @@ function Alphabirth:modUpdate()
                 entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and 
                 entity.SubType == ACTIVE_CAULDRON then
 			local sprite = entity:GetSprite()
-            if cauldron_points <= 10 then
+            if cauldron_points <= 15 then
                 sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_cauldron1.png")
-            elseif cauldron_points <= 20 and cauldron_points > 10 then
+            elseif cauldron_points < 30 and cauldron_points > 15 then
                 sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_cauldron2.png")
             else
                 sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_cauldron3.png")
