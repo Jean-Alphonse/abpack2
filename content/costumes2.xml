@@ -1,5 +1,5 @@
 <costumes anm2root = "gfx/animations/costumes/accessories">
-    
+    <costume anm2path="animation_costume_crackedrock.anm2" priority = "98" type="none" />
 </costumes>
 
 <costumes anm2root = "gfx/animations/costumes/players">
