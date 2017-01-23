@@ -29,6 +29,7 @@ local CRACKED_ROCK_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/a
 ---------------------------------------
 -- use ACTIVE_YOUR_ITEM = ItemID
 local ACTIVE_CAULDRON = Isaac.GetItemIdByName("Cauldron")
+local ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
 
 ---------------------------------------
 -- Passive Declaration
@@ -48,6 +49,7 @@ local PASSIVE_CRACKED_ROCK = Isaac.GetItemIdByName("Cracked Rock")
 -------------------------------------------------------------------------------
 ---- ACTIVE ITEM LOGIC
 -------------------------------------------------------------------------------
+
 ---------------------------------------
 -- Cauldron Logic
 ---------------------------------------
@@ -62,23 +64,42 @@ function Alphabirth:triggerCauldron()
                 else
                     cauldron_points = cauldron_points + 1
                 end
-                
+
                 pickup_entity = entity:ToPickup()
                 pickup_entity.Timeout = 1
             end
         end
     end
-            
+
     while cauldron_points >= 30 do
-        free_position = Isaac.GetFreeNearPosition(Game():GetRoom():GetCenterPos(),1)
+        free_position = Game():GetRoom():FindFreePickupSpawnPosition(player.Position, 1, true)
         Isaac.Spawn(EntityType.ENTITY_PICKUP,
             PickupVariant.PICKUP_COLLECTIBLE,
             0,
-            player.Position,
+            free_position,
             Vector(0,0),
             player)
         cauldron_points = cauldron_points - 30
     end
+  
+    return true
+end
+
+---------------------------------------
+-- Surgeon Simulator Logic
+---------------------------------------
+function Alphabirth:triggerSurgeonSimulator()
+    local player = Isaac.GetPlayer(0)
+    local spawnPos = Game():GetRoom():FindFreePickupSpawnPosition(player.Position, 1, true)
+    if player:GetHearts() == 2 then
+        player:AddHearts(-1)
+        Isaac.Spawn(5, 10, 2, spawnPos, Vector(0, 0), player)
+    end
+    if player:GetHearts() > 2 then
+        player:AddHearts(-2)
+        Isaac.Spawn(5, 10, 1, spawnPos, Vector(0, 0), player)
+    end
+    return true
 end
 
 -------------------------------------------------------------------------------
@@ -181,6 +202,7 @@ end
 -- Active Handling
 -------------------
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerCauldron, ACTIVE_CAULDRON)
+Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerSurgeonSimulator, ACTIVE_SURGEON_SIMULATOR)
 
 -------------------
 -- Passive Handling
