@@ -1,3 +1,4 @@
 <items gfxroot = "gfx/items/" version = "1">
+    <active gfx = "collectible_surgeon_simulator.png" maxcharges = "0" name = "Surgeon Simulator" />
     <active gfx = "collectible_empty.png" maxcharges = "0" name = "Cauldron" />
 </items>
