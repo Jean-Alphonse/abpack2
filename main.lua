@@ -71,11 +71,11 @@ function Alphabirth:triggerCauldron()
     end
 
     while cauldron_points >= 30 do
-        free_position = Isaac.GetFreeNearPosition(Game():GetRoom():GetCenterPos(),1)
+        free_position = Game():GetRoom():FindFreePickupSpawnPosition(player.Position, 1, true)
         Isaac.Spawn(EntityType.ENTITY_PICKUP,
             PickupVariant.PICKUP_COLLECTIBLE,
             0,
-            player.Position,
+            free_position,
             Vector(0,0),
             player)
         cauldron_points = cauldron_points - 30
