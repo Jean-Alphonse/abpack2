@@ -37,6 +37,7 @@ local ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
 ---------------------------------------
 -- use PASSIVE_YOUR_ITEM = ItemID
 local PASSIVE_CRACKED_ROCK = Isaac.GetItemIdByName("Cracked Rock")
+local PASSIVE_HEMOPHILIA = Isaac.GetItemIdByName("Hemophilia")
 
 ---------------------------------------
 -- Trinket Declaration
@@ -183,9 +184,9 @@ end
 
 local function handleCrackedRockSpawnChance()
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
-        if entity.Type == EntityType.ENTITY_PICKUP and 
-                entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and 
-                entity.SubType == Isaac.GetItemIdByName("The Small Rock") and 
+        if entity.Type == EntityType.ENTITY_PICKUP and
+                entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and
+                entity.SubType == Isaac.GetItemIdByName("The Small Rock") and
                 entity.FrameCount == 1 then
             if math.random(1,3) == 1 then
                 local pickup_entity = entity:ToPickup()
@@ -195,6 +196,33 @@ local function handleCrackedRockSpawnChance()
                     false)
             end
         end
+    end
+end
+
+---------------------------------------
+-- Hemophilia Logic
+---------------------------------------
+
+local explosionRadius = 4
+local numberOfTears = 15
+local tears = {}
+
+function Alphabirth:triggerHemophilia(dmg_target, dmg_amount, dmg_source, dmg_flags)
+    local player = Isaac.GetPlayer(0)
+    if dmg_target:IsActiveEnemy() and dmg_target.HitPoints <= dmg_amount and player:HasCollectible(PASSIVE_HEMOPHILIA) then
+        Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.PLAYER_CREEP_RED,0,dmg_target.Position,Vector(0, 0),player)
+        Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.LARGE_BLOOD_EXPLOSION,0,dmg_target.Position,Vector(0, 0),player)
+        for i=1, numberOfTears do
+            tears[i] = player:FireTear(dmg_target.Position, Vector(math.random(-explosionRadius, explosionRadius),math.random(-explosionRadius, explosionRadius)), false, false, true)
+            tears[i]:ChangeVariant(1)
+            tears[i].TearFlags = 0
+            tears[i].Scale = 1
+            tears[i].Height = -60
+            tears[i].FallingSpeed = -4 + math.random()*-4
+            tears[i].FallingAcceleration = math.random() + 0.5
+        end
+        dmg_target:BloodyExplosion()
+        tears = {}
     end
 end
 
@@ -217,8 +245,8 @@ function Alphabirth:modUpdate()
         handleCrackedRockSpawnChance()
     end
 	for _, entity in ipairs(Isaac.GetRoomEntities()) do
-		if entity.Type == EntityType.ENTITY_PICKUP and 
-                entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and 
+		if entity.Type == EntityType.ENTITY_PICKUP and
+                entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and
                 entity.SubType == ACTIVE_CAULDRON then
 			local sprite = entity:GetSprite()
             if cauldron_points <= 15 then
@@ -247,7 +275,7 @@ function Alphabirth:cauldronUpdate()
         else
             sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_cauldron4.png")
         end
-        
+
         sprite:LoadGraphics()
         sprite:Play("Idle", true)
         sprite.Offset = Vector(16,16)
@@ -286,6 +314,7 @@ Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerMirror, ACTIV
 -- Take Damage Updates
 -------------------
 Alphabirth:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerCrackedRockEffect)
+Alphabirth:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHemophilia)
 
 -------------------
 -- Entity Handling
