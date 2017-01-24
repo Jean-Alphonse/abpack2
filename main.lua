@@ -14,6 +14,7 @@ math.random();math.random();math.random();
 -- Costume Declaration
 ---------------------------------------
 local CRACKED_ROCK_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_crackedrock.anm2")
+local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_gloomskull.anm2")
 ---------------------------------------
 -- Entity Flag Declaration
 ---------------------------------------
@@ -231,7 +232,21 @@ end
 -- Gloom Skull Logic
 ---------------------------------------
 
+function applyGloomSkullCache(player, cache_flag)
+    if cache_flag == CacheFlag.CACHE_DAMAGE and player:HasCollectible(PASSIVE_GLOOM_SKULL) then
+        player.Damage = player.Damage + 1.5
+        Game():GetLevel():AddCurse(Isaac.GetCurseIdByName("Curse of Darkness"), true)
+        
+        player:AddNullCostume(GLOOM_SKULL_COSTUME)
+    end
+end
 
+local isMaxed = false
+local didMax = false
+
+function maxOutDevilDeal()
+    isMaxed = true
+end
 
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
@@ -248,6 +263,13 @@ function Alphabirth:modUpdate()
     local player = Isaac.GetPlayer(0)
     local game = Game()
     local room = game:GetRoom()
+    if isMaxed and didMax == false then
+        local goatHead = Item()
+        goatHead.ID = CollectibleType.COLLECTIBLE_GOAT_HEAD
+        Isaac.GetPlayer(0):AddCollectible(CollectibleType.COLLECTIBLE_GOAT_HEAD, 0, false)
+        Isaac.GetPlayer(0):RemoveCostume(goatHead)
+        didMax = true
+    end
     if not player:HasCollectible(PASSIVE_CRACKED_ROCK) then
         handleCrackedRockSpawnChance()
     end
@@ -299,6 +321,7 @@ end
 
 function Alphabirth:evaluateCache(player, cache_flag)
     local player = Isaac.GetPlayer(0)
+    applyGloomSkullCache(player, cache_flag)
     applyCrackedRockCache(player, cache_flag)
 end
 
