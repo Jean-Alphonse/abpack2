@@ -38,6 +38,7 @@ local ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
 -- use PASSIVE_YOUR_ITEM = ItemID
 local PASSIVE_CRACKED_ROCK = Isaac.GetItemIdByName("Cracked Rock")
 local PASSIVE_HEMOPHILIA = Isaac.GetItemIdByName("Hemophilia")
+local PASSIVE_GLOOM_SKULL = Isaac.GetItemIdByName("Gloom Skull")
 
 ---------------------------------------
 -- Trinket Declaration
@@ -225,6 +226,12 @@ function Alphabirth:triggerHemophilia(dmg_target, dmg_amount, dmg_source, dmg_fl
         tears = {}
     end
 end
+
+---------------------------------------
+-- Gloom Skull Logic
+---------------------------------------
+
+
 
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC

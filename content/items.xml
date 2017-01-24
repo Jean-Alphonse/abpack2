@@ -4,5 +4,6 @@
     <active gfx = "collectible_mirror.png" maxcharges = "0" name = "Mirror" />
 
     <passive gfx = "collectible_crackedrock.png" cache="tearcolor" devilprice="1" name ="Cracked Rock" />
-    <passive gfx = "collectible_hemophilia.png" name ="Hemophilia" />
+    <passive gfx = "collectible_hemophilia.png" name ="Hemophilia" description="What a bloody mess..." />
+    <passive gfx = "collectible_gloom_skull.png" name ="Gloom Skull" description="A thousand years of midnight" />
 </items>
