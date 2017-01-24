@@ -58,7 +58,7 @@ local cauldron_points = 0
 function Alphabirth:triggerCauldron()
     local player = Isaac.GetPlayer(0)
     if cauldron_points >= 30 then
-        free_position = Game():GetRoom():FindFreePickupSpawnPosition(player.Position, 1, true)
+        local free_position = Game():GetRoom():FindFreePickupSpawnPosition(player.Position, 1, true)
         Isaac.Spawn(EntityType.ENTITY_PICKUP,
             PickupVariant.PICKUP_COLLECTIBLE,
             0,
@@ -82,6 +82,8 @@ function Alphabirth:triggerCauldron()
             end
         end
     end
+    
+    player:AnimateHappy()
 end
 
 ---------------------------------------
@@ -209,8 +211,10 @@ function Alphabirth:cauldronUpdate()
             sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_cauldron1.png")
         elseif cauldron_points <= 20 and cauldron_points > 10 then
             sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_cauldron2.png")
-        else
+        elseif cauldron_points < 30 and cauldron_points > 20 then
             sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_cauldron3.png")
+        else
+            sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_cauldron4.png")
         end
         
         sprite:LoadGraphics()
