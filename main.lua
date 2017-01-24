@@ -183,10 +183,16 @@ end
 
 local function handleCrackedRockSpawnChance()
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
-        if entity.Type == 5 and entity.Variant == 100 and entity.SubType ==
-        Isaac.GetItemIdByName("Small Rock") and entity.FrameCount == 1 then
-            if math.random(3) == 1 then
-                entity.SubVariant = PASSIVE_CRACKED_ROCK
+        if entity.Type == EntityType.ENTITY_PICKUP and 
+                entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and 
+                entity.SubType == Isaac.GetItemIdByName("The Small Rock") and 
+                entity.FrameCount == 1 then
+            if math.random(1,3) == 1 then
+                local pickup_entity = entity:ToPickup()
+                pickup_entity:Morph(EntityType.ENTITY_PICKUP,
+                    PickupVariant.PICKUP_COLLECTIBLE,
+                    PASSIVE_CRACKED_ROCK,
+                    false)
             end
         end
     end
