@@ -171,6 +171,16 @@ local function applyCrackedRockCache(player, cache_flag)
     end
 end
 
+local function handleCrackedRockSpawnChance()
+    for _, entity in ipairs(Isaac.GetRoomEntities()) do
+        if entity.Type == 5 and entity.Variant == 100 and entity.SubType ==
+        Isaac.GetItemIdByName("Small Rock") and entity.FrameCount == 1 then
+            if math.random(3) == 1 then
+                entity.SubVariant = PASSIVE_CRACKED_ROCK
+            end
+        end
+    end
+end
 
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
@@ -184,7 +194,12 @@ end
 -- Post-Update Callback
 ---------------------------------------
 function Alphabirth:modUpdate()
-	local player = Isaac.GetPlayer(0)
+    local player = Isaac.GetPlayer(0)
+    local game = Game()
+    local room = game:GetRoom()
+    if not player:HasCollectible(PASSIVE_CRACKED_ROCK) then
+        handleCrackedRockSpawnChance()
+    end
 	for _, entity in ipairs(Isaac.GetRoomEntities()) do
 		if entity.Type == EntityType.ENTITY_PICKUP and 
                 entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and 
