@@ -78,12 +78,21 @@ function Alphabirth:triggerCauldron()
 
                     pickup_entity = entity:ToPickup()
                     pickup_entity.Timeout = 1
+
+                    Isaac.Spawn(
+                        EntityType.ENTITY_EFFECT,
+                        EffectVariant.POOF01,
+                        0,            -- Entity Subtype
+                        pickup_entity.Position,
+                        Vector(0, 0), -- Velocity
+                        player
+                    )
                 end
             end
         end
     end
-    
     player:AnimateHappy()
+    return true
 end
 
 ---------------------------------------
