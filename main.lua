@@ -66,6 +66,7 @@ function Alphabirth:triggerCauldron()
             Vector(0,0),
             player)
         cauldron_points = cauldron_points - 30
+        player:AnimateHappy()
     else
         for _, entity in ipairs(Isaac.GetRoomEntities()) do
             if entity.Type == EntityType.ENTITY_PICKUP then
@@ -87,12 +88,12 @@ function Alphabirth:triggerCauldron()
                         Vector(0, 0), -- Velocity
                         player
                     )
+
+                    player:AnimateHappy()
                 end
             end
         end
     end
-    player:AnimateHappy()
-    return true
 end
 
 ---------------------------------------
