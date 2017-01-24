@@ -111,7 +111,8 @@ end
 function Alphabirth:triggerCrackedRockEffect(dmg_target, dmg_amount, dmg_source, dmg_dealer)
     local player = Isaac.GetPlayer(0)
     if player:HasCollectible(PASSIVE_CRACKED_ROCK) and dmg_source == 0 and dmg_target:IsActiveEnemy() then
-        if(math.random(1, 100) <= 10) then
+        local upper_limit_luck_modifier = 100 - math.ceil(player.Luck * 1.5)
+        if(math.random(1, upper_limit_luck_modifier) <= 10) then
             Isaac.Spawn(
                 EntityType.ENTITY_EFFECT,
                 EffectVariant.SHOCKWAVE_RANDOM,
