@@ -134,13 +134,15 @@ local function applyCrackedRockCache(player, cache_flag)
     end
 end
 
+local small_rock_reroll_attempt = false
 local function handleCrackedRockSpawnChance()
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
         if entity.Type == 5 and entity.Variant == 100 and entity.SubType ==
-        Isaac.GetItemIdByName("Small Rock") then
+        Isaac.GetItemIdByName("Small Rock") and small_rock_reroll_attempt == false then
             if math.random(3) == 1 then
                 entity.SubVariant = PASSIVE_CRACKED_ROCK
             end
+            small_rock_reroll_attempt = true
         end
     end
 end
@@ -157,8 +159,15 @@ end
 -- Post-Update Callback
 ---------------------------------------
 function Alphabirth:modUpdate()
-	local player = Isaac.GetPlayer(0)
+    local player = Isaac.GetPlayer(0)
+    local game = Game()
+    local room = game:GetRoom()
+    local room_frame_count = room:GetFrameCount()
+
     if not player:HasCollectible(PASSIVE_CRACKED_ROCK) then
+        if room_frame_count == 1 and room:IsFirstVisit() then
+            small_rock_reroll_attempt = false
+        end
         handleCrackedRockSpawnChance()
     end
 	for _, entity in ipairs(Isaac.GetRoomEntities()) do
