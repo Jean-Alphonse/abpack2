@@ -26,6 +26,31 @@ local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/ac
 -- use CURSE_YOUR_CURSE = 1 << CurseID
 
 ---------------------------------------
+-- Functions
+---------------------------------------
+local function contains(table, value)
+    for _, current_item in ipairs(table) do
+       if current_item == value then
+          return true
+       end
+    end
+
+    return false
+end
+---------------------------------------
+-- Miscelaneous Tables
+---------------------------------------
+local cyborg_pool = {
+    CollectibleType.COLLECTIBLE_TECHNOLOGY,
+    CollectibleType.COLLECTIBLE_TECH_X,
+    CollectibleType.COLLECTIBLE_TECHNOLOGY_2,
+    CollectibleType.COLLECTIBLE_TECH_5
+    --PASSIVE_AIMBOT
+    --ACTIVE_BIONIC_ARM
+}
+
+local cyborg_progress = {}
+---------------------------------------
 -- Active Declaration
 ---------------------------------------
 -- use local ACTIVE_YOUR_ITEM = ItemID
@@ -247,6 +272,17 @@ function maxOutDevilDeal()
     didMax = true
 end
 
+---------------------------------------
+-- Cyborg Logic
+---------------------------------------
+
+local hasCyborg = false
+function applyCyborgCache(player, flag)
+    if hasCyborg and flag == CacheFlag.CACHE_DAMAGE then
+        player.Damage = player.Damage + 1
+    end
+end
+
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
 -------------------------------------------------------------------------------
@@ -284,6 +320,25 @@ function Alphabirth:modUpdate()
 			sprite:LoadGraphics()
 		end
 	end
+
+    --Cyborg Transformation Detector
+    if Game():GetFrameCount() % 60 == 0 then
+        if not hasCyborg then
+            for _, item in ipairs(cyborg_pool) do
+                if player:HasCollectible(item) and contains(cyborg_progress, item) == false then
+                    table.insert(cyborg_progress, item)
+                    Isaac.DebugString("cytem")
+                    Isaac.DebugString(#cyborg_progress)
+                end
+            end
+            if #cyborg_progress >= 3 then
+                hasCyborg = true
+                Isaac.DebugString("cytran")
+                player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
+                player:EvaluateItems()
+            end
+        end
+    end
 end
 
 function Alphabirth:cauldronUpdate()
@@ -314,13 +369,15 @@ end
 function Alphabirth:reset()
     cauldron_points = 0
     didMax = false
-    isMaxed = false
+    hasCyborg = false
+    cyborg_progress = {}
 end
 
 function Alphabirth:evaluateCache(player, cache_flag)
     local player = Isaac.GetPlayer(0)
     applyGloomSkullCache(player, cache_flag)
     applyCrackedRockCache(player, cache_flag)
+    applyCyborgCache(player, cache_flag)
 end
 
 -------------------
