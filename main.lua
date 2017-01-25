@@ -14,6 +14,7 @@ math.random();math.random();math.random();
 -- Costume Declaration
 ---------------------------------------
 local CRACKED_ROCK_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_crackedrock.anm2")
+local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_gloomskull.anm2")
 ---------------------------------------
 -- Entity Flag Declaration
 ---------------------------------------
@@ -38,6 +39,7 @@ local ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
 -- use PASSIVE_YOUR_ITEM = ItemID
 local PASSIVE_CRACKED_ROCK = Isaac.GetItemIdByName("Cracked Rock")
 local PASSIVE_HEMOPHILIA = Isaac.GetItemIdByName("Hemophilia")
+local PASSIVE_GLOOM_SKULL = Isaac.GetItemIdByName("Gloom Skull")
 
 ---------------------------------------
 -- Trinket Declaration
@@ -226,6 +228,25 @@ function Alphabirth:triggerHemophilia(dmg_target, dmg_amount, dmg_source, dmg_fl
     end
 end
 
+---------------------------------------
+-- Gloom Skull Logic
+---------------------------------------
+
+function applyGloomSkullCache(player, cache_flag)
+    if cache_flag == CacheFlag.CACHE_DAMAGE and player:HasCollectible(PASSIVE_GLOOM_SKULL) then
+        player.Damage = player.Damage + 1.5
+        Game():GetLevel():AddCurse(Isaac.GetCurseIdByName("Curse of Darkness"), false)
+        maxOutDevilDeal()
+        player:AddNullCostume(GLOOM_SKULL_COSTUME)
+        Game():AddDevilRoomDeal()
+    end
+end
+local didMax = false
+
+function maxOutDevilDeal()
+    didMax = true
+end
+
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
 -------------------------------------------------------------------------------
@@ -237,12 +258,16 @@ end
 ---------------------------------------
 -- Post-Update Callback
 ---------------------------------------
+local currentRoom = Game():GetRoom()
+
 function Alphabirth:modUpdate()
     local player = Isaac.GetPlayer(0)
     local game = Game()
-    local room = game:GetRoom()
     if not player:HasCollectible(PASSIVE_CRACKED_ROCK) then
         handleCrackedRockSpawnChance()
+    end
+    if didMax == true and Game():GetRoom():GetFrameCount() == 1 then
+        Isaac.GetPlayer(0):GetEffects():AddCollectibleEffect(CollectibleType.COLLECTIBLE_GOAT_HEAD, false)
     end
 	for _, entity in ipairs(Isaac.GetRoomEntities()) do
 		if entity.Type == EntityType.ENTITY_PICKUP and
@@ -288,10 +313,13 @@ end
 ---------------------------------------
 function Alphabirth:reset()
     cauldron_points = 0
+    didMax = false
+    isMaxed = false
 end
 
 function Alphabirth:evaluateCache(player, cache_flag)
     local player = Isaac.GetPlayer(0)
+    applyGloomSkullCache(player, cache_flag)
     applyCrackedRockCache(player, cache_flag)
 end
 
