@@ -235,17 +235,16 @@ end
 function applyGloomSkullCache(player, cache_flag)
     if cache_flag == CacheFlag.CACHE_DAMAGE and player:HasCollectible(PASSIVE_GLOOM_SKULL) then
         player.Damage = player.Damage + 1.5
-        Game():GetLevel():AddCurse(Isaac.GetCurseIdByName("Curse of Darkness"), true)
-        
+        Game():GetLevel():AddCurse(Isaac.GetCurseIdByName("Curse of Darkness"), false)
+        maxOutDevilDeal()
         player:AddNullCostume(GLOOM_SKULL_COSTUME)
+        Game():AddDevilRoomDeal()
     end
 end
-
-local isMaxed = false
 local didMax = false
 
 function maxOutDevilDeal()
-    isMaxed = true
+    didMax = true
 end
 
 -------------------------------------------------------------------------------
@@ -259,19 +258,16 @@ end
 ---------------------------------------
 -- Post-Update Callback
 ---------------------------------------
+local currentRoom = Game():GetRoom()
+
 function Alphabirth:modUpdate()
     local player = Isaac.GetPlayer(0)
     local game = Game()
-    local room = game:GetRoom()
-    if isMaxed and didMax == false then
-        local goatHead = Item()
-        goatHead.ID = CollectibleType.COLLECTIBLE_GOAT_HEAD
-        Isaac.GetPlayer(0):AddCollectible(CollectibleType.COLLECTIBLE_GOAT_HEAD, 0, false)
-        Isaac.GetPlayer(0):RemoveCostume(goatHead)
-        didMax = true
-    end
     if not player:HasCollectible(PASSIVE_CRACKED_ROCK) then
         handleCrackedRockSpawnChance()
+    end
+    if didMax == true and Game():GetRoom():GetFrameCount() == 1 then
+        Isaac.GetPlayer(0):GetEffects():AddCollectibleEffect(CollectibleType.COLLECTIBLE_GOAT_HEAD, false)
     end
 	for _, entity in ipairs(Isaac.GetRoomEntities()) do
 		if entity.Type == EntityType.ENTITY_PICKUP and
@@ -317,6 +313,8 @@ end
 ---------------------------------------
 function Alphabirth:reset()
     cauldron_points = 0
+    didMax = false
+    isMaxed = false
 end
 
 function Alphabirth:evaluateCache(player, cache_flag)
