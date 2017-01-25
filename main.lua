@@ -32,6 +32,7 @@ local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/ac
 local ACTIVE_MIRROR = Isaac.GetItemIdByName("Mirror")
 local ACTIVE_CAULDRON = Isaac.GetItemIdByName("Cauldron")
 local ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
+local ACTIVE_BIONIC_ARM = Isaac.GetItemIdByName("Bionic Arm")
 
 ---------------------------------------
 -- Passive Declaration
@@ -150,6 +151,24 @@ function Alphabirth:triggerMirror()
     end
 end
 
+----------------------------------------
+-- Bionic Arm Logic
+----------------------------------------
+
+local bionicDamage = 200
+function Alphabirth:triggerBionicArm()
+    local ents = Isaac.GetRoomEntities()
+    for _, e in ipairs(Isaac.GetRoomEntities()) do
+        if e:IsVulnerableEnemy() then
+            if e.HitPoints - bionicDamage <= 0 then
+                e:Kill()
+            else
+                e.HitPoints = e.HitPoints - bionicDamage
+            end
+        end
+    end
+end
+
 -------------------------------------------------------------------------------
 ---- PASSIVE ITEM LOGIC
 -------------------------------------------------------------------------------
@@ -259,6 +278,7 @@ end
 -- Post-Update Callback
 ---------------------------------------
 local currentRoom = Game():GetRoom()
+local activeCharge
 
 function Alphabirth:modUpdate()
     local player = Isaac.GetPlayer(0)
@@ -266,6 +286,7 @@ function Alphabirth:modUpdate()
     if not player:HasCollectible(PASSIVE_CRACKED_ROCK) then
         handleCrackedRockSpawnChance()
     end
+    --Max Deal with the Devil chance
     if didMax == true and Game():GetRoom():GetFrameCount() == 1 then
         Isaac.GetPlayer(0):GetEffects():AddCollectibleEffect(CollectibleType.COLLECTIBLE_GOAT_HEAD, false)
     end
@@ -284,6 +305,14 @@ function Alphabirth:modUpdate()
 			sprite:LoadGraphics()
 		end
 	end
+    --Bionic Arm Extra Logic
+    local charge = player:GetActiveCharge()
+    if player:HasCollectible(ACTIVE_BIONIC_ARM) and charge ~= activeCharge then
+        player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
+        player:EvaluateItems()
+        player.Damage = player.Damage + (charge/4)
+    end
+    activeCharge = charge
 end
 
 function Alphabirth:cauldronUpdate()
@@ -329,6 +358,8 @@ end
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerCauldron, ACTIVE_CAULDRON)
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerSurgeonSimulator, ACTIVE_SURGEON_SIMULATOR)
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerMirror, ACTIVE_MIRROR)
+Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBionicArm, ACTIVE_BIONIC_ARM)
+
 
 -------------------
 -- Passive Handling
