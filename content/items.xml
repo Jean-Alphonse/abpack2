@@ -2,6 +2,7 @@
     <active gfx="collectible_surgeon_simulator.png" maxcharges="0" name="Surgeon Simulator" />
     <active gfx="collectible_empty.png" maxcharges="0" name="Cauldron" />
     <active gfx="collectible_mirror.png" maxcharges="0" name="Mirror" />
+    <active gfx="collectible_bionic_arm.png" maxcharges="12" name="Bionic Arm" />
 
     <passive gfx="collectible_crackedrock.png" cache="tearcolor" devilprice="1" name = "Cracked Rock" />
     <passive gfx="collectible_hemophilia.png" name="Hemophilia" description="What a bloody mess..." />
