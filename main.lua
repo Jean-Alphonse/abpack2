@@ -15,6 +15,7 @@ math.random();math.random();math.random();
 ---------------------------------------
 local CRACKED_ROCK_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_crackedrock.anm2")
 local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_gloomskull.anm2")
+local AIMBOT_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_aimbot.anm2")
 ---------------------------------------
 -- Entity Flag Declaration
 ---------------------------------------
@@ -26,6 +27,22 @@ EntityFlag.FLAG_BLOODERFLY_TARGET = 1 << 37
 -- Curse Declaration
 ---------------------------------------
 -- use CURSE_YOUR_CURSE = 1 << CurseID
+
+---------------------------------------
+-- Functions
+---------------------------------------
+function findClosestEnemy(entity)
+    local entities = Isaac.GetRoomEntities()
+    local maxDistance = 999999
+    local closestEntity
+    for _, e in ipairs(entities) do
+        if (entity.Position - e.Position):Length() <= maxDistance and e:IsVulnerableEnemy() and e ~= entity then
+            closestEntity = e
+            maxDistance = (entity.Position - e.Position):Length()
+        end
+    end
+    return closestEntity
+end
 
 ---------------------------------------
 -- Active Declaration
@@ -43,6 +60,7 @@ local ACTIVE_BIONIC_ARM = Isaac.GetItemIdByName("Bionic Arm")
 local PASSIVE_CRACKED_ROCK = Isaac.GetItemIdByName("Cracked Rock")
 local PASSIVE_HEMOPHILIA = Isaac.GetItemIdByName("Hemophilia")
 local PASSIVE_GLOOM_SKULL = Isaac.GetItemIdByName("Gloom Skull")
+local PASSIVE_AIMBOT = Isaac.GetItemIdByName("Aimbot")
 local PASSIVE_BLOODERFLY = Isaac.GetItemIdByName("Blooderfly")
 
 ---------------------------------------
@@ -274,6 +292,30 @@ local function maxOutDevilDeal()
     didMax = true
 end
 
+---------------------------------------
+-- Aimbot Logic
+---------------------------------------
+
+local aimbotSpeedMod = 3
+function handleAimbot ()
+    local player = Isaac.GetPlayer(0)
+    for _, e in ipairs(Isaac.GetRoomEntities()) do
+        if e.Type == 2 and player:HasCollectible(PASSIVE_AIMBOT) then
+            local enemy = findClosestEnemy(e)
+            if enemy.Position:Distance(e.Position) <= 100 then
+                e.Velocity = Vector(-(e.Position.X - enemy.Position.X)/aimbotSpeedMod, -(e.Position.Y - enemy.Position.Y)/aimbotSpeedMod)
+                e:ToTear().TearFlags = 1
+            end
+        end
+    end
+end
+
+function applyAimbotCache(p, f)
+    if f == CacheFlag.CACHE_TEARCOLOR and p:HasCollectible(PASSIVE_AIMBOT) then
+        p:AddNullCostume(AIMBOT_COSTUME)
+    end
+end
+
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
 -------------------------------------------------------------------------------
@@ -397,6 +439,7 @@ function Alphabirth:modUpdate()
         player.Damage = player.Damage + (charge/4)
     end
     activeCharge = charge
+    handleAimbot ()
 end
 
 function Alphabirth:cauldronUpdate()
@@ -434,6 +477,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     local player = Isaac.GetPlayer(0)
     applyGloomSkullCache(player, cache_flag)
     applyCrackedRockCache(player, cache_flag)
+    applyAimbotCache(player, cache_flag)
     applyBlooderflyCache(player, cache_flag)
 end
 

@@ -7,6 +7,8 @@
     <passive gfx="collectible_crackedrock.png" cache="tearcolor" devilprice="1" name = "Cracked Rock" />
     <passive gfx="collectible_hemophilia.png" name="Hemophilia" description="What a bloody mess..." />
     <passive gfx="collectible_gloom_skull.png" cache="damage" name="Gloom Skull" description="Damage up + Evil Up + You Feel Scared" />
+    <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Aimbot" />
 
     <familiar gfx="collectible_blooderfly.png" cache="familiars" name="Blooderfly" description="Blood Friend" />
+
 </items>
