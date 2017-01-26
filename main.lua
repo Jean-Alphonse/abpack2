@@ -18,6 +18,8 @@ local CRACKED_ROCK_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/a
 local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_gloomskull.anm2")
 local AIMBOT_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_aimbot.anm2")
 local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_transformation_cyborg.anm2")
+local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hemophilia.anm2")
+
 ---------------------------------------
 -- Entity Flag Declaration
 ---------------------------------------
@@ -305,7 +307,7 @@ local tears = {}
 
 function Alphabirth:triggerHemophilia(dmg_target, dmg_amount, dmg_source, dmg_flags)
     local player = Isaac.GetPlayer(0)
-    if dmg_target:IsActiveEnemy() and dmg_target.HitPoints <= dmg_amount and player:HasCollectible(PASSIVE_HEMOPHILIA) and math.random(1,6) == 1 then
+    if dmg_target:IsActiveEnemy() and dmg_target.HitPoints <= dmg_amount and player:HasCollectible(PASSIVE_HEMOPHILIA) and math.random(1,3) == 1 then
         Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.PLAYER_CREEP_RED,0,dmg_target.Position,Vector(0, 0),player)
         Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.LARGE_BLOOD_EXPLOSION,0,dmg_target.Position,Vector(0, 0),player)
         for i=1, numberOfTears do
@@ -321,6 +323,14 @@ function Alphabirth:triggerHemophilia(dmg_target, dmg_amount, dmg_source, dmg_fl
         tears = {}
     end
 end
+
+local function applyHemophiliaCache(pl, fl)
+    if pl:HasCollectible(PASSIVE_HEMOPHILIA) and fl == CacheFlag.CACHE_TEARCOLOR then
+        pl:AddNullCostume(HEMOPHILIA_COSTUME)
+        pl.TearColor = Color(0.6,0,0,1,0,0,0)
+    end
+end
+
 
 ---------------------------------------
 -- Gloom Skull Logic
@@ -630,10 +640,11 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyCrackedRockCache(player, cache_flag)
     applyAimbotCache(player, cache_flag)
     applyBlooderflyCache(player, cache_flag)
+    applyHemophiliaCache(player, cache_flag)
 
     local charge = player:GetActiveCharge()
     if player:HasCollectible(ACTIVE_BIONIC_ARM) and cache_flag == CacheFlag.CACHE_DAMAGE then
-        player.Damage = player.Damage + (charge/4)
+        player.Damage = player.Damage + (charge/6)
     end
     applyCyborgCache(player, cache_flag)
 end
