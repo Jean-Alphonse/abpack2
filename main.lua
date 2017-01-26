@@ -28,11 +28,37 @@ EntityFlag.FLAG_BLOODERFLY_TARGET = 1 << 37
 -- Curse Declaration
 ---------------------------------------
 -- use CURSE_YOUR_CURSE = 1 << CurseID
+local CURSE_OF_THE_LONELY = 1 << (Isaac.GetCurseIdByName("Curse of the Lonely") - 1)
+
+local function evalCurses(curse_flags)
+    if curse_flags then
+        local curse_roll = math.random(1, 7)
+        if curse_roll == 7 then
+            return CURSE_OF_THE_LONELY
+        else
+            --return curse_flags
+        end
+    end
+end
+
+local function triggerCurses(player)
+    local game = Game()
+    local level = game:GetLevel()
+    if level:GetCurses() & CURSE_OF_THE_LONELY == CURSE_OF_THE_LONELY then
+        for _,ent in ipairs(Isaac.GetRoomEntities()) do
+            if ent.Type == EntityType.ENTITY_PICKUP and ent.Variant ~= 100 and player.Position:Distance(ent.Position) <= 35 then
+                ent.Velocity = Vector((ent.Position.X - player.Position.X)/4, (ent.Position.Y - player.Position.Y)/4)
+            end
+        end
+    end
+end
+
+Alphabirth:AddCallback(ModCallbacks.MC_POST_CURSE_EVAL, evalCurses)
 
 ---------------------------------------
 -- Functions
 ---------------------------------------
-function findClosestEnemy(entity)
+local function findClosestEnemy(entity)
     local entities = Isaac.GetRoomEntities()
     local maxDistance = 999999
     local closestEntity
@@ -454,6 +480,7 @@ function Alphabirth:modUpdate()
     if not player:HasCollectible(PASSIVE_CRACKED_ROCK) then
         handleCrackedRockSpawnChance()
     end
+    triggerCurses(player)
     --Max Deal with the Devil chance
     if didMax == true and Game():GetRoom():GetFrameCount() == 1 then
         Isaac.GetPlayer(0):GetEffects():AddCollectibleEffect(CollectibleType.COLLECTIBLE_GOAT_HEAD, false)
@@ -504,7 +531,7 @@ function Alphabirth:modUpdate()
     handleAimbot()
     if hasCyborg then
         local room = Game():GetRoom()
-        if room:GetFrameCount() == 1 and room:IsFirstVisit() then
+        if room:GetFrameCount() == 1 and room:IsFirstVisit() and room:IsAmbushActive() == true then
             canDrop = true
         end
         if canDrop and room:IsFirstVisit() and room:IsAmbushActive() == false then
