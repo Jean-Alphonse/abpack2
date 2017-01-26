@@ -16,6 +16,7 @@ math.random();math.random();math.random();
 local CRACKED_ROCK_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_crackedrock.anm2")
 local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_gloomskull.anm2")
 local AIMBOT_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_aimbot.anm2")
+local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_transformation_cyborg.anm2")
 ---------------------------------------
 -- Entity Flag Declaration
 ---------------------------------------
@@ -42,6 +43,16 @@ function findClosestEnemy(entity)
         end
     end
     return closestEntity
+end
+
+local function contains(table, value)
+    for _, current_item in ipairs(table) do
+       if current_item == value then
+          return true
+       end
+    end
+
+    return false
 end
 
 ---------------------------------------
@@ -76,6 +87,17 @@ local ENTITY_VARIANT_BLOODERFLY = Isaac.GetEntityVariantByName("Blooderfly")
 ---------------------------------------
 -- Variables that need to be loaded early
 ---------------------------------------
+
+local cyborg_pool = {
+    CollectibleType.COLLECTIBLE_TECHNOLOGY,
+    CollectibleType.COLLECTIBLE_TECH_X,
+    CollectibleType.COLLECTIBLE_TECHNOLOGY_2,
+    CollectibleType.COLLECTIBLE_TECH_5,
+    PASSIVE_AIMBOT,
+    ACTIVE_BIONIC_ARM
+}
+
+local cyborg_progress = {}
 
 -------------------------------------------------------------------------------
 ---- ACTIVE ITEM LOGIC
@@ -293,6 +315,24 @@ local function maxOutDevilDeal()
 end
 
 ---------------------------------------
+-- Cyborg Logic
+---------------------------------------
+
+local hasCyborg = false
+function applyCyborgCache(player, flag)
+    local charge = player:GetActiveCharge()
+    if hasCyborg and flag == CacheFlag.CACHE_DAMAGE then
+        player.Damage = player.Damage + (charge/6)
+    elseif hasCyborg and flag == CacheFlag.CACHE_LUCK then
+        player.Luck = player.Luck + (charge/4)
+    elseif hasCyborg and flag == CacheFlag.CACHE_SPEED then
+        player.MoveSpeed = player.MoveSpeed + (charge/24)
+    elseif hasCyborg and flag == CacheFlag.CACHE_SHOTSPEED then
+        player.ShotSpeed = player.ShotSpeed + (charge/24)
+    end
+end
+
+---------------------------------------
 -- Aimbot Logic
 ---------------------------------------
 
@@ -405,6 +445,7 @@ end
 ---------------------------------------
 local currentRoom = Game():GetRoom()
 local activeCharge
+local canDrop = false
 
 function Alphabirth:modUpdate()
     local player = Isaac.GetPlayer(0)
@@ -431,15 +472,48 @@ function Alphabirth:modUpdate()
 			sprite:LoadGraphics()
 		end
 	end
+    --Cyborg Transformation Detector
+    if Game():GetFrameCount() % 60 == 0 then
+        if not hasCyborg then
+            for _, item in ipairs(cyborg_pool) do
+                if player:HasCollectible(item) and contains(cyborg_progress, item) == false then
+                    table.insert(cyborg_progress, item)
+                end
+            end
+            if #cyborg_progress >= 3 then
+                hasCyborg = true
+                player:AddNullCostume(CYBORG_COSTUME)
+                player:AddCacheFlags(CacheFlag.CACHE_ALL)
+                player:EvaluateItems()
+            end
+        end
+    end
+
     --Bionic Arm Extra Logic
     local charge = player:GetActiveCharge()
     if player:HasCollectible(ACTIVE_BIONIC_ARM) and charge ~= activeCharge then
         player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
         player:EvaluateItems()
-        player.Damage = player.Damage + (charge/4)
+    end
+    --Cyborg Extra Logic
+    if hasCyborg and charge ~= activeCharge then
+        player:AddCacheFlags(CacheFlag.CACHE_ALL)
+        player:EvaluateItems()
     end
     activeCharge = charge
-    handleAimbot ()
+    handleAimbot()
+    if hasCyborg then
+        local room = Game():GetRoom()
+        if room:GetFrameCount() == 1 and room:IsFirstVisit() then
+            canDrop = true
+        end
+        if canDrop and room:IsFirstVisit() and room:IsAmbushActive() == false then
+            canDrop = false
+            if math.random(1,10) == 1 then
+                Isaac.Spawn(5,90,0,room:GetCenterPos(), Vector(0,0), player)
+            end
+        end
+    end
 end
 
 function Alphabirth:cauldronUpdate()
@@ -470,7 +544,8 @@ end
 function Alphabirth:reset()
     cauldron_points = 0
     didMax = false
-    isMaxed = false
+    hasCyborg = false
+    cyborg_progress = {}
 end
 
 function Alphabirth:evaluateCache(player, cache_flag)
@@ -479,6 +554,12 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyCrackedRockCache(player, cache_flag)
     applyAimbotCache(player, cache_flag)
     applyBlooderflyCache(player, cache_flag)
+
+    local charge = player:GetActiveCharge()
+    if player:HasCollectible(ACTIVE_BIONIC_ARM) and cache_flag == CacheFlag.CACHE_DAMAGE then
+        player.Damage = player.Damage + (charge/4)
+    end
+    applyCyborgCache(player, cache_flag)
 end
 
 -------------------
