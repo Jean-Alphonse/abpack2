@@ -340,6 +340,7 @@ local function applyGloomSkullCache(player, cache_flag)
     if cache_flag == CacheFlag.CACHE_DAMAGE and player:HasCollectible(PASSIVE_GLOOM_SKULL) then
         player.Damage = player.Damage + 1.5
         Game():GetLevel():AddCurse(Isaac.GetCurseIdByName("Curse of Darkness"), false)
+        
         player:AddNullCostume(GLOOM_SKULL_COSTUME)
         maxOutDevilDeal()
     end
