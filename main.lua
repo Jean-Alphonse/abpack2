@@ -16,7 +16,7 @@ math.random();math.random();math.random();
 local CRACKED_ROCK_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_crackedrock.anm2")
 local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_gloomskull.anm2")
 local AIMBOT_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_aimbot.anm2")
-local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_transformation_cyborg.anm2")
+local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_transformation_cyborg.anm2")
 ---------------------------------------
 -- Entity Flag Declaration
 ---------------------------------------
@@ -322,7 +322,6 @@ local hasCyborg = false
 function applyCyborgCache(player, flag)
     local charge = player:GetActiveCharge()
     if hasCyborg and flag == CacheFlag.CACHE_DAMAGE then
-        player:AddNullCostume(CYBORG_COSTUME)
         player.Damage = player.Damage + (charge/6)
     elseif hasCyborg and flag == CacheFlag.CACHE_LUCK then
         player.Luck = player.Luck + (charge/4)
@@ -483,6 +482,7 @@ function Alphabirth:modUpdate()
             end
             if #cyborg_progress >= 3 then
                 hasCyborg = true
+                player:AddNullCostume(CYBORG_COSTUME)
                 player:AddCacheFlags(CacheFlag.CACHE_ALL)
                 player:EvaluateItems()
             end
