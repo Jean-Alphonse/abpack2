@@ -16,7 +16,7 @@ math.random();math.random();math.random();
 local CRACKED_ROCK_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_crackedrock.anm2")
 local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_gloomskull.anm2")
 local AIMBOT_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_aimbot.anm2")
-local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_transformation_cyborg.anm2")
+local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_transformation_cyborg.anm2")
 ---------------------------------------
 -- Entity Flag Declaration
 ---------------------------------------
