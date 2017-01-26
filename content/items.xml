@@ -5,7 +5,7 @@
     <active gfx="collectible_bionic_arm.png" maxcharges="12" name="Bionic Arm" />
 
     <passive gfx="collectible_crackedrock.png" cache="tearcolor" devilprice="1" name = "Cracked Rock" />
-    <passive gfx="collectible_hemophilia.png" name="Hemophilia" description="What a bloody mess..." />
+    <passive gfx="collectible_hemophilia.png" cache="tearcolor" name="Hemophilia" description="What a bloody mess..." />
     <passive gfx="collectible_gloom_skull.png" cache="damage" name="Gloom Skull" description="Damage up + Evil Up + You Feel Scared" />
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Aimbot" />
 
