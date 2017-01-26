@@ -3,6 +3,7 @@ local Alphabirth = RegisterMod("Alphabirth Pack 2", 1)
 ---------------------------------------
 -- Config
 ---------------------------------------
+local starting_room_enabled = true
 
 ---------------------------------------
 -- Initialize the RNG
@@ -348,7 +349,6 @@ local hasCyborg = false
 function applyCyborgCache(player, flag)
     local charge = player:GetActiveCharge()
     if hasCyborg and flag == CacheFlag.CACHE_DAMAGE then
-        player:AddNullCostume(CYBORG_COSTUME)
         player.Damage = player.Damage + (charge/6)
     elseif hasCyborg and flag == CacheFlag.CACHE_LUCK then
         player.Luck = player.Luck + (charge/4)
@@ -477,14 +477,27 @@ local canDrop = false
 function Alphabirth:modUpdate()
     local player = Isaac.GetPlayer(0)
     local game = Game()
+    local room = game:GetRoom()
+    local frame = game:GetFrameCount()
+
     if not player:HasCollectible(PASSIVE_CRACKED_ROCK) then
         handleCrackedRockSpawnChance()
     end
     triggerCurses(player)
-    --Max Deal with the Devil chance
+
+    -- Reset variables each run
+    if frame == 1 then
+        cauldron_points = 0
+        didMax = false
+        hasCyborg = false
+        cyborg_progress = {}
+    end
+
+    -- Max Deal with the Devil chance
     if didMax == true and Game():GetRoom():GetFrameCount() == 1 then
         Isaac.GetPlayer(0):GetEffects():AddCollectibleEffect(CollectibleType.COLLECTIBLE_GOAT_HEAD, false)
     end
+
 	for _, entity in ipairs(Isaac.GetRoomEntities()) do
 		if entity.Type == EntityType.ENTITY_PICKUP and
                 entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and
@@ -510,6 +523,7 @@ function Alphabirth:modUpdate()
             end
             if #cyborg_progress >= 3 then
                 hasCyborg = true
+                player:AddNullCostume(CYBORG_COSTUME)
                 player:AddCacheFlags(CacheFlag.CACHE_ALL)
                 player:EvaluateItems()
             end
@@ -522,11 +536,13 @@ function Alphabirth:modUpdate()
         player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
         player:EvaluateItems()
     end
+
     --Cyborg Extra Logic
     if hasCyborg and charge ~= activeCharge then
         player:AddCacheFlags(CacheFlag.CACHE_ALL)
         player:EvaluateItems()
     end
+
     activeCharge = charge
     handleAimbot()
     if hasCyborg then
@@ -538,6 +554,46 @@ function Alphabirth:modUpdate()
             canDrop = false
             if math.random(1,10) == 1 then
                 Isaac.Spawn(5,90,0,room:GetCenterPos(), Vector(0,0), player)
+            end
+        end
+    end
+
+    -- Spawn items in starting room
+    if starting_room_enabled then
+        if frame == 1 then
+            local new_items = {
+                    ACTIVE_CAULDRON, ACTIVE_BIONIC_ARM, ACTIVE_MIRROR, ACTIVE_SURGEON_SIMULATOR,
+                    PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK, PASSIVE_GLOOM_SKULL,
+                    PASSIVE_HEMOPHILIA
+            }
+            local row = 31
+            for i, item in ipairs(new_items) do
+                -- Usable grid indexes start at 16 with 16 per "row"
+                -- This places them in the second row of the room
+                Isaac.DebugString("Spawning: " .. item)
+                local position = room:GetGridPosition(i + row)
+                if item < 500 then
+                    Isaac.Spawn(
+                                EntityType.ENTITY_PICKUP,       -- Type
+                                PickupVariant.PICKUP_TRINKET,   -- Variant
+                                item,                           -- Subtype
+                                position,                       -- Position
+                                Vector(0, 0),                   -- Velocity
+                                player                          -- Spawner
+                            )
+                else
+                    Isaac.Spawn(EntityType.ENTITY_PICKUP,
+                                PickupVariant.PICKUP_COLLECTIBLE,
+                                item,
+                                position,
+                                Vector(0, 0),
+                                player
+                            )
+                end
+
+                if i % 11 == 0 then
+                    row = row + 19
+                end
             end
         end
     end
@@ -568,13 +624,6 @@ end
 ---------------------------------------
 -- Callbacks
 ---------------------------------------
-function Alphabirth:reset()
-    cauldron_points = 0
-    didMax = false
-    hasCyborg = false
-    cyborg_progress = {}
-end
-
 function Alphabirth:evaluateCache(player, cache_flag)
     local player = Isaac.GetPlayer(0)
     applyGloomSkullCache(player, cache_flag)
@@ -623,5 +672,4 @@ Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.blooderflyUpd
 
 Alphabirth:AddCallback(ModCallbacks.MC_POST_UPDATE, Alphabirth.modUpdate)
 Alphabirth:AddCallback(ModCallbacks.MC_POST_RENDER, Alphabirth.cauldronUpdate)
-Alphabirth:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, Alphabirth.reset)
 Alphabirth:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, Alphabirth.evaluateCache)
