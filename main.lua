@@ -629,6 +629,13 @@ function Alphabirth:modUpdate()
         didMax = false
         hasCyborg = false
         cyborg_progress = {}
+        birthControlStats = {
+            Damage = 0,
+            MoveSpeed = 0,
+            ShotSpeed = 0,
+            Luck = 0,
+            Range = 0
+        }
     end
 
     -- Max Deal with the Devil chance
