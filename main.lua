@@ -150,6 +150,48 @@ local cyborg_pool = {
 
 local cyborg_progress = {}
 
+local birthControl_pool = {
+    Isaac.GetItemIdByName("Brother Bobby"),
+    Isaac.GetItemIdByName("Sister Maggy"),
+    Isaac.GetItemIdByName("Little Chubby"),
+    Isaac.GetItemIdByName("Robo-Baby"),
+    Isaac.GetItemIdByName("Little C.H.A.D."),
+    Isaac.GetItemIdByName("Little Steven"),
+    Isaac.GetItemIdByName("Guardian Angel"),
+    Isaac.GetItemIdByName("Demon Baby"),
+    Isaac.GetItemIdByName("Dead Bird"),
+    Isaac.GetItemIdByName("Bum Friend"),
+    Isaac.GetItemIdByName("Ghost Baby"),
+    Isaac.GetItemIdByName("Harlequin Baby"),
+    Isaac.GetItemIdByName("Rainbow Baby"),
+    Isaac.GetItemIdByName("Abel"),
+    Isaac.GetItemIdByName("Dry Baby"),
+    Isaac.GetItemIdByName("Robo-Baby 2.0"),
+    Isaac.GetItemIdByName("Rotten Baby"),
+    Isaac.GetItemIdByName("Headless Baby"),
+    Isaac.GetItemIdByName("Lil' Brimstone"),
+    Isaac.GetItemIdByName("Lil' Haunt"),
+    Isaac.GetItemIdByName("Dark Bum"),
+    Isaac.GetItemIdByName("Punching Bag"),
+    Isaac.GetItemIdByName("Mongo Baby"),
+    Isaac.GetItemIdByName("Incubus"),
+    Isaac.GetItemIdByName("Sworn Protector"),
+    Isaac.GetItemIdByName("Fate's Reward"),
+    Isaac.GetItemIdByName("Charged Baby"),
+    Isaac.GetItemIdByName("Bumbo"),
+    Isaac.GetItemIdByName("Lil Gurdy"),
+    Isaac.GetItemIdByName("Key Bum"),
+    Isaac.GetItemIdByName("Seraphim"),
+    Isaac.GetItemIdByName("Farting Baby"),
+    Isaac.GetItemIdByName("Succubus"),
+    Isaac.GetItemIdByName("Lil Loki"),
+    Isaac.GetItemIdByName("Hushy"),
+    Isaac.GetItemIdByName("Lil Mionstro"),
+    Isaac.GetItemIdByName("King Baby"),
+    Isaac.GetItemIdByName("Big Chubby"),
+    Isaac.GetItemIdByName("Acid Baby"),
+}
+
 -------------------------------------------------------------------------------
 ---- ACTIVE ITEM LOGIC
 -------------------------------------------------------------------------------
@@ -416,6 +458,26 @@ function applyAimbotCache(p, f)
     end
 end
 
+---------------------------------------
+-- Birth Control Logic
+---------------------------------------
+
+local birthControlStats = {
+    Damage = 0
+    MoveSpeed = 0
+    ShotSpeed = 0
+    Luck = 0
+    Range = 0
+}
+
+local function birthControlUpdate()
+
+end
+
+local function applyBirthControlCache (pl, fl)
+
+end
+
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
 -------------------------------------------------------------------------------
@@ -584,6 +646,7 @@ function Alphabirth:modUpdate()
 
     activeCharge = charge
     handleAimbot()
+    birthControlUpdate()
     if hasCyborg then
         local room = Game():GetRoom()
         if room:GetFrameCount() == 1 and room:IsFirstVisit() and room:IsAmbushActive() == true then
@@ -670,6 +733,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyAimbotCache(player, cache_flag)
     applyBlooderflyCache(player, cache_flag)
     applyHemophiliaCache(player, cache_flag)
+    applyBirthControlCache(player, cache_flag)
 
     local charge = player:GetActiveCharge()
     if player:HasCollectible(ACTIVE_BIONIC_ARM) and cache_flag == CacheFlag.CACHE_DAMAGE then
