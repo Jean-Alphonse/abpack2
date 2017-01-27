@@ -124,6 +124,7 @@ local PASSIVE_HEMOPHILIA = Isaac.GetItemIdByName("Hemophilia")
 local PASSIVE_GLOOM_SKULL = Isaac.GetItemIdByName("Gloom Skull")
 local PASSIVE_AIMBOT = Isaac.GetItemIdByName("Aimbot")
 local PASSIVE_BLOODERFLY = Isaac.GetItemIdByName("Blooderfly")
+local PASSIVE_BIRTH_CONTROL = Isaac.GetItemIdByName("Birth Control")
 
 ---------------------------------------
 -- Entity Variant Declaration
@@ -151,45 +152,45 @@ local cyborg_pool = {
 local cyborg_progress = {}
 
 local birthControl_pool = {
-    Isaac.GetItemIdByName("Brother Bobby"),
-    Isaac.GetItemIdByName("Sister Maggy"),
-    Isaac.GetItemIdByName("Little Chubby"),
-    Isaac.GetItemIdByName("Robo-Baby"),
-    Isaac.GetItemIdByName("Little C.H.A.D."),
-    Isaac.GetItemIdByName("Little Steven"),
-    Isaac.GetItemIdByName("Guardian Angel"),
-    Isaac.GetItemIdByName("Demon Baby"),
-    Isaac.GetItemIdByName("Dead Bird"),
-    Isaac.GetItemIdByName("Bum Friend"),
-    Isaac.GetItemIdByName("Ghost Baby"),
-    Isaac.GetItemIdByName("Harlequin Baby"),
-    Isaac.GetItemIdByName("Rainbow Baby"),
-    Isaac.GetItemIdByName("Abel"),
-    Isaac.GetItemIdByName("Dry Baby"),
-    Isaac.GetItemIdByName("Robo-Baby 2.0"),
-    Isaac.GetItemIdByName("Rotten Baby"),
-    Isaac.GetItemIdByName("Headless Baby"),
-    Isaac.GetItemIdByName("Lil' Brimstone"),
-    Isaac.GetItemIdByName("Lil' Haunt"),
-    Isaac.GetItemIdByName("Dark Bum"),
-    Isaac.GetItemIdByName("Punching Bag"),
-    Isaac.GetItemIdByName("Mongo Baby"),
-    Isaac.GetItemIdByName("Incubus"),
-    Isaac.GetItemIdByName("Sworn Protector"),
-    Isaac.GetItemIdByName("Fate's Reward"),
-    Isaac.GetItemIdByName("Charged Baby"),
-    Isaac.GetItemIdByName("Bumbo"),
-    Isaac.GetItemIdByName("Lil Gurdy"),
-    Isaac.GetItemIdByName("Key Bum"),
-    Isaac.GetItemIdByName("Seraphim"),
-    Isaac.GetItemIdByName("Farting Baby"),
-    Isaac.GetItemIdByName("Succubus"),
-    Isaac.GetItemIdByName("Lil Loki"),
-    Isaac.GetItemIdByName("Hushy"),
-    Isaac.GetItemIdByName("Lil Mionstro"),
-    Isaac.GetItemIdByName("King Baby"),
-    Isaac.GetItemIdByName("Big Chubby"),
-    Isaac.GetItemIdByName("Acid Baby"),
+    8, --Brother Bobby
+    67, --Sister Maggy
+    88, --Little Chubby
+    95, --Robo-Baby
+    96, --Little C.H.A.D.
+    100, --Little Steven
+    112, --Guardian Angel
+    113, --Demon Baby
+    117, --Dead Bird
+    144, --Bum Friend
+    163, --Ghost Baby
+    167, --Harlequin Baby
+    174, --Rainbow Baby
+    188, --Abel
+    265, --Dry Baby
+    267, --Robo-Baby 2.0
+    268, --Rotten Baby
+    269, --Headless Baby
+    275, --Lil' Brimstone
+    277, --Lil' Haunt
+    278, --Dark Bum
+    281, --Punching Bag
+    322, --Mongo Baby
+    360, --Incubus
+    363, --Sworn Protector
+    361, --Fate's Reward
+    372, --Charged Baby
+    385, --Bumbo
+    384, --Lil Gurdy
+    388, --Key Bum
+    390, --Seraphim
+    404, --Farting Baby
+    417, --Succubus
+    435, --Lil Loki
+    470, --Hushy
+    471, --Lil Monstro
+    472, --King Baby
+    473, --Big Chubby
+    491  --Acid Baby
 }
 
 -------------------------------------------------------------------------------
@@ -463,19 +464,55 @@ end
 ---------------------------------------
 
 local birthControlStats = {
-    Damage = 0
-    MoveSpeed = 0
-    ShotSpeed = 0
-    Luck = 0
+    Damage = 0,
+    MoveSpeed = 0,
+    ShotSpeed = 0,
+    Luck = 0,
     Range = 0
 }
 
 local function birthControlUpdate()
-
+    local player = Isaac.GetPlayer(0)
+    for _,item in ipairs(birthControl_pool) do
+        if player:HasCollectible(item) and player:HasCollectible(PASSIVE_BIRTH_CONTROL) then
+            player:RemoveCollectible(item)
+            local roll = math.random(1,5)
+            if roll == 1 then
+                birthControlStats.Damage = birthControlStats.Damage + 0.5
+            elseif roll == 2 then
+                birthControlStats.MoveSpeed = birthControlStats.MoveSpeed + 0.2
+            elseif roll == 3 then
+                birthControlStats.ShotSpeed = birthControlStats.ShotSpeed + 0.2
+            elseif roll == 4 then
+                birthControlStats.Luck = birthControlStats.Luck + 1
+            elseif roll == 5 then
+                birthControlStats.Range = birthControlStats.Range + 2
+            end
+            player:AddCacheFlags(CacheFlag.CACHE_ALL)
+            player:EvaluateItems()
+        end
+    end
 end
 
 local function applyBirthControlCache (pl, fl)
-
+    local player = Isaac.GetPlayer(0)
+    if player:HasCollectible(PASSIVE_BIRTH_CONTROL) then
+        if fl == CacheFlag.CACHE_DAMAGE then
+            player.Damage = player.Damage + birthControlStats.Damage
+        end
+        if fl == CacheFlag.CACHE_SPEED then
+            player.MoveSpeed = player.MoveSpeed + birthControlStats.MoveSpeed
+        end
+        if fl == CacheFlag.CACHE_SHOTSPEED then
+            player.ShotSpeed = player.ShotSpeed + birthControlStats.ShotSpeed
+        end
+        if fl == CacheFlag.CACHE_LUCK then
+            player.Luck = player.Luck + birthControlStats.Luck
+        end
+        if fl == CacheFlag.CACHE_RANGE then
+            player.TearFallingSpeed = player.TearFallingSpeed + birthControlStats.Range
+        end
+    end
 end
 
 -------------------------------------------------------------------------------
@@ -646,7 +683,11 @@ function Alphabirth:modUpdate()
 
     activeCharge = charge
     handleAimbot()
-    birthControlUpdate()
+
+    if Game():GetFrameCount() % 10 == 0 then
+        birthControlUpdate()
+    end
+
     if hasCyborg then
         local room = Game():GetRoom()
         if room:GetFrameCount() == 1 and room:IsFirstVisit() and room:IsAmbushActive() == true then
@@ -666,7 +707,7 @@ function Alphabirth:modUpdate()
             local new_items = {
                     ACTIVE_CAULDRON, ACTIVE_BIONIC_ARM, ACTIVE_MIRROR, ACTIVE_SURGEON_SIMULATOR,
                     PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK, PASSIVE_GLOOM_SKULL,
-                    PASSIVE_HEMOPHILIA
+                    PASSIVE_HEMOPHILIA, PASSIVE_BIRTH_CONTROL
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -728,17 +769,16 @@ end
 ---------------------------------------
 function Alphabirth:evaluateCache(player, cache_flag)
     local player = Isaac.GetPlayer(0)
+    local charge = player:GetActiveCharge()
+    if player:HasCollectible(ACTIVE_BIONIC_ARM) and cache_flag == CacheFlag.CACHE_DAMAGE then
+        player.Damage = player.Damage + (charge/6)
+    end
     applyGloomSkullCache(player, cache_flag)
     applyCrackedRockCache(player, cache_flag)
     applyAimbotCache(player, cache_flag)
     applyBlooderflyCache(player, cache_flag)
     applyHemophiliaCache(player, cache_flag)
     applyBirthControlCache(player, cache_flag)
-
-    local charge = player:GetActiveCharge()
-    if player:HasCollectible(ACTIVE_BIONIC_ARM) and cache_flag == CacheFlag.CACHE_DAMAGE then
-        player.Damage = player.Damage + (charge/6)
-    end
     applyCyborgCache(player, cache_flag)
 end
 
