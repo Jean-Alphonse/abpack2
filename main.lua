@@ -82,6 +82,28 @@ local function contains(table, value)
     return false
 end
 
+local function chooseRandomTarget()
+    local entities = Isaac.GetRoomEntities()
+    local valid_entities = {}
+
+    for _, entity in ipairs(entities) do
+        if entity:IsVulnerableEnemy() and entity:IsActiveEnemy() and entity.Type ~= 306 then
+            if entity:ToNPC() then
+                valid_entities[#valid_entities + 1] = entity
+            end
+        end
+    end
+
+    if #valid_entities > 0 then
+        local index = 1
+        if #valid_entities > 1 then
+            index = math.random(#valid_entities)
+        end
+        return valid_entities[index]
+    end
+    return nil
+end
+
 ---------------------------------------
 -- Active Declaration
 ---------------------------------------
@@ -394,76 +416,82 @@ end
 -- Blooderfly Logic
 ---------------------------------------
 function Alphabirth:onBlooderflyInit(_,familiar)
-    if familiar == nil then
-        Isaac.DebugString("NIL FAMILIAR")
-    else
-        Isaac.DebugString("Blooderfly Spawned")
+    if blooderfly == nil then
+        Isaac.DebugString("PROBLEM SPAWNING BLOODERFLY")
     end
 end
 
 local blooderfly
-local target_entity
-local has_target
-function Alphabirth:blooderflyUpdate(_,_)
+local blooderfly_target = nil
+local in_range = false
+function Alphabirth:blooderflyUpdate(_,familiar)
     local player = Isaac.GetPlayer(0)
 
-    if player:HasCollectible(PASSIVE_BLOODERFLY) then
-        local entities = Isaac.GetRoomEntities();
-        local valid_entities = {}
-        local has_target = false
+    if blooderfly_target == nil then
+        blooderfly:FollowPosition(player.Position)
+        blooderfly_target = chooseRandomTarget()
+    else
+        local dir = blooderfly_target.Position:__sub(blooderfly.Position)
+        local hyp = math.sqrt(dir.X * dir.X + dir.Y * dir.Y)
+        dir.X = dir.X / hyp
+        dir.Y = dir.Y / hyp
+        local pos = Vector(0,0)
+        pos.X = blooderfly.Position.X + dir.X * 44
+        pos.Y = blooderfly.Position.Y + dir.Y * 55
 
-        for _, entity in ipairs(entities) do
-            if entity:IsVulnerableEnemy() and entity:IsActiveEnemy(false) then
-                if entity:HasEntityFlags(EntityFlag.FLAG_BLOODERFLY_TARGET) then
-                    has_target = true
-                end
-
-                local enemy = entity:ToNPC()
-                if enemy then
-                    valid_entities[#valid_entities + 1] = entity
-                end
-            end
-        end
-
-        if #valid_entities > 0 and has_target == false then
-            local target_entity_index = 1
-            if #valid_entities > 1 then
-                target_entity_index = math.random(#valid_entities)
-            end
-            target_entity = valid_entities[target_entity_index]
-            target_entity:AddEntityFlags(EntityFlag.FLAG_BLOODERFLY_TARGET)
-        end
-
-        if Game():GetRoom():IsClear() then
-            blooderfly:FollowPosition(player.Position)
+        if blooderfly_target.Position:Distance(blooderfly.Position) < 25 then
+            in_range = true
+            blooderfly:FollowPosition(blooderfly_target.Position)
         else
-            blooderfly:FollowPosition(target_entity.Position)
+            blooderfly:FollowPosition(pos)
+        end
+        if blooderfly_target:IsDead() then
+            blooderfly_target = nil
+
+            if in_range then
+                --Hemophilia Effect
+                local tears = {}
+                for i = 1, 3 do
+                    tears[i] = player:FireTear(blooderfly.Position,
+                        Vector(math.random(-4, 4),
+                            math.random(-4, 4)),
+                        false,
+                        false,
+                        true
+                    )
+
+                    tears[i]:ChangeVariant(1)
+                    tears[i].TearFlags = 0
+                    tears[i].Scale = 1
+                    tears[i].Height = -30
+                    tears[i].FallingSpeed = -4 + math.random()*-4
+                    tears[i].FallingAcceleration = math.random() + 0.5
+                end
+                Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.PLAYER_CREEP_RED,0,blooderfly.Position,Vector(0, 0),player)
+                Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.LARGE_BLOOD_EXPLOSION,0,blooderfly.Position,Vector(0, 0),player)
+                tears = {}
+                in_range = false
+            end
+
+            if(math.random(8) == 1) then
+                Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP,
+                    PickupVariant.PICKUP_HEART,
+                    1,
+                    blooderfly.Position,
+                    blooderfly.Velocity,
+                    blooderfly
+                )
+            end
         end
     end
 end
 
-function Alphabirth:triggerBlooderfly(entity, damage_amount, damage_source, damage_flags)
-    local player = Isaac.GetPlayer(0)
-    if entity:IsActiveEnemy() and entity.HitPoints <= damage_amount * 1.2 and entity:HasEntityFlags(EntityFlag.FLAG_BLOODERFLY_TARGET) then
-        for i=1, 3 do
-            local tear = player:FireTear(entity.Position, Vector(math.random(-4, 4),math.random(-4, 4)), false, false, true)
-            tear:ChangeVariant(1)
-            tear.TearFlags = 0
-            tear.Scale = 1
-            tear.Height = -60
-            tear.FallingSpeed = -4 + math.random()*-4
-            tear.FallingAcceleration = math.random() + 0.5
-        end
-        Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.PLAYER_CREEP_RED,0,entity.Position,Vector(0, 0),player)
-    end
-    if entity:IsActiveEnemy() and entity:HasEntityFlags(EntityFlag.FLAG_BLOODERFLY_TARGET) then
-        entity.HitPoints = entity.HitPoints - damage_amount * 0.2
-    end
-end
-
+local blooderfly_exists = false
 local function applyBlooderflyCache(player, cache_flag)
-    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_BLOODERFLY) then
+    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_BLOODERFLY) and blooderfly_exists == false then
         blooderfly = Isaac.Spawn(EntityType.ENTITY_FAMILIAR, ENTITY_VARIANT_BLOODERFLY, 0, player.Position, Vector(0,0), player):ToFamiliar()
+        blooderfly_exists = true
     end
 end
 
