@@ -114,6 +114,7 @@ local ACTIVE_MIRROR = Isaac.GetItemIdByName("Mirror")
 local ACTIVE_CAULDRON = Isaac.GetItemIdByName("Cauldron")
 local ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
 local ACTIVE_BIONIC_ARM = Isaac.GetItemIdByName("Bionic Arm")
+local ACTIVE_ALASTORS_CANDLE = Isaac.GetItemIdByName("Alastor's Candle")
 
 ---------------------------------------
 -- Passive Declaration
@@ -308,6 +309,48 @@ function Alphabirth:triggerBionicArm()
                 e.HitPoints = e.HitPoints - bionicDamage
             end
         end
+    end
+end
+
+----------------------------------------
+-- Alastor's Candle Logic
+----------------------------------------
+local flames_exist = false
+local flame_one = nil
+local flame_two = nil
+function Alphabirth:triggerAlastorsCandle()
+    local player = Isaac.GetPlayer(0)
+    flame_one = Isaac.Spawn(
+        EntityType.ENTITY_EFFECT,
+        EffectVariant.RED_CANDLE_FLAME,
+        0,
+        player.Position,
+        Vector(0,0),
+        player
+    )
+    flame_two = Isaac.Spawn(
+        EntityType.ENTITY_EFFECT,
+        EffectVariant.RED_CANDLE_FLAME,
+        0,
+        player.Position,
+        Vector(0,0),
+        player
+    )
+    flames_exist = true
+    return true
+end
+
+local function handleAlastorsCandleFlames()
+    local player = Isaac.GetPlayer(0)
+    if flame_one ~= nil then
+        local x_velocity = math.cos(Game():GetFrameCount()/10)*100
+        local y_velocity = math.sin(Game():GetFrameCount()/10)*100
+        flame_one.Position = Vector(player.Position.X + x_velocity, player.Position.Y + y_velocity)
+    end
+    if flame_two ~= nil then
+        local x_velocity = math.cos((Game():GetFrameCount()/10)+math.pi)*100
+        local y_velocity = math.sin((Game():GetFrameCount()/10)+math.pi)*100
+        flame_two.Position = Vector(player.Position.X + x_velocity, player.Position.Y + y_velocity)
     end
 end
 
@@ -618,6 +661,10 @@ function Alphabirth:modUpdate()
     local room = game:GetRoom()
     local frame = game:GetFrameCount()
 
+    if player:HasCollectible(ACTIVE_ALASTORS_CANDLE) and flames_exist then
+        handleAlastorsCandleFlames()
+    end
+
     if not player:HasCollectible(PASSIVE_CRACKED_ROCK) then
         handleCrackedRockSpawnChance()
     end
@@ -713,8 +760,8 @@ function Alphabirth:modUpdate()
         if frame == 1 then
             local new_items = {
                     ACTIVE_CAULDRON, ACTIVE_BIONIC_ARM, ACTIVE_MIRROR, ACTIVE_SURGEON_SIMULATOR,
-                    PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK, PASSIVE_GLOOM_SKULL,
-                    PASSIVE_HEMOPHILIA, PASSIVE_BIRTH_CONTROL
+                    ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
+                    PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_BIRTH_CONTROL
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -796,6 +843,7 @@ Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerCauldron, ACT
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerSurgeonSimulator, ACTIVE_SURGEON_SIMULATOR)
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerMirror, ACTIVE_MIRROR)
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBionicArm, ACTIVE_BIONIC_ARM)
+Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerAlastorsCandle, ACTIVE_ALASTORS_CANDLE)
 
 
 -------------------
