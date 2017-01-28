@@ -395,13 +395,23 @@ local bloodDriveTimesUsed = 0
 
 local function handleBloodDrive()
     local currentRoom = Game():GetRoom()
-    if bloodDriveTimesUsed > 0 and currentRoom:GetFrameCount() == 1 then
-        for _,ent in ipairs(Isaac.GetRoomEntities()) do
-            if ent:IsVulnerableEnemy() then
-                ent.MaxHitPoints = ent.MaxHitPoints - ent.MaxHitPoints/(12/bloodDriveTimesUsed)
-                ent.HitPoints = ent.MaxHitPoints
-                for i=1, bloodDriveTimesUsed do
-                    Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.BLOOD_EXPLOSION, 0, ent.Position, Vector(0,0),player)
+    local player = Isaac.GetPlayer(0)
+    if bloodDriveTimesUsed > 0 then
+        if player:GetHearts() > player:GetMaxHearts() - (bloodDriveTimesUsed*2) then
+            if player:GetHearts() % 2 == 0 then
+                player:AddHearts(-2)
+            else
+                player:AddHearts(-1)
+            end
+        end
+        if currentRoom:GetFrameCount() == 1 then
+            for _,ent in ipairs(Isaac.GetRoomEntities()) do
+                if ent:IsVulnerableEnemy() then
+                    ent.MaxHitPoints = ent.MaxHitPoints - ent.MaxHitPoints/(12/bloodDriveTimesUsed)
+                    ent.HitPoints = ent.MaxHitPoints
+                    for i=1, bloodDriveTimesUsed do
+                        Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.BLOOD_EXPLOSION, 0, ent.Position, Vector(0,0),player)
+                    end
                 end
             end
         end
@@ -410,9 +420,10 @@ end
 
 function Alphabirth:triggerBloodDrive()
     local player = Isaac.GetPlayer(0)
-    if player:GetMaxHearts() > 2 and bloodDriveTimesUsed < 7 then
-        player:AddMaxHearts(-2, false)
+    if player:GetHearts() > 2 and bloodDriveTimesUsed < 7 then
         bloodDriveTimesUsed = bloodDriveTimesUsed + 1
+        Game():Darken(1, 8)
+        player:AnimateSad()
     end
 end
 
@@ -890,6 +901,7 @@ function Alphabirth:modUpdate()
             Luck = 0,
             Range = 0
         }
+        bloodDriveTimesUsed = 0
     end
 
     -- Max Deal with the Devil chance
