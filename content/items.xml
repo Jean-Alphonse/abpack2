@@ -3,7 +3,7 @@
     <active gfx="collectible_empty.png" maxcharges="0" name="Cauldron" />
     <active gfx="collectible_mirror.png" maxcharges="0" name="Mirror" />
     <active gfx="collectible_bionicarm.png" maxcharges="12" name="Bionic Arm" />
-    <active gfx="collectible_alastorscandle.png" maxcharges="4" name="Alastor's Candle" description ="The dark shines brightest"/>
+    <active gfx="collectible_alastorscandle.png" maxcharges="3" name="Alastor's Candle" description ="The dark shines brightest"/>
 
     <passive gfx="collectible_crackedrock.png" cache="tearcolor" devilprice="1" name = "Cracked Rock" />
     <passive gfx="collectible_hemophilia.png" cache="tearcolor" name="Hemophilia" description="What a bloody mess..." />
