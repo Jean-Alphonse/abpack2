@@ -440,7 +440,7 @@ end
 ---------------------------------------
 -- Tech Alpha Logic
 ---------------------------------------
-local function handleTechAlpha()
+local function handleTechAlpha(player)
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
         local entity_will_shoot = nil
         if entity.Type == EntityType.ENTITY_TEAR then
@@ -462,7 +462,7 @@ local function handleTechAlpha()
         end
         
         if entity_will_shoot then
-            local laser_roll = math.random(1,30)
+            local laser_roll = math.random(1,roll_max)
             if laser_roll == 1 then
                 local closest_enemy = nil
                 local previous_distance = nil
@@ -482,11 +482,7 @@ local function handleTechAlpha()
                 if closest_enemy then
                     direction_vector = closest_enemy.Position - entity.Position
                     direction_vector = direction_vector:Normalized() * entity.Velocity:Length()
-                    if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
-                        player:FireTechXLaser(entity.Position, direction_vector, 30)
-                    else
-                        player:FireTechLaser(entity.Position, 0, direction_vector, false, false)
-                    end
+                    player:FireTechLaser(entity.Position, 0, direction_vector, false, false)
                 end
             end
         end
@@ -847,7 +843,7 @@ function Alphabirth:modUpdate()
     handleAimbot()
     
     if player:HasCollectible(PASSIVE_TECH_ALPHA) then
-        handleTechAlpha()
+        handleTechAlpha(player)
     end
 
     if Game():GetFrameCount() % 10 == 0 then
