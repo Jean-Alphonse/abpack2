@@ -550,17 +550,20 @@ local function birthControlUpdate()
     for _,item in ipairs(birthControl_pool) do
         if player:HasCollectible(item) and player:HasCollectible(PASSIVE_BIRTH_CONTROL) then
             player:RemoveCollectible(item)
-            local roll = math.random(1,5)
+            local roll = math.random(1,6)
             if roll == 1 then
-                birthControlStats.Damage = birthControlStats.Damage + 0.5
+                birthControlStats.Damage = birthControlStats.Damage + (math.random(2, 8) /10)
             elseif roll == 2 then
-                birthControlStats.MoveSpeed = birthControlStats.MoveSpeed + 0.2
+                birthControlStats.MoveSpeed = birthControlStats.MoveSpeed + (math.random(1, 3) /10)
             elseif roll == 3 then
-                birthControlStats.ShotSpeed = birthControlStats.ShotSpeed + 0.2
+                birthControlStats.ShotSpeed = birthControlStats.ShotSpeed + (math.random(1, 3) /10)
             elseif roll == 4 then
-                birthControlStats.Luck = birthControlStats.Luck + 1
+                birthControlStats.Luck = birthControlStats.Luck + (math.random(10, 20) /10)
             elseif roll == 5 then
-                birthControlStats.Range = birthControlStats.Range + 2
+                birthControlStats.Range = birthControlStats.Range + (math.random(5, 10) /10)
+            elseif roll == 6 then
+                birthControlStats.HP = birthControlStats.HP + 2
+                player:AddMaxHearts(2, true)
             end
             player:AddCacheFlags(CacheFlag.CACHE_ALL)
             player:EvaluateItems()
@@ -723,6 +726,7 @@ function Alphabirth:modUpdate()
         hasCyborg = false
         cyborg_progress = {}
         birthControlStats = {
+            HP = 0,
             Damage = 0,
             MoveSpeed = 0,
             ShotSpeed = 0,
