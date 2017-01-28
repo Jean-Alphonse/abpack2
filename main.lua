@@ -481,7 +481,7 @@ local function handleTechAlpha(player)
                 
                 if closest_enemy then
                     direction_vector = closest_enemy.Position - entity.Position
-                    direction_vector = direction_vector:Normalized() * entity.Velocity:Length()
+                    -- direction_vector = direction_vector:Normalized() * entity.Velocity:Length()
                     player:FireTechLaser(entity.Position, 0, direction_vector, false, false)
                 end
             end
