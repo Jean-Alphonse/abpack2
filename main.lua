@@ -400,7 +400,14 @@ local function handleBloodDrive()
         if player:GetMaxHearts() < bloodDriveTimesUsed * 2 then
             player:AddMaxHearts(bloodDriveTimesUsed * 2 - player:GetMaxHearts())
         end
-        
+
+        if player:GetMaxHearts() == bloodDriveTimesUsed*2 then
+            if player:HasCollectible(CollectibleType.COLLECTIBLE_GUPPYS_PAW) then
+                player:RemoveCollectible(CollectibleType.COLLECTIBLE_GUPPYS_PAW)
+                Isaac.Spawn(5,100,CollectibleType.COLLECTIBLE_GUPPYS_PAW,player.Position,Vector(0,0),player)
+            end
+        end
+
         if player:GetHearts() > player:GetMaxHearts() - (bloodDriveTimesUsed*2) then
             if player:GetHearts() % 2 == 0 then
                 player:AddHearts(-2)
