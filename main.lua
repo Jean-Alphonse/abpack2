@@ -113,6 +113,7 @@ local ACTIVE_CAULDRON = Isaac.GetItemIdByName("Cauldron")
 local ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
 local ACTIVE_BIONIC_ARM = Isaac.GetItemIdByName("Bionic Arm")
 local ACTIVE_ALASTORS_CANDLE = Isaac.GetItemIdByName("Alastor's Candle")
+local ACTIVE_BLOOD_DRIVE = Isaac.GetItemIdByName("Blood Drive")
 
 ---------------------------------------
 -- Passive Declaration
@@ -125,7 +126,6 @@ local PASSIVE_AIMBOT = Isaac.GetItemIdByName("Aimbot")
 local PASSIVE_BLOODERFLY = Isaac.GetItemIdByName("Blooderfly")
 local PASSIVE_TECH_ALPHA = Isaac.GetItemIdByName("Tech Alpha")
 local PASSIVE_BIRTH_CONTROL = Isaac.GetItemIdByName("Birth Control")
-local PASSIVE_BLOOD_DRIVE = Isaac.GetItemIdByName("Blood Drive")
 local PASSIVE_SPIRIT_EYE = Isaac.GetItemIdByName("Spirit Eye")
 
 ---------------------------------------
@@ -386,6 +386,34 @@ local function handleAlastorsCandleFlames()
     end
 end
 
+---------------------------------------
+-- Blood Drive Logic
+---------------------------------------
+
+local bloodDriveTimesUsed = 0
+
+local function handleBloodDrive()
+    local currentRoom = Game():GetRoom()
+    if bloodDriveTimesUsed > 0 and currentRoom:GetFrameCount() == 1 then
+        for _,ent in ipairs(Isaac.GetRoomEntities()) do
+            if ent:IsVulnerableEnemy() then
+                ent.MaxHitPoints = ent.MaxHitPoints - ent.MaxHitPoints/(12/bloodDriveTimesUsed)
+                ent.HitPoints = ent.MaxHitPoints
+                for i=1, bloodDriveTimesUsed do
+                    Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.BLOOD_EXPLOSION, 0, ent.Position, Vector(0,0),player)
+                end
+            end
+        end
+    end
+end
+
+function Alphabirth:triggerBloodDrive()
+    local player = Isaac.GetPlayer(0)
+    if player:GetMaxHearts() > 2 and bloodDriveTimesUsed < 7 then
+        player:AddMaxHearts(-2, false)
+        bloodDriveTimesUsed = bloodDriveTimesUsed + 1
+    end
+end
 
 -------------------------------------------------------------------------------
 ---- PASSIVE ITEM LOGIC
@@ -594,14 +622,6 @@ function applyAimbotCache(p, f)
     if f == CacheFlag.CACHE_TEARCOLOR and p:HasCollectible(PASSIVE_AIMBOT) then
         p:AddNullCostume(AIMBOT_COSTUME)
     end
-end
-
----------------------------------------
--- Blood Drive Logic
----------------------------------------
-
-function handleBloodDrive()
-
 end
 
 ---------------------------------------
@@ -931,9 +951,7 @@ function Alphabirth:modUpdate()
         birthControlUpdate()
     end
 
-    if player:HasCollectible(PASSIVE_BLOOD_DRIVE) then
-        handleBloodDrive()
-    end
+    handleBloodDrive()
 
     if hasCyborg then
         local room = Game():GetRoom()
@@ -1038,6 +1056,7 @@ Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerSurgeonSimula
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerMirror, ACTIVE_MIRROR)
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBionicArm, ACTIVE_BIONIC_ARM)
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerAlastorsCandle, ACTIVE_ALASTORS_CANDLE)
+Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBloodDrive, ACTIVE_BLOOD_DRIVE)
 
 
 -------------------

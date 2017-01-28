@@ -4,6 +4,7 @@
     <active gfx="collectible_mirror.png" maxcharges="0" name="Mirror" />
     <active gfx="collectible_bionicarm.png" maxcharges="12" name="Bionic Arm" />
     <active gfx="collectible_alastorscandle.png" maxcharges="3" name="Alastor's Candle" description ="The dark shines brightest"/>
+    <active gfx="collectible_birthcontrol.png" maxcharges="0" name="Blood Drive" />
 
     <passive gfx="collectible_crackedrock.png" cache="tearcolor" devilprice="1" name = "Cracked Rock" />
     <passive gfx="collectible_hemophilia.png" cache="tearcolor" name="Hemophilia" description="What a bloody mess..." />
@@ -11,7 +12,6 @@
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Tech Alpha" />
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Aimbot" description = "H4x Sh0t"/>
     <passive gfx="collectible_birthcontrol.png" cache="all" name="Birth Control" />
-    <passive gfx="collectible_birthcontrol.png" name="Blood Drive" />
 
     <familiar gfx="collectible_blooderfly.png" cache="familiars" name="Blooderfly" description="Blood Friend" />
     <familiar gfx="collectible_blooderfly.png" cache="familiars" name="Spirit Eye" description="Spirit Friend" />
