@@ -74,6 +74,7 @@ local PASSIVE_HEMOPHILIA = Isaac.GetItemIdByName("Hemophilia")
 local PASSIVE_GLOOM_SKULL = Isaac.GetItemIdByName("Gloom Skull")
 local PASSIVE_AIMBOT = Isaac.GetItemIdByName("Aimbot")
 local PASSIVE_BLOODERFLY = Isaac.GetItemIdByName("Blooderfly")
+local PASSIVE_TECH_ALPHA = Isaac.GetItemIdByName("Tech Alpha")
 
 ---------------------------------------
 -- Entity Variant Declaration
@@ -531,10 +532,11 @@ function Alphabirth:modUpdate()
         end
     end
     
-    if frame % 31 == 0 then
-        if player:HasCollectible(PASSIVE_BLOODERFLY) then
-            for _, entity in ipairs(Isaac.GetRoomEntities()) do
-                if entity.Type == EntityType.ENTITY_TEAR then
+    if player:HasCollectible(PASSIVE_TECH_ALPHA) then
+        for _, entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity.Type == EntityType.ENTITY_TEAR then
+                local laser_roll = math.random(1,30)
+                if laser_roll == 1 then
                     local closest_enemy = nil
                     local previous_distance = nil
                     for _, enemy in ipairs(Isaac.GetRoomEntities()) do
@@ -562,7 +564,7 @@ function Alphabirth:modUpdate()
             local new_items = {
                     ACTIVE_CAULDRON, ACTIVE_BIONIC_ARM, ACTIVE_MIRROR, ACTIVE_SURGEON_SIMULATOR,
                     PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK, PASSIVE_GLOOM_SKULL,
-                    PASSIVE_HEMOPHILIA
+                    PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA
             }
             local row = 31
             for i, item in ipairs(new_items) do
