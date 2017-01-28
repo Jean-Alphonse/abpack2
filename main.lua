@@ -114,6 +114,7 @@ local ACTIVE_MIRROR = Isaac.GetItemIdByName("Mirror")
 local ACTIVE_CAULDRON = Isaac.GetItemIdByName("Cauldron")
 local ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
 local ACTIVE_BIONIC_ARM = Isaac.GetItemIdByName("Bionic Arm")
+local ACTIVE_ALASTORS_CANDLE = Isaac.GetItemIdByName("Alastor's Candle")
 
 ---------------------------------------
 -- Passive Declaration
@@ -310,6 +311,79 @@ function Alphabirth:triggerBionicArm()
         end
     end
 end
+
+----------------------------------------
+-- Alastor's Candle Logic
+----------------------------------------
+local flames = {}
+local number_of_fires = 2
+local flames_exist = false
+function Alphabirth:triggerAlastorsCandle()
+    local player = Isaac.GetPlayer(0)
+    --Remove previous flames (if any)
+    if flames_exist then
+        for i=1, number_of_fires do
+            flames[i]:Die()
+            Isaac.Spawn(
+                EntityType.ENTITY_EFFECT,
+                EffectVariant.POOF01,
+                0,            -- Entity Subtype
+                flames[i].Position,
+                Vector(0, 0), -- Velocity
+                nil
+            )
+        end
+    end
+    --Spawn two flames
+    for i=1, number_of_fires do
+        flames[i] = Isaac.Spawn(
+            3,
+            239,
+            0,
+            player.Position,
+            Vector(0,0),
+            player
+        )
+    end
+    flames_exist = true
+    return true
+end
+
+local distance = 100
+local modifier
+local function handleAlastorsCandleFlames()
+    local player = Isaac.GetPlayer(0)
+    --Spin the flames
+    if distance == 100 then
+        modifier = 1
+    end
+    if distance == 30 then
+        modifier = -1
+    end
+
+    for i=1, number_of_fires do
+        if(i % 2 == 0) then
+            local x_velocity = math.cos((Game():GetFrameCount()/10)+math.pi)*distance
+            local y_velocity = math.sin((Game():GetFrameCount()/10)+math.pi)*distance
+            flames[i].Position = Vector(player.Position.X + x_velocity, player.Position.Y + y_velocity)
+        else
+            local x_velocity = math.cos(Game():GetFrameCount()/10)*distance
+            local y_velocity = math.sin(Game():GetFrameCount()/10)*distance
+            flames[i].Position = Vector(player.Position.X + x_velocity, player.Position.Y + y_velocity)
+        end
+    end
+
+    distance = distance - modifier
+    for i=1, number_of_fires do
+        --Add Fear to Close Entitie
+        for _, entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity:IsVulnerableEnemy() and entity.Position:Distance(flames[i].Position) < 55 and math.random(20) == 1 then
+                entity:AddFear(EntityRef(flames[i]), 60)
+            end
+        end
+    end
+end
+
 
 -------------------------------------------------------------------------------
 ---- PASSIVE ITEM LOGIC
@@ -618,6 +692,25 @@ function Alphabirth:modUpdate()
     local room = game:GetRoom()
     local frame = game:GetFrameCount()
 
+    --Additional Alastor's Candle Logic
+    if player:HasCollectible(ACTIVE_ALASTORS_CANDLE) and flames_exist then
+        handleAlastorsCandleFlames()
+        if room:GetFrameCount() == 1 then
+            for i=1, number_of_fires do
+                flames[i]:Die()
+                Isaac.Spawn(
+                    EntityType.ENTITY_EFFECT,
+                    EffectVariant.POOF01,
+                    0,            -- Entity Subtype
+                    flames[i].Position,
+                    Vector(0, 0), -- Velocity
+                    nil
+                )
+            end
+            flames_exist = false
+        end
+    end
+
     if not player:HasCollectible(PASSIVE_CRACKED_ROCK) then
         handleCrackedRockSpawnChance()
     end
@@ -713,8 +806,8 @@ function Alphabirth:modUpdate()
         if frame == 1 then
             local new_items = {
                     ACTIVE_CAULDRON, ACTIVE_BIONIC_ARM, ACTIVE_MIRROR, ACTIVE_SURGEON_SIMULATOR,
-                    PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK, PASSIVE_GLOOM_SKULL,
-                    PASSIVE_HEMOPHILIA, PASSIVE_BIRTH_CONTROL
+                    ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
+                    PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_BIRTH_CONTROL
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -796,6 +889,7 @@ Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerCauldron, ACT
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerSurgeonSimulator, ACTIVE_SURGEON_SIMULATOR)
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerMirror, ACTIVE_MIRROR)
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBionicArm, ACTIVE_BIONIC_ARM)
+Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerAlastorsCandle, ACTIVE_ALASTORS_CANDLE)
 
 
 -------------------
