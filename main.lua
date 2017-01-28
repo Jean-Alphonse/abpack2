@@ -415,14 +415,13 @@ local function handleBloodDrive()
                 player:AddHearts(-1)
             end
         end
-        if currentRoom:GetFrameCount() == 1 then
-            for _,ent in ipairs(Isaac.GetRoomEntities()) do
-                if ent:IsVulnerableEnemy() then
-                    ent.MaxHitPoints = ent.MaxHitPoints - ent.MaxHitPoints/(12/bloodDriveTimesUsed)
-                    ent.HitPoints = ent.MaxHitPoints
-                    for i=1, bloodDriveTimesUsed do
-                        Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.BLOOD_EXPLOSION, 0, ent.Position, Vector(0,0),player)
-                    end
+        
+        for _,ent in ipairs(Isaac.GetRoomEntities()) do
+            if ent:IsVulnerableEnemy() and ent.FrameCount == 1 then
+                ent.MaxHitPoints = ent.MaxHitPoints - ent.MaxHitPoints/(12/bloodDriveTimesUsed)
+                ent.HitPoints = ent.MaxHitPoints
+                for i=1, bloodDriveTimesUsed do
+                    Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.BLOOD_EXPLOSION, 0, ent.Position, Vector(0,0),player)
                 end
             end
         end
