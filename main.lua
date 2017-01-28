@@ -321,16 +321,16 @@ local flame_two = nil
 function Alphabirth:triggerAlastorsCandle()
     local player = Isaac.GetPlayer(0)
     flame_one = Isaac.Spawn(
-        EntityType.ENTITY_EFFECT,
-        EffectVariant.RED_CANDLE_FLAME,
+        3,
+        239,
         0,
         player.Position,
         Vector(0,0),
         player
     )
     flame_two = Isaac.Spawn(
-        EntityType.ENTITY_EFFECT,
-        EffectVariant.RED_CANDLE_FLAME,
+        3,
+        239,
         0,
         player.Position,
         Vector(0,0),
@@ -340,19 +340,53 @@ function Alphabirth:triggerAlastorsCandle()
     return true
 end
 
+local distance = 100
+local modifier
 local function handleAlastorsCandleFlames()
     local player = Isaac.GetPlayer(0)
+    --Spin the flames
+    if distance == 100 then
+        modifier = 1
+    end
+    if distance == 30 then
+        modifier = -1
+    end
     if flame_one ~= nil then
-        local x_velocity = math.cos(Game():GetFrameCount()/10)*100
-        local y_velocity = math.sin(Game():GetFrameCount()/10)*100
+        local x_velocity = math.cos(Game():GetFrameCount()/10)*distance
+        local y_velocity = math.sin(Game():GetFrameCount()/10)*distance
         flame_one.Position = Vector(player.Position.X + x_velocity, player.Position.Y + y_velocity)
     end
     if flame_two ~= nil then
-        local x_velocity = math.cos((Game():GetFrameCount()/10)+math.pi)*100
-        local y_velocity = math.sin((Game():GetFrameCount()/10)+math.pi)*100
+        local x_velocity = math.cos((Game():GetFrameCount()/10)+math.pi)*distance
+        local y_velocity = math.sin((Game():GetFrameCount()/10)+math.pi)*distance
         flame_two.Position = Vector(player.Position.X + x_velocity, player.Position.Y + y_velocity)
     end
+    distance = distance - modifier
+
+    if Game():GetRoom():GetFrameCount() == 1 then
+        Isaac.Spawn(
+            EntityType.ENTITY_EFFECT,
+            EffectVariant.POOF01,
+            0,            -- Entity Subtype
+            flame_one.Position,
+            Vector(0, 0), -- Velocity
+            player
+        )
+        flame_one:Die()
+        Isaac.Spawn(
+            EntityType.ENTITY_EFFECT,
+            EffectVariant.POOF01,
+            0,            -- Entity Subtype
+            flame_two.Position,
+            Vector(0, 0), -- Velocity
+            player
+        )
+        flame_two:Die()
+        flames_exist = false
+    end
+    --Handle object properties
 end
+
 
 -------------------------------------------------------------------------------
 ---- PASSIVE ITEM LOGIC
