@@ -438,6 +438,62 @@ local function handleCrackedRockSpawnChance()
 end
 
 ---------------------------------------
+-- Tech Alpha Logic
+---------------------------------------
+local function handleTechAlpha()
+    for _, entity in ipairs(Isaac.GetRoomEntities()) do
+        local entity_will_shoot = nil
+        if entity.Type == EntityType.ENTITY_TEAR then
+            entity_will_shoot = true
+        elseif entity.Type == EntityType.ENTITY_BOMBDROP then
+            if player:HasCollectible(CollectibleType.COLLECTIBLE_DR_FETUS) then
+                if entity:ToBomb().IsFetus then
+                    entity_will_shoot = true
+                end
+            end
+        elseif entity.Type == EntityType.ENTITY_KNIFE then
+            if entity:ToKnife().IsFlying then
+                entity_will_shoot = true
+            end
+        elseif entity.Type == EntityType.ENTITY_LASER then
+            if entity:ToLaser():IsCircleLaser() then
+                entity_will_shoot = true
+            end
+        end
+        
+        if entity_will_shoot then
+            local laser_roll = math.random(1,30)
+            if laser_roll == 1 then
+                local closest_enemy = nil
+                local previous_distance = nil
+                for _, enemy in ipairs(Isaac.GetRoomEntities()) do
+                    if enemy:IsActiveEnemy(false) and enemy:IsVulnerableEnemy() then
+                        local distance_to_enemy = entity.Position:Distance(enemy.Position)
+                        if not previous_distance then
+                            closest_enemy = enemy
+                            previous_distance = distance_to_enemy
+                        elseif distance_to_enemy  < previous_distance then
+                            closest_enemy = enemy
+                            previous_distance = distance_to_enemy
+                        end
+                    end
+                end
+                
+                if closest_enemy then
+                    direction_vector = closest_enemy.Position - entity.Position
+                    direction_vector = direction_vector:Normalized() * entity.Velocity:Length()
+                    if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
+                        player:FireTechXLaser(entity.Position, direction_vector, 30)
+                    else
+                        player:FireTechLaser(entity.Position, 0, direction_vector, false, false)
+                    end
+                end
+            end
+        end
+    end
+end
+
+---------------------------------------
 -- Hemophilia Logic
 ---------------------------------------
 
@@ -788,6 +844,10 @@ function Alphabirth:modUpdate()
 
     activeCharge = charge
     handleAimbot()
+    
+    if player:HasCollectible(PASSIVE_TECH_ALPHA) then
+        handleTechAlpha()
+    end
 
     if Game():GetFrameCount() % 10 == 0 then
         birthControlUpdate()
@@ -802,35 +862,6 @@ function Alphabirth:modUpdate()
             canDrop = false
             if math.random(1,10) == 1 then
                 Isaac.Spawn(5,90,0,room:GetCenterPos(), Vector(0,0), player)
-            end
-        end
-    end
-    
-    if player:HasCollectible(PASSIVE_TECH_ALPHA) then
-        for _, entity in ipairs(Isaac.GetRoomEntities()) do
-            if entity.Type == EntityType.ENTITY_TEAR then
-                local laser_roll = math.random(1,30)
-                if laser_roll == 1 then
-                    local closest_enemy = nil
-                    local previous_distance = nil
-                    for _, enemy in ipairs(Isaac.GetRoomEntities()) do
-                        if enemy:IsActiveEnemy(false) and enemy:IsVulnerableEnemy() then
-                            local distance_to_enemy = entity.Position:Distance(enemy.Position)
-                            if not previous_distance then
-                                closest_enemy = enemy
-                                previous_distance = distance_to_enemy
-                            elseif distance_to_enemy  < previous_distance then
-                                closest_enemy = enemy
-                                previous_distance = distance_to_enemy
-                            end
-                        end
-                    end
-                    
-                    if closest_enemy then
-                        direction_vector = closest_enemy.Position - entity.Position
-                        player:FireTechLaser(entity.Position, 0, direction_vector, false, false)
-                    end
-                end
             end
         end
     end
