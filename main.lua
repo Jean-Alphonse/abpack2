@@ -462,7 +462,7 @@ local function handleTechAlpha(player)
         end
         
         if entity_will_shoot then
-            local laser_roll = math.random(1,roll_max)
+            local laser_roll = math.random(1,30)
             if laser_roll == 1 then
                 local closest_enemy = nil
                 local previous_distance = nil
