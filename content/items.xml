@@ -11,6 +11,7 @@
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Tech Alpha" />
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Aimbot" description = "H4x Sh0t"/>
     <passive gfx="collectible_birthcontrol.png" cache="all" name="Birth Control" />
+    <passive gfx="collectible_birthcontrol.png" name="Blood Drive" />
 
     <familiar gfx="collectible_blooderfly.png" cache="familiars" name="Blooderfly" description="Blood Friend" />
 

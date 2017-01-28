@@ -127,6 +127,7 @@ local PASSIVE_AIMBOT = Isaac.GetItemIdByName("Aimbot")
 local PASSIVE_BLOODERFLY = Isaac.GetItemIdByName("Blooderfly")
 local PASSIVE_TECH_ALPHA = Isaac.GetItemIdByName("Tech Alpha")
 local PASSIVE_BIRTH_CONTROL = Isaac.GetItemIdByName("Birth Control")
+local PASSIVE_BLOOD_DRIVE = Isaac.GetItemIdByName("Blood Drive")
 
 ---------------------------------------
 -- Entity Variant Declaration
@@ -447,7 +448,7 @@ local function handleTechAlpha(player)
         if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
             roll_max = roll_max * 2
         end
-        
+
         if entity.Type == EntityType.ENTITY_TEAR then
             entity_will_shoot = true
         elseif entity.Type == EntityType.ENTITY_BOMBDROP then
@@ -465,7 +466,7 @@ local function handleTechAlpha(player)
                 entity_will_shoot = true
             end
         end
-        
+
         if entity_will_shoot then
             local laser_roll = math.random(1,roll_max)
             if laser_roll == 1 then
@@ -483,7 +484,7 @@ local function handleTechAlpha(player)
                         end
                     end
                 end
-                
+
                 if closest_enemy then
                     direction_vector = closest_enemy.Position - entity.Position
                     direction_vector = direction_vector:Normalized() * (player.ShotSpeed * 13)
@@ -593,6 +594,14 @@ function applyAimbotCache(p, f)
     if f == CacheFlag.CACHE_TEARCOLOR and p:HasCollectible(PASSIVE_AIMBOT) then
         p:AddNullCostume(AIMBOT_COSTUME)
     end
+end
+
+---------------------------------------
+-- Blood Drive Logic
+---------------------------------------
+
+function handleBloodDrive()
+
 end
 
 ---------------------------------------
@@ -850,13 +859,17 @@ function Alphabirth:modUpdate()
 
     activeCharge = charge
     handleAimbot()
-    
+
     if player:HasCollectible(PASSIVE_TECH_ALPHA) then
         handleTechAlpha(player)
     end
 
     if Game():GetFrameCount() % 10 == 0 then
         birthControlUpdate()
+    end
+
+    if player:HasCollectible(PASSIVE_BLOOD_DRIVE) then
+        handleBloodDrive()
     end
 
     if hasCyborg then
@@ -871,7 +884,7 @@ function Alphabirth:modUpdate()
             end
         end
     end
-                    
+
     -- Spawn items in starting room
     if starting_room_enabled then
         if frame == 1 then
