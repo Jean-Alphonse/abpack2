@@ -19,6 +19,7 @@ local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/ac
 local AIMBOT_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_aimbot.anm2")
 local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_transformation_cyborg.anm2")
 local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hemophilia.anm2")
+local BIRTH_CONTROL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_birthcontrol.anm2")
 
 ---------------------------------------
 -- Entity Flag Declaration
@@ -637,6 +638,7 @@ end
 local function applyBirthControlCache (pl, fl)
     local player = Isaac.GetPlayer(0)
     if player:HasCollectible(PASSIVE_BIRTH_CONTROL) then
+        player:AddNullCostume(BIRTH_CONTROL_COSTUME)
         if fl == CacheFlag.CACHE_DAMAGE then
             player.Damage = player.Damage + birthControlStats.Damage
         end
