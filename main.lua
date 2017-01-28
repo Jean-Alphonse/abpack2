@@ -530,7 +530,32 @@ function Alphabirth:modUpdate()
             end
         end
     end
-
+    
+    if frame % 31 == 0 then
+        if player:HasCollectible(PASSIVE_BLOODERFLY) then
+            for _, entity in ipairs(Isaac.GetRoomEntities()) do
+                if entity.Type == EntityType.ENTITY_TEAR then
+                    local closest_enemy = nil
+                    local previous_distance = nil
+                    for _, enemy in ipairs(Isaac.GetRoomEntities()) do
+                        if enemy:IsActiveEnemy(false) and enemy:IsVulnerableEnemy() then
+                            if not previous_distance then
+                                closest_enemy = enemy
+                            elseif Vector:Distance(entity.Position, enemy.Position) < previous_distance then
+                                closest_enemy = enemy
+                            end
+                        end
+                    end
+                    
+                    if closest_enemy then
+                        direction_vector = closest_enemy.Position - entity.Position
+                        player:FireTechLaser(entity.Position, 0, direction_vector, false, false)
+                    end
+                end
+            end
+        end
+    end
+                    
     -- Spawn items in starting room
     if starting_room_enabled then
         if frame == 1 then
