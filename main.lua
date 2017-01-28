@@ -443,6 +443,11 @@ end
 local function handleTechAlpha(player)
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
         local entity_will_shoot = nil
+        local roll_max = 30
+        if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
+            roll_max = roll_max * 2
+        end
+        
         if entity.Type == EntityType.ENTITY_TEAR then
             entity_will_shoot = true
         elseif entity.Type == EntityType.ENTITY_BOMBDROP then
@@ -462,7 +467,7 @@ local function handleTechAlpha(player)
         end
         
         if entity_will_shoot then
-            local laser_roll = math.random(1,30)
+            local laser_roll = math.random(1,roll_max)
             if laser_roll == 1 then
                 local closest_enemy = nil
                 local previous_distance = nil
@@ -481,8 +486,12 @@ local function handleTechAlpha(player)
                 
                 if closest_enemy then
                     direction_vector = closest_enemy.Position - entity.Position
-                    -- direction_vector = direction_vector:Normalized() * entity.Velocity:Length()
-                    player:FireTechLaser(entity.Position, 0, direction_vector, false, false)
+                    direction_vector = direction_vector:Normalized() * (player.ShotSpeed * 13)
+                    if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
+                        player:FireTechXLaser(entity.Position, direction_vector, 30)
+                    else
+                        player:FireTechLaser(entity.Position, 0, direction_vector, false, false)
+                    end
                 end
             end
         end
