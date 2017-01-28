@@ -19,6 +19,7 @@ local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/ac
 local AIMBOT_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_aimbot.anm2")
 local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_transformation_cyborg.anm2")
 local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hemophilia.anm2")
+local BIRTH_CONTROL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_birthcontrol.anm2")
 
 ---------------------------------------
 -- Entity Flag Declaration
@@ -154,45 +155,45 @@ local cyborg_pool = {
 local cyborg_progress = {}
 
 local birthControl_pool = {
-    8, --Brother Bobby
-    67, --Sister Maggy
-    88, --Little Chubby
-    95, --Robo-Baby
-    96, --Little C.H.A.D.
-    100, --Little Steven
-    112, --Guardian Angel
-    113, --Demon Baby
-    117, --Dead Bird
-    144, --Bum Friend
-    163, --Ghost Baby
-    167, --Harlequin Baby
-    174, --Rainbow Baby
-    188, --Abel
-    265, --Dry Baby
-    267, --Robo-Baby 2.0
-    268, --Rotten Baby
-    269, --Headless Baby
-    275, --Lil' Brimstone
-    277, --Lil' Haunt
-    278, --Dark Bum
-    281, --Punching Bag
-    322, --Mongo Baby
-    360, --Incubus
-    363, --Sworn Protector
-    361, --Fate's Reward
-    372, --Charged Baby
-    385, --Bumbo
-    384, --Lil Gurdy
-    388, --Key Bum
-    390, --Seraphim
-    404, --Farting Baby
-    417, --Succubus
-    435, --Lil Loki
-    470, --Hushy
-    471, --Lil Monstro
-    472, --King Baby
-    473, --Big Chubby
-    491  --Acid Baby
+    CollectibleType.COLLECTIBLE_BROTHER_BOBBY,
+    CollectibleType.COLLECTIBLE_SISTER_MAGGY,
+    CollectibleType.COLLECTIBLE_LITTLE_CHUBBY,
+    CollectibleType.COLLECTIBLE_ROBO_BABY,
+    CollectibleType.COLLECTIBLE_LITTLE_CHAD,
+    CollectibleType.COLLECTIBLE_LITTLE_STEVEN,
+    CollectibleType.COLLECTIBLE_GUARDIAN_ANGEL,
+    CollectibleType.COLLECTIBLE_DEMON_BABY,
+    CollectibleType.COLLECTIBLE_DEAD_BIRD,
+    CollectibleType.COLLECTIBLE_BUM_FRIEND,
+    CollectibleType.COLLECTIBLE_GHOST_BABY,
+    CollectibleType.COLLECTIBLE_HARLEQUIN_BABY,
+    CollectibleType.COLLECTIBLE_RAINBOW_BABY,
+    CollectibleType.COLLECTIBLE_ABEL,
+    CollectibleType.COLLECTIBLE_DRY_BABY,
+    CollectibleType.COLLECTIBLE_ROBO_BABY_2,
+    CollectibleType.COLLECTIBLE_ROTTEN_BABY,
+    CollectibleType.COLLECTIBLE_HEADLESS_BABY,
+    CollectibleType.COLLECTIBLE_LIL_BRIMSTONE,
+    CollectibleType.COLLECTIBLE_LIL_HAUNT,
+    CollectibleType.COLLECTIBLE_DARK_BUM,
+    CollectibleType.COLLECTIBLE_PUNCHING_BAG,
+    CollectibleType.COLLECTIBLE_MONGO_BABY,
+    CollectibleType.COLLECTIBLE_INCUBUS,
+    CollectibleType.COLLECTIBLE_SWORN_PROTECTOR,
+    CollectibleType.COLLECTIBLE_FATES_REWARD,
+    CollectibleType.COLLECTIBLE_CHARGED_BABY,
+    CollectibleType.COLLECTIBLE_BUMBO,
+    CollectibleType.COLLECTIBLE_LIL_GURDY,
+    CollectibleType.COLLECTIBLE_KEY_BUM,
+    CollectibleType.COLLECTIBLE_SERAPHIM,
+    CollectibleType.COLLECTIBLE_FARTING_BABY,
+    CollectibleType.COLLECTIBLE_SUCCUBUS,
+    CollectibleType.COLLECTIBLE_LIL_LOKI,
+    CollectibleType.COLLECTIBLE_HUSHY,
+    CollectibleType.COLLECTIBLE_LIL_MONSTRO,
+    CollectibleType.COLLECTIBLE_KING_BABY,
+    CollectibleType.COLLECTIBLE_BIG_CHUBBY,
+    CollectibleType.COLLECTIBLE_ACID_BABY
 }
 
 -------------------------------------------------------------------------------
@@ -447,7 +448,7 @@ local function handleTechAlpha(player)
         if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
             roll_max = roll_max * 2
         end
-        
+
         if entity.Type == EntityType.ENTITY_TEAR then
             entity_will_shoot = true
         elseif entity.Type == EntityType.ENTITY_BOMBDROP then
@@ -465,7 +466,7 @@ local function handleTechAlpha(player)
                 entity_will_shoot = true
             end
         end
-        
+
         if entity_will_shoot then
             local laser_roll = math.random(1,roll_max)
             if laser_roll == 1 then
@@ -483,7 +484,7 @@ local function handleTechAlpha(player)
                         end
                     end
                 end
-                
+
                 if closest_enemy then
                     direction_vector = closest_enemy.Position - entity.Position
                     direction_vector = direction_vector:Normalized() * (player.ShotSpeed * 13)
@@ -637,6 +638,7 @@ end
 local function applyBirthControlCache (pl, fl)
     local player = Isaac.GetPlayer(0)
     if player:HasCollectible(PASSIVE_BIRTH_CONTROL) then
+        player:AddNullCostume(BIRTH_CONTROL_COSTUME)
         if fl == CacheFlag.CACHE_DAMAGE then
             player.Damage = player.Damage + birthControlStats.Damage
         end
@@ -913,7 +915,7 @@ function Alphabirth:modUpdate()
 
     activeCharge = charge
     handleAimbot()
-    
+
     if player:HasCollectible(PASSIVE_TECH_ALPHA) then
         handleTechAlpha(player)
     end
@@ -934,7 +936,7 @@ function Alphabirth:modUpdate()
             end
         end
     end
-                    
+
     -- Spawn items in starting room
     if starting_room_enabled then
         if frame == 1 then
