@@ -538,6 +538,7 @@ end
 ---------------------------------------
 
 local birthControlStats = {
+    HP = 0,
     Damage = 0,
     MoveSpeed = 0,
     ShotSpeed = 0,
