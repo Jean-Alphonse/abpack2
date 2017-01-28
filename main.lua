@@ -125,6 +125,7 @@ local PASSIVE_HEMOPHILIA = Isaac.GetItemIdByName("Hemophilia")
 local PASSIVE_GLOOM_SKULL = Isaac.GetItemIdByName("Gloom Skull")
 local PASSIVE_AIMBOT = Isaac.GetItemIdByName("Aimbot")
 local PASSIVE_BLOODERFLY = Isaac.GetItemIdByName("Blooderfly")
+local PASSIVE_TECH_ALPHA = Isaac.GetItemIdByName("Tech Alpha")
 local PASSIVE_BIRTH_CONTROL = Isaac.GetItemIdByName("Birth Control")
 
 ---------------------------------------
@@ -431,6 +432,67 @@ local function handleCrackedRockSpawnChance()
                     PickupVariant.PICKUP_COLLECTIBLE,
                     PASSIVE_CRACKED_ROCK,
                     false)
+            end
+        end
+    end
+end
+
+---------------------------------------
+-- Tech Alpha Logic
+---------------------------------------
+local function handleTechAlpha(player)
+    for _, entity in ipairs(Isaac.GetRoomEntities()) do
+        local entity_will_shoot = nil
+        local roll_max = 30
+        if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
+            roll_max = roll_max * 2
+        end
+        
+        if entity.Type == EntityType.ENTITY_TEAR then
+            entity_will_shoot = true
+        elseif entity.Type == EntityType.ENTITY_BOMBDROP then
+            if player:HasCollectible(CollectibleType.COLLECTIBLE_DR_FETUS) then
+                if entity:ToBomb().IsFetus then
+                    entity_will_shoot = true
+                end
+            end
+        elseif entity.Type == EntityType.ENTITY_KNIFE then
+            if entity:ToKnife().IsFlying then
+                entity_will_shoot = true
+            end
+        elseif entity.Type == EntityType.ENTITY_LASER then
+            if entity:ToLaser():IsCircleLaser() then
+                entity_will_shoot = true
+            end
+        end
+        
+        if entity_will_shoot then
+            local laser_roll = math.random(1,roll_max)
+            if laser_roll == 1 then
+                local closest_enemy = nil
+                local previous_distance = nil
+                for _, enemy in ipairs(Isaac.GetRoomEntities()) do
+                    if enemy:IsActiveEnemy(false) and enemy:IsVulnerableEnemy() then
+                        local distance_to_enemy = entity.Position:Distance(enemy.Position)
+                        if not previous_distance then
+                            closest_enemy = enemy
+                            previous_distance = distance_to_enemy
+                        elseif distance_to_enemy  < previous_distance then
+                            closest_enemy = enemy
+                            previous_distance = distance_to_enemy
+                        end
+                    end
+                end
+                
+                if closest_enemy then
+                    direction_vector = closest_enemy.Position - entity.Position
+                    direction_vector = direction_vector:Normalized() * (player.ShotSpeed * 13)
+                    if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
+                        player:FireTechXLaser(entity.Position, direction_vector, 30)
+                    else
+                        player:FireTechLaser(entity.Position, 0, direction_vector, false, false)
+                    end
+                end
             end
         end
     end
@@ -788,6 +850,10 @@ function Alphabirth:modUpdate()
 
     activeCharge = charge
     handleAimbot()
+    
+    if player:HasCollectible(PASSIVE_TECH_ALPHA) then
+        handleTechAlpha(player)
+    end
 
     if Game():GetFrameCount() % 10 == 0 then
         birthControlUpdate()
@@ -805,14 +871,14 @@ function Alphabirth:modUpdate()
             end
         end
     end
-
+                    
     -- Spawn items in starting room
     if starting_room_enabled then
         if frame == 1 then
             local new_items = {
                     ACTIVE_CAULDRON, ACTIVE_BIONIC_ARM, ACTIVE_MIRROR, ACTIVE_SURGEON_SIMULATOR,
                     ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
-                    PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_BIRTH_CONTROL
+                    PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL
             }
             local row = 31
             for i, item in ipairs(new_items) do
