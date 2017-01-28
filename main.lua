@@ -528,7 +528,7 @@ local function handleVoidTears()
                 local entity2_npc = entity2:ToNPC()
                 if entity2_npc then
                     if entity2:IsActiveEnemy(false) and entity2:IsVulnerableEnemy() and not entity2_npc:IsBoss() then
-                        if entity2.Position:Distance(entity.Position) < 180 then
+                        if entity2.Position:Distance(entity.Position) < 120 then
                             local direction_vector = entity.Position - entity2.Position
                             direction_vector = direction_vector:Normalized() * 2
                             entity2.Velocity = entity2.Velocity + direction_vector
@@ -537,7 +537,7 @@ local function handleVoidTears()
                 end
             end
             
-            lose_flag_roll = math.random(1,500)
+            lose_flag_roll = math.random(1,300)
             if lose_flag_roll == 1 then
                 entity:ClearEntityFlags(FLAG_VOID)
                 entity:ClearEntityFlags(EntityFlag.FLAG_FREEZE)
