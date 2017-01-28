@@ -420,7 +420,7 @@ end
 
 function Alphabirth:triggerBloodDrive()
     local player = Isaac.GetPlayer(0)
-    if player:GetHearts() > 2 and bloodDriveTimesUsed < 7 then
+    if player:GetHearts() > 2 and bloodDriveTimesUsed < 6 then
         bloodDriveTimesUsed = bloodDriveTimesUsed + 1
         Game():Darken(1, 8)
         player:AnimateSad()
