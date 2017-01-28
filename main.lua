@@ -607,10 +607,13 @@ function Alphabirth:modUpdate()
                     local previous_distance = nil
                     for _, enemy in ipairs(Isaac.GetRoomEntities()) do
                         if enemy:IsActiveEnemy(false) and enemy:IsVulnerableEnemy() then
+                            local distance_to_enemy = entity.Position:Distance(enemy.Position)
                             if not previous_distance then
                                 closest_enemy = enemy
-                            elseif Vector:Distance(entity.Position, enemy.Position) < previous_distance then
+                                previous_distance = distance_to_enemy
+                            elseif distance_to_enemy  < previous_distance then
                                 closest_enemy = enemy
+                                previous_distance = distance_to_enemy
                             end
                         end
                     end
