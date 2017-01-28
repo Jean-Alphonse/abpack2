@@ -18,6 +18,8 @@ local CRACKED_ROCK_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/a
 local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_gloomskull.anm2")
 local AIMBOT_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_aimbot.anm2")
 local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_transformation_cyborg.anm2")
+local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hemophilia.anm2")
+
 ---------------------------------------
 -- Entity Flag Declaration
 ---------------------------------------
@@ -29,11 +31,37 @@ EntityFlag.FLAG_BLOODERFLY_TARGET = 1 << 37
 -- Curse Declaration
 ---------------------------------------
 -- use CURSE_YOUR_CURSE = 1 << CurseID
+local CURSE_OF_THE_LONELY = 1 << (Isaac.GetCurseIdByName("Curse of the Lonely") - 1)
+
+local function evalCurses(curse_flags)
+    if curse_flags then
+        local curse_roll = math.random(1, 7)
+        if curse_roll == 7 then
+            return CURSE_OF_THE_LONELY
+        else
+            --return curse_flags
+        end
+    end
+end
+
+local function triggerCurses(player)
+    local game = Game()
+    local level = game:GetLevel()
+    if level:GetCurses() & CURSE_OF_THE_LONELY == CURSE_OF_THE_LONELY then
+        for _,ent in ipairs(Isaac.GetRoomEntities()) do
+            if ent.Type == EntityType.ENTITY_PICKUP and ent.Variant ~= 100 and player.Position:Distance(ent.Position) <= 35 then
+                ent.Velocity = Vector((ent.Position.X - player.Position.X)/4, (ent.Position.Y - player.Position.Y)/4)
+            end
+        end
+    end
+end
+
+Alphabirth:AddCallback(ModCallbacks.MC_POST_CURSE_EVAL, evalCurses)
 
 ---------------------------------------
 -- Functions
 ---------------------------------------
-function findClosestEnemy(entity)
+local function findClosestEnemy(entity)
     local entities = Isaac.GetRoomEntities()
     local maxDistance = 999999
     local closestEntity
@@ -54,6 +82,28 @@ local function contains(table, value)
     end
 
     return false
+end
+
+local function chooseRandomTarget()
+    local entities = Isaac.GetRoomEntities()
+    local valid_entities = {}
+
+    for _, entity in ipairs(entities) do
+        if entity:IsVulnerableEnemy() and entity:IsActiveEnemy() and entity.Type ~= 306 then
+            if entity:ToNPC() then
+                valid_entities[#valid_entities + 1] = entity
+            end
+        end
+    end
+
+    if #valid_entities > 0 then
+        local index = 1
+        if #valid_entities > 1 then
+            index = math.random(#valid_entities)
+        end
+        return valid_entities[index]
+    end
+    return nil
 end
 
 ---------------------------------------
@@ -280,7 +330,7 @@ local tears = {}
 
 function Alphabirth:triggerHemophilia(dmg_target, dmg_amount, dmg_source, dmg_flags)
     local player = Isaac.GetPlayer(0)
-    if dmg_target:IsActiveEnemy() and dmg_target.HitPoints <= dmg_amount and player:HasCollectible(PASSIVE_HEMOPHILIA) and math.random(1,6) == 1 then
+    if dmg_target:IsActiveEnemy() and dmg_target.HitPoints <= dmg_amount and player:HasCollectible(PASSIVE_HEMOPHILIA) and math.random(1,3) == 1 then
         Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.PLAYER_CREEP_RED,0,dmg_target.Position,Vector(0, 0),player)
         Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.LARGE_BLOOD_EXPLOSION,0,dmg_target.Position,Vector(0, 0),player)
         for i=1, numberOfTears do
@@ -297,23 +347,32 @@ function Alphabirth:triggerHemophilia(dmg_target, dmg_amount, dmg_source, dmg_fl
     end
 end
 
+local function applyHemophiliaCache(pl, fl)
+    if pl:HasCollectible(PASSIVE_HEMOPHILIA) and fl == CacheFlag.CACHE_TEARCOLOR then
+        pl:AddNullCostume(HEMOPHILIA_COSTUME)
+        pl.TearColor = Color(0.6,0,0,1,0,0,0)
+    end
+end
+
+
 ---------------------------------------
 -- Gloom Skull Logic
 ---------------------------------------
+
+local didMax = false
+
+local function maxOutDevilDeal()
+    didMax = true
+end
 
 local function applyGloomSkullCache(player, cache_flag)
     if cache_flag == CacheFlag.CACHE_DAMAGE and player:HasCollectible(PASSIVE_GLOOM_SKULL) then
         player.Damage = player.Damage + 1.5
         Game():GetLevel():AddCurse(Isaac.GetCurseIdByName("Curse of Darkness"), false)
-        maxOutDevilDeal()
-        player:AddNullCostume(GLOOM_SKULL_COSTUME)
-        Game():AddDevilRoomDeal()
-    end
-end
-local didMax = false
 
-local function maxOutDevilDeal()
-    didMax = true
+        player:AddNullCostume(GLOOM_SKULL_COSTUME)
+        maxOutDevilDeal()
+    end
 end
 
 ---------------------------------------
@@ -369,76 +428,82 @@ end
 -- Blooderfly Logic
 ---------------------------------------
 function Alphabirth:onBlooderflyInit(_,familiar)
-    if familiar == nil then
-        Isaac.DebugString("NIL FAMILIAR")
-    else
-        Isaac.DebugString("Blooderfly Spawned")
+    if blooderfly == nil then
+        Isaac.DebugString("PROBLEM SPAWNING BLOODERFLY")
     end
 end
 
 local blooderfly
-local target_entity
-local has_target
-function Alphabirth:blooderflyUpdate(_,_)
+local blooderfly_target = nil
+local in_range = false
+function Alphabirth:blooderflyUpdate(_,familiar)
     local player = Isaac.GetPlayer(0)
 
-    if player:HasCollectible(PASSIVE_BLOODERFLY) then
-        local entities = Isaac.GetRoomEntities();
-        local valid_entities = {}
-        local has_target = false
+    if blooderfly_target == nil then
+        blooderfly:FollowPosition(player.Position)
+        blooderfly_target = chooseRandomTarget()
+    else
+        local dir = blooderfly_target.Position:__sub(blooderfly.Position)
+        local hyp = math.sqrt(dir.X * dir.X + dir.Y * dir.Y)
+        dir.X = dir.X / hyp
+        dir.Y = dir.Y / hyp
+        local pos = Vector(0,0)
+        pos.X = blooderfly.Position.X + dir.X * 44
+        pos.Y = blooderfly.Position.Y + dir.Y * 55
 
-        for _, entity in ipairs(entities) do
-            if entity:IsVulnerableEnemy() and entity:IsActiveEnemy(false) then
-                if entity:HasEntityFlags(EntityFlag.FLAG_BLOODERFLY_TARGET) then
-                    has_target = true
-                end
-
-                local enemy = entity:ToNPC()
-                if enemy then
-                    valid_entities[#valid_entities + 1] = entity
-                end
-            end
-        end
-
-        if #valid_entities > 0 and has_target == false then
-            local target_entity_index = 1
-            if #valid_entities > 1 then
-                target_entity_index = math.random(#valid_entities)
-            end
-            target_entity = valid_entities[target_entity_index]
-            target_entity:AddEntityFlags(EntityFlag.FLAG_BLOODERFLY_TARGET)
-        end
-
-        if Game():GetRoom():IsClear() then
-            blooderfly:FollowPosition(player.Position)
+        if blooderfly_target.Position:Distance(blooderfly.Position) < 25 then
+            in_range = true
+            blooderfly:FollowPosition(blooderfly_target.Position)
         else
-            blooderfly:FollowPosition(target_entity.Position)
+            blooderfly:FollowPosition(pos)
+        end
+        if blooderfly_target:IsDead() then
+            blooderfly_target = nil
+
+            if in_range then
+                --Hemophilia Effect
+                local tears = {}
+                for i = 1, 3 do
+                    tears[i] = player:FireTear(blooderfly.Position,
+                        Vector(math.random(-4, 4),
+                            math.random(-4, 4)),
+                        false,
+                        false,
+                        true
+                    )
+
+                    tears[i]:ChangeVariant(1)
+                    tears[i].TearFlags = 0
+                    tears[i].Scale = 1
+                    tears[i].Height = -30
+                    tears[i].FallingSpeed = -4 + math.random()*-4
+                    tears[i].FallingAcceleration = math.random() + 0.5
+                end
+                Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.PLAYER_CREEP_RED,0,blooderfly.Position,Vector(0, 0),player)
+                Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.LARGE_BLOOD_EXPLOSION,0,blooderfly.Position,Vector(0, 0),player)
+                tears = {}
+                in_range = false
+            end
+
+            if(math.random(8) == 1) then
+                Isaac.Spawn(
+                    EntityType.ENTITY_PICKUP,
+                    PickupVariant.PICKUP_HEART,
+                    1,
+                    blooderfly.Position,
+                    blooderfly.Velocity,
+                    blooderfly
+                )
+            end
         end
     end
 end
 
-function Alphabirth:triggerBlooderfly(entity, damage_amount, damage_source, damage_flags)
-    local player = Isaac.GetPlayer(0)
-    if entity:IsActiveEnemy() and entity.HitPoints <= damage_amount * 1.2 and entity:HasEntityFlags(EntityFlag.FLAG_BLOODERFLY_TARGET) then
-        for i=1, 3 do
-            local tear = player:FireTear(entity.Position, Vector(math.random(-4, 4),math.random(-4, 4)), false, false, true)
-            tear:ChangeVariant(1)
-            tear.TearFlags = 0
-            tear.Scale = 1
-            tear.Height = -60
-            tear.FallingSpeed = -4 + math.random()*-4
-            tear.FallingAcceleration = math.random() + 0.5
-        end
-        Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.PLAYER_CREEP_RED,0,entity.Position,Vector(0, 0),player)
-    end
-    if entity:IsActiveEnemy() and entity:HasEntityFlags(EntityFlag.FLAG_BLOODERFLY_TARGET) then
-        entity.HitPoints = entity.HitPoints - damage_amount * 0.2
-    end
-end
-
+local blooderfly_exists = false
 local function applyBlooderflyCache(player, cache_flag)
-    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_BLOODERFLY) then
+    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_BLOODERFLY) and blooderfly_exists == false then
         blooderfly = Isaac.Spawn(EntityType.ENTITY_FAMILIAR, ENTITY_VARIANT_BLOODERFLY, 0, player.Position, Vector(0,0), player):ToFamiliar()
+        blooderfly_exists = true
     end
 end
 
@@ -454,11 +519,12 @@ function Alphabirth:modUpdate()
     local game = Game()
     local room = game:GetRoom()
     local frame = game:GetFrameCount()
-    
+
     if not player:HasCollectible(PASSIVE_CRACKED_ROCK) then
         handleCrackedRockSpawnChance()
     end
-    
+    triggerCurses(player)
+
     -- Reset variables each run
     if frame == 1 then
         cauldron_points = 0
@@ -466,12 +532,12 @@ function Alphabirth:modUpdate()
         hasCyborg = false
         cyborg_progress = {}
     end
-    
+
     -- Max Deal with the Devil chance
     if didMax == true and Game():GetRoom():GetFrameCount() == 1 then
         Isaac.GetPlayer(0):GetEffects():AddCollectibleEffect(CollectibleType.COLLECTIBLE_GOAT_HEAD, false)
     end
-    
+
 	for _, entity in ipairs(Isaac.GetRoomEntities()) do
 		if entity.Type == EntityType.ENTITY_PICKUP and
                 entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and
@@ -510,18 +576,18 @@ function Alphabirth:modUpdate()
         player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
         player:EvaluateItems()
     end
-    
+
     --Cyborg Extra Logic
     if hasCyborg and charge ~= activeCharge then
         player:AddCacheFlags(CacheFlag.CACHE_ALL)
         player:EvaluateItems()
     end
-    
+
     activeCharge = charge
     handleAimbot()
     if hasCyborg then
         local room = Game():GetRoom()
-        if room:GetFrameCount() == 1 and room:IsFirstVisit() then
+        if room:GetFrameCount() == 1 and room:IsFirstVisit() and room:IsAmbushActive() == true then
             canDrop = true
         end
         if canDrop and room:IsFirstVisit() and room:IsAmbushActive() == false then
@@ -630,10 +696,11 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyCrackedRockCache(player, cache_flag)
     applyAimbotCache(player, cache_flag)
     applyBlooderflyCache(player, cache_flag)
+    applyHemophiliaCache(player, cache_flag)
 
     local charge = player:GetActiveCharge()
     if player:HasCollectible(ACTIVE_BIONIC_ARM) and cache_flag == CacheFlag.CACHE_DAMAGE then
-        player.Damage = player.Damage + (charge/4)
+        player.Damage = player.Damage + (charge/6)
     end
     applyCyborgCache(player, cache_flag)
 end
