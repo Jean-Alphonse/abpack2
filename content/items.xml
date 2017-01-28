@@ -9,6 +9,7 @@
     <passive gfx="collectible_hemophilia.png" cache="tearcolor" name="Hemophilia" description="What a bloody mess..." />
     <passive gfx="collectible_gloomskull.png" cache="damage" name="Gloom Skull" description="Damage up + Evil Up + You Feel Scared" />
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Tech Alpha" />
+    <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Void Tears" />
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Aimbot" description = "H4x Sh0t"/>
     <passive gfx="collectible_birthcontrol.png" cache="all" name="Birth Control" />
 

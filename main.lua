@@ -24,6 +24,7 @@ local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/acc
 -- Entity Flag Declaration
 ---------------------------------------
 -- use FLAG_YOUR_FLAG = 1 << FlagID
+local FLAG_VOID = 1 << 37
 
 ---------------------------------------
 -- Curse Declaration
@@ -126,6 +127,7 @@ local PASSIVE_BLOODERFLY = Isaac.GetItemIdByName("Blooderfly")
 local PASSIVE_TECH_ALPHA = Isaac.GetItemIdByName("Tech Alpha")
 local PASSIVE_BIRTH_CONTROL = Isaac.GetItemIdByName("Birth Control")
 local PASSIVE_SPIRIT_EYE = Isaac.GetItemIdByName("Spirit Eye")
+local PASSIVE_VOID_TEARS = Isaac.GetItemIdByName("Void Tears")
 
 ---------------------------------------
 -- Entity Variant Declaration
@@ -485,7 +487,7 @@ local function handleTechAlpha(player)
                 end
                 
                 if closest_enemy then
-                    direction_vector = closest_enemy.Position - entity.Position
+                    local direction_vector = closest_enemy.Position - entity.Position
                     direction_vector = direction_vector:Normalized() * (player.ShotSpeed * 13)
                     if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
                         player:FireTechXLaser(entity.Position, direction_vector, 30)
@@ -493,6 +495,52 @@ local function handleTechAlpha(player)
                         player:FireTechLaser(entity.Position, 0, direction_vector, false, false)
                     end
                 end
+            end
+        end
+    end
+end
+
+---------------------------------------
+-- Void Tear Logic
+---------------------------------------
+function Alphabirth:triggerVoidTears(damaged_entity, damage_amount, damage_flag, damage_source, invincible_frames)
+    local player = Isaac.GetPlayer(0)
+    if player:HasCollectible(PASSIVE_VOID_TEARS) then
+        local damaged_npc = damaged_entity:ToNPC()
+        if damaged_npc then
+            if damaged_entity:IsActiveEnemy(false) and damaged_entity:IsVulnerableEnemy() and not damaged_npc:IsBoss() then
+                local apply_void_roll = math.random(1,8)
+                if apply_void_roll == 1 then
+                    damaged_entity:AddEntityFlags(FLAG_VOID)
+                    damaged_entity:AddEntityFlags(EntityFlag.FLAG_FREEZE)
+                end
+            end
+        end
+    end
+end
+
+local function handleVoidTears()
+    for _, entity in ipairs(Isaac.GetRoomEntities()) do
+        if entity:HasEntityFlags(FLAG_VOID) then
+            entity.Friction = 0
+            entity.Velocity = Vector(0,0)
+            for _, entity2 in ipairs(Isaac.GetRoomEntities()) do
+                local entity2_npc = entity2:ToNPC()
+                if entity2_npc then
+                    if entity2:IsActiveEnemy(false) and entity2:IsVulnerableEnemy() and not entity2_npc:IsBoss() then
+                        if entity2.Position:Distance(entity.Position) < 180 then
+                            local direction_vector = entity.Position - entity2.Position
+                            direction_vector = direction_vector:Normalized() * 2
+                            entity2.Velocity = entity2.Velocity + direction_vector
+                        end
+                    end
+                end
+            end
+            
+            lose_flag_roll = math.random(1,500)
+            if lose_flag_roll == 1 then
+                entity:ClearEntityFlags(FLAG_VOID)
+                entity:ClearEntityFlags(EntityFlag.FLAG_FREEZE)
             end
         end
     end
@@ -850,6 +898,7 @@ function Alphabirth:modUpdate()
         cauldron_points = 0
         didMax = false
         hasCyborg = false
+        spirit_eye_exists = false
         cyborg_progress = {}
         birthControlStats = {
             HP = 0,
@@ -916,6 +965,10 @@ function Alphabirth:modUpdate()
     
     if player:HasCollectible(PASSIVE_TECH_ALPHA) then
         handleTechAlpha(player)
+    end
+    
+    if player:HasCollectible(PASSIVE_VOID_TEARS) then
+        handleVoidTears()
     end
 
     if Game():GetFrameCount() % 10 == 0 then
@@ -1040,6 +1093,7 @@ Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerAlastorsCandl
 -------------------
 Alphabirth:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerCrackedRockEffect)
 Alphabirth:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHemophilia)
+Alphabirth:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerVoidTears)
 
 -------------------
 -- Entity Handling
