@@ -432,7 +432,7 @@ end
 function Alphabirth:triggerBloodDrive()
     local player = Isaac.GetPlayer(0)
     local total_hearts = player:GetHearts() + player:GetSoulHearts()
-    if total_hearts > 2 and bloodDriveTimesUsed < 13 and player:GetPlayerType ~= PlayerType.PLAYER_XXX then
+    if total_hearts > 2 and bloodDriveTimesUsed < 13 and player:GetPlayerType() ~= PlayerType.PLAYER_XXX then
         bloodDriveTimesUsed = bloodDriveTimesUsed + 1
         player:TakeDamage(2, 0, EntityRef(player), 0)
         player:AddMaxHearts(2)
