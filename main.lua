@@ -397,6 +397,10 @@ local function handleBloodDrive()
     local currentRoom = Game():GetRoom()
     local player = Isaac.GetPlayer(0)
     if bloodDriveTimesUsed > 0 then
+        if player:GetMaxHearts() < bloodDriveTimesUsed * 2 then
+            player:AddMaxHearts(bloodDriveTimesUsed * 2 - player:GetMaxHearts())
+        end
+        
         if player:GetHearts() > player:GetMaxHearts() - (bloodDriveTimesUsed*2) then
             if player:GetHearts() % 2 == 0 then
                 player:AddHearts(-2)
@@ -420,8 +424,10 @@ end
 
 function Alphabirth:triggerBloodDrive()
     local player = Isaac.GetPlayer(0)
-    if player:GetHearts() > 2 and bloodDriveTimesUsed < 6 then
+    if player:GetHearts() > 2 and bloodDriveTimesUsed < 13 then
         bloodDriveTimesUsed = bloodDriveTimesUsed + 1
+        player:TakeDamage(2, 0, EntityRef(player), 0)
+        player:AddMaxHearts(2)
         Game():Darken(1, 8)
         player:AnimateSad()
     end
