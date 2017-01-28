@@ -114,6 +114,7 @@ local ACTIVE_MIRROR = Isaac.GetItemIdByName("Mirror")
 local ACTIVE_CAULDRON = Isaac.GetItemIdByName("Cauldron")
 local ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
 local ACTIVE_BIONIC_ARM = Isaac.GetItemIdByName("Bionic Arm")
+local ACTIVE_ALASTORS_CANDLE = Isaac.GetItemIdByName("Alastor's Candle")
 
 ---------------------------------------
 -- Passive Declaration
@@ -125,6 +126,7 @@ local PASSIVE_GLOOM_SKULL = Isaac.GetItemIdByName("Gloom Skull")
 local PASSIVE_AIMBOT = Isaac.GetItemIdByName("Aimbot")
 local PASSIVE_BLOODERFLY = Isaac.GetItemIdByName("Blooderfly")
 local PASSIVE_TECH_ALPHA = Isaac.GetItemIdByName("Tech Alpha")
+local PASSIVE_BIRTH_CONTROL = Isaac.GetItemIdByName("Birth Control")
 
 ---------------------------------------
 -- Entity Variant Declaration
@@ -150,6 +152,48 @@ local cyborg_pool = {
 }
 
 local cyborg_progress = {}
+
+local birthControl_pool = {
+    8, --Brother Bobby
+    67, --Sister Maggy
+    88, --Little Chubby
+    95, --Robo-Baby
+    96, --Little C.H.A.D.
+    100, --Little Steven
+    112, --Guardian Angel
+    113, --Demon Baby
+    117, --Dead Bird
+    144, --Bum Friend
+    163, --Ghost Baby
+    167, --Harlequin Baby
+    174, --Rainbow Baby
+    188, --Abel
+    265, --Dry Baby
+    267, --Robo-Baby 2.0
+    268, --Rotten Baby
+    269, --Headless Baby
+    275, --Lil' Brimstone
+    277, --Lil' Haunt
+    278, --Dark Bum
+    281, --Punching Bag
+    322, --Mongo Baby
+    360, --Incubus
+    363, --Sworn Protector
+    361, --Fate's Reward
+    372, --Charged Baby
+    385, --Bumbo
+    384, --Lil Gurdy
+    388, --Key Bum
+    390, --Seraphim
+    404, --Farting Baby
+    417, --Succubus
+    435, --Lil Loki
+    470, --Hushy
+    471, --Lil Monstro
+    472, --King Baby
+    473, --Big Chubby
+    491  --Acid Baby
+}
 
 -------------------------------------------------------------------------------
 ---- ACTIVE ITEM LOGIC
@@ -268,6 +312,79 @@ function Alphabirth:triggerBionicArm()
         end
     end
 end
+
+----------------------------------------
+-- Alastor's Candle Logic
+----------------------------------------
+local flames = {}
+local number_of_fires = 2
+local flames_exist = false
+function Alphabirth:triggerAlastorsCandle()
+    local player = Isaac.GetPlayer(0)
+    --Remove previous flames (if any)
+    if flames_exist then
+        for i=1, number_of_fires do
+            flames[i]:Die()
+            Isaac.Spawn(
+                EntityType.ENTITY_EFFECT,
+                EffectVariant.POOF01,
+                0,            -- Entity Subtype
+                flames[i].Position,
+                Vector(0, 0), -- Velocity
+                nil
+            )
+        end
+    end
+    --Spawn two flames
+    for i=1, number_of_fires do
+        flames[i] = Isaac.Spawn(
+            3,
+            239,
+            0,
+            player.Position,
+            Vector(0,0),
+            player
+        )
+    end
+    flames_exist = true
+    return true
+end
+
+local distance = 100
+local modifier
+local function handleAlastorsCandleFlames()
+    local player = Isaac.GetPlayer(0)
+    --Spin the flames
+    if distance == 100 then
+        modifier = 1
+    end
+    if distance == 30 then
+        modifier = -1
+    end
+
+    for i=1, number_of_fires do
+        if(i % 2 == 0) then
+            local x_velocity = math.cos((Game():GetFrameCount()/10)+math.pi)*distance
+            local y_velocity = math.sin((Game():GetFrameCount()/10)+math.pi)*distance
+            flames[i].Position = Vector(player.Position.X + x_velocity, player.Position.Y + y_velocity)
+        else
+            local x_velocity = math.cos(Game():GetFrameCount()/10)*distance
+            local y_velocity = math.sin(Game():GetFrameCount()/10)*distance
+            flames[i].Position = Vector(player.Position.X + x_velocity, player.Position.Y + y_velocity)
+        end
+    end
+
+    distance = distance - modifier
+    for i=1, number_of_fires do
+        --Add Fear to Close Entitie
+        for _, entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity:IsVulnerableEnemy() and entity.Position:Distance(flames[i].Position) < 55 and math.random(20) == 1 then
+                entity:AddFear(EntityRef(flames[i]), 60)
+            end
+        end
+    end
+end
+
 
 -------------------------------------------------------------------------------
 ---- PASSIVE ITEM LOGIC
@@ -417,6 +534,65 @@ function applyAimbotCache(p, f)
     end
 end
 
+---------------------------------------
+-- Birth Control Logic
+---------------------------------------
+
+local birthControlStats = {
+    Damage = 0,
+    MoveSpeed = 0,
+    ShotSpeed = 0,
+    Luck = 0,
+    Range = 0
+}
+
+local function birthControlUpdate()
+    local player = Isaac.GetPlayer(0)
+    for _,item in ipairs(birthControl_pool) do
+        if player:HasCollectible(item) and player:HasCollectible(PASSIVE_BIRTH_CONTROL) then
+            player:RemoveCollectible(item)
+            local roll = math.random(1,6)
+            if roll == 1 then
+                birthControlStats.Damage = birthControlStats.Damage + (math.random(2, 8) /10)
+            elseif roll == 2 then
+                birthControlStats.MoveSpeed = birthControlStats.MoveSpeed + (math.random(1, 3) /10)
+            elseif roll == 3 then
+                birthControlStats.ShotSpeed = birthControlStats.ShotSpeed + (math.random(1, 3) /10)
+            elseif roll == 4 then
+                birthControlStats.Luck = birthControlStats.Luck + (math.random(10, 20) /10)
+            elseif roll == 5 then
+                birthControlStats.Range = birthControlStats.Range + (math.random(5, 10) /10)
+            elseif roll == 6 then
+                birthControlStats.HP = birthControlStats.HP + 2
+                player:AddMaxHearts(2, true)
+            end
+            player:AddCacheFlags(CacheFlag.CACHE_ALL)
+            player:EvaluateItems()
+        end
+    end
+end
+
+local function applyBirthControlCache (pl, fl)
+    local player = Isaac.GetPlayer(0)
+    if player:HasCollectible(PASSIVE_BIRTH_CONTROL) then
+        if fl == CacheFlag.CACHE_DAMAGE then
+            player.Damage = player.Damage + birthControlStats.Damage
+        end
+        if fl == CacheFlag.CACHE_SPEED then
+            player.MoveSpeed = player.MoveSpeed + birthControlStats.MoveSpeed
+        end
+        if fl == CacheFlag.CACHE_SHOTSPEED then
+            player.ShotSpeed = player.ShotSpeed + birthControlStats.ShotSpeed
+        end
+        if fl == CacheFlag.CACHE_LUCK then
+            player.Luck = player.Luck + birthControlStats.Luck
+        end
+        if fl == CacheFlag.CACHE_RANGE then
+            player.TearFallingSpeed = player.TearFallingSpeed + birthControlStats.Range
+        end
+    end
+end
+
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
 -------------------------------------------------------------------------------
@@ -520,6 +696,25 @@ function Alphabirth:modUpdate()
     local room = game:GetRoom()
     local frame = game:GetFrameCount()
 
+    --Additional Alastor's Candle Logic
+    if player:HasCollectible(ACTIVE_ALASTORS_CANDLE) and flames_exist then
+        handleAlastorsCandleFlames()
+        if room:GetFrameCount() == 1 then
+            for i=1, number_of_fires do
+                flames[i]:Die()
+                Isaac.Spawn(
+                    EntityType.ENTITY_EFFECT,
+                    EffectVariant.POOF01,
+                    0,            -- Entity Subtype
+                    flames[i].Position,
+                    Vector(0, 0), -- Velocity
+                    nil
+                )
+            end
+            flames_exist = false
+        end
+    end
+
     if not player:HasCollectible(PASSIVE_CRACKED_ROCK) then
         handleCrackedRockSpawnChance()
     end
@@ -531,6 +726,14 @@ function Alphabirth:modUpdate()
         didMax = false
         hasCyborg = false
         cyborg_progress = {}
+        birthControlStats = {
+            HP = 0,
+            Damage = 0,
+            MoveSpeed = 0,
+            ShotSpeed = 0,
+            Luck = 0,
+            Range = 0
+        }
     end
 
     -- Max Deal with the Devil chance
@@ -585,6 +788,11 @@ function Alphabirth:modUpdate()
 
     activeCharge = charge
     handleAimbot()
+
+    if Game():GetFrameCount() % 10 == 0 then
+        birthControlUpdate()
+    end
+
     if hasCyborg then
         local room = Game():GetRoom()
         if room:GetFrameCount() == 1 and room:IsFirstVisit() and room:IsAmbushActive() == true then
@@ -632,8 +840,8 @@ function Alphabirth:modUpdate()
         if frame == 1 then
             local new_items = {
                     ACTIVE_CAULDRON, ACTIVE_BIONIC_ARM, ACTIVE_MIRROR, ACTIVE_SURGEON_SIMULATOR,
-                    PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK, PASSIVE_GLOOM_SKULL,
-                    PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA
+                    ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
+                    PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -695,16 +903,16 @@ end
 ---------------------------------------
 function Alphabirth:evaluateCache(player, cache_flag)
     local player = Isaac.GetPlayer(0)
+    local charge = player:GetActiveCharge()
+    if player:HasCollectible(ACTIVE_BIONIC_ARM) and cache_flag == CacheFlag.CACHE_DAMAGE then
+        player.Damage = player.Damage + (charge/6)
+    end
     applyGloomSkullCache(player, cache_flag)
     applyCrackedRockCache(player, cache_flag)
     applyAimbotCache(player, cache_flag)
     applyBlooderflyCache(player, cache_flag)
     applyHemophiliaCache(player, cache_flag)
-
-    local charge = player:GetActiveCharge()
-    if player:HasCollectible(ACTIVE_BIONIC_ARM) and cache_flag == CacheFlag.CACHE_DAMAGE then
-        player.Damage = player.Damage + (charge/6)
-    end
+    applyBirthControlCache(player, cache_flag)
     applyCyborgCache(player, cache_flag)
 end
 
@@ -715,6 +923,7 @@ Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerCauldron, ACT
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerSurgeonSimulator, ACTIVE_SURGEON_SIMULATOR)
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerMirror, ACTIVE_MIRROR)
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBionicArm, ACTIVE_BIONIC_ARM)
+Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerAlastorsCandle, ACTIVE_ALASTORS_CANDLE)
 
 
 -------------------
