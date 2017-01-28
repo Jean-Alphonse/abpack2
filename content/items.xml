@@ -14,5 +14,6 @@
     <passive gfx="collectible_birthcontrol.png" name="Blood Drive" />
 
     <familiar gfx="collectible_blooderfly.png" cache="familiars" name="Blooderfly" description="Blood Friend" />
+    <familiar gfx="collectible_blooderfly.png" cache="familiars" name="Spirit Eye" description="Spirit Friend" />
 
 </items>
