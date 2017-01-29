@@ -159,6 +159,7 @@ local cyborg_pool = {
 local cyborg_progress = {}
 
 local birthControl_pool = {
+    PASSIVE_INFESTED_BABY,
     CollectibleType.COLLECTIBLE_BROTHER_BOBBY,
     CollectibleType.COLLECTIBLE_SISTER_MAGGY,
     CollectibleType.COLLECTIBLE_LITTLE_CHUBBY,
@@ -893,6 +894,10 @@ end
 
 
 local function applyInfestedBabyCache(pl, fl)
+    if fl == CacheFlag.CACHE_FAMILIARS and pl:HasCollectible(PASSIVE_INFESTED_BABY) == false and infestedEntity then
+        infestedEntity:Remove()
+        infestedEntity = nil
+    end
     if fl == CacheFlag.CACHE_FAMILIARS and pl:HasCollectible(PASSIVE_INFESTED_BABY) and not infestedEntity then
         infestedEntity = Isaac.Spawn(EntityType.ENTITY_FAMILIAR, ENTITY_VARIANT_INFESTED_BABY, 0, pl.Position, Vector(0, 0), pl)
     end
