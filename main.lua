@@ -978,7 +978,9 @@ function Alphabirth:modUpdate()
         birthControlUpdate()
     end
 
-    handleBloodDrive()
+    if bloodDriveTimesUsed > 0 then
+        handleBloodDrive()
+    end
 
     if hasCyborg then
         local room = Game():GetRoom()
