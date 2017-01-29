@@ -15,5 +15,6 @@
 
     <familiar gfx="collectible_blooderfly.png" cache="familiars" name="Blooderfly" description="Blood Friend" />
     <familiar gfx="collectible_spiriteye.png" cache="familiars" name="Spirit Eye" description="Spirit Friend" />
+    <familiar gfx="collectible_infestedbaby.png" cache="familiars" name="Infested Baby" />
 
 </items>
