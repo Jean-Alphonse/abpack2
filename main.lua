@@ -408,25 +408,6 @@ local function handleBloodDrive()
     local currentRoom = Game():GetRoom()
     local player = Isaac.GetPlayer(0)
     if bloodDriveTimesUsed > 0 then
-        if player:GetMaxHearts() < bloodDriveTimesUsed * 2 then
-            player:AddMaxHearts(bloodDriveTimesUsed * 2 - player:GetMaxHearts())
-        end
-
-        if player:GetMaxHearts() == bloodDriveTimesUsed*2 then
-            if player:HasCollectible(CollectibleType.COLLECTIBLE_GUPPYS_PAW) then
-                player:RemoveCollectible(CollectibleType.COLLECTIBLE_GUPPYS_PAW)
-                Isaac.Spawn(5,100,CollectibleType.COLLECTIBLE_GUPPYS_PAW,player.Position,Vector(0,0),player)
-            end
-        end
-
-        if player:GetHearts() > player:GetMaxHearts() - (bloodDriveTimesUsed*2) then
-            if player:GetHearts() % 2 == 0 then
-                player:AddHearts(-2)
-            else
-                player:AddHearts(-1)
-            end
-        end
-
         for _,ent in ipairs(Isaac.GetRoomEntities()) do
             if ent:IsVulnerableEnemy() and ent.FrameCount == 1 then
                 ent.MaxHitPoints = ent.MaxHitPoints - ent.MaxHitPoints/(12/bloodDriveTimesUsed)
@@ -441,11 +422,10 @@ end
 
 function Alphabirth:triggerBloodDrive()
     local player = Isaac.GetPlayer(0)
-    local total_hearts = player:GetHearts() + player:GetSoulHearts()
-    if total_hearts > 2 and bloodDriveTimesUsed < 13 and player:GetPlayerType() ~= PlayerType.PLAYER_XXX then
+    local total_hearts = player:GetMaxHearts()
+    if total_hearts > 2 and player:GetPlayerType() ~= PlayerType.PLAYER_XXX then
         bloodDriveTimesUsed = bloodDriveTimesUsed + 1
-        player:TakeDamage(2, 0, EntityRef(player), 0)
-        player:AddMaxHearts(2)
+        player:AddMaxHearts(-2)
         Game():Darken(1, 8)
         player:AnimateSad()
     end
