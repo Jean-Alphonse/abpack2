@@ -915,6 +915,8 @@ function Alphabirth:modUpdate()
             Range = 0
         }
         bloodDriveTimesUsed = 0
+        spirit_eye_exists = false
+        blooderfly_exists = false
     end
 
     -- Max Deal with the Devil chance
@@ -1001,7 +1003,8 @@ function Alphabirth:modUpdate()
             local new_items = {
                     ACTIVE_CAULDRON, ACTIVE_BIONIC_ARM, ACTIVE_MIRROR, ACTIVE_SURGEON_SIMULATOR,
                     ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
-                    PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL
+                    PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL,
+                    PASSIVE_SPIRIT_EYE
             }
             local row = 31
             for i, item in ipairs(new_items) do
