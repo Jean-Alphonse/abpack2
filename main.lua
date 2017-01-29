@@ -105,6 +105,13 @@ local function chooseRandomTarget()
     return nil
 end
 
+local function playSound(sfx, vol, delay, loop, pitch) --SFX: SoundEffect.SOUND_SPIDER_COUGH vol: float delay: integer loop:boolean pitch: float
+    local player = Isaac.GetPlayer(0)
+    local sound_entity = Isaac.Spawn(EntityType.ENTITY_FLY, 0, 0, player.Position, Vector(0,0), nil):ToNPC()
+    sound_entity:PlaySound(sfx, vol, delay, loop, pitch)
+    sound_entity:Remove()
+end
+
 ---------------------------------------
 -- Active Declaration
 ---------------------------------------
@@ -897,6 +904,7 @@ function Alphabirth:onInfestedBabyUpdate(familiar)
             familiar:GetSprite():Play("ShootSide", 1)
         end
         animationCooldown = 8
+        playSound(SoundEffect.SOUND_SPIDER_COUGH, 0.5, 0, false, 1)
     end
     for _, e in ipairs(Isaac.GetRoomEntities()) do
         if e.Parent == familiar and e.Type == EntityType.ENTITY_TEAR then
