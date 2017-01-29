@@ -105,6 +105,13 @@ local function chooseRandomTarget()
     return nil
 end
 
+local function playSound(sfx, vol, delay, loop, pitch) --SFX: SoundEffect.SOUND_SPIDER_COUGH vol: float delay: integer loop:boolean pitch: float
+    local player = Isaac.GetPlayer(0)
+    local sound_entity = Isaac.Spawn(EntityType.ENTITY_FLY, 0, 0, player.Position, Vector(0,0), nil):ToNPC()
+    sound_entity:PlaySound(sfx, vol, delay, loop, pitch)
+    sound_entity:Remove()
+end
+
 ---------------------------------------
 -- Active Declaration
 ---------------------------------------
@@ -128,6 +135,7 @@ local PASSIVE_BLOODERFLY = Isaac.GetItemIdByName("Blooderfly")
 local PASSIVE_TECH_ALPHA = Isaac.GetItemIdByName("Tech Alpha")
 local PASSIVE_BIRTH_CONTROL = Isaac.GetItemIdByName("Birth Control")
 local PASSIVE_SPIRIT_EYE = Isaac.GetItemIdByName("Spirit Eye")
+local PASSIVE_INFESTED_BABY = Isaac.GetItemIdByName("Infested Baby")
 
 ---------------------------------------
 -- Entity Variant Declaration
@@ -135,6 +143,8 @@ local PASSIVE_SPIRIT_EYE = Isaac.GetItemIdByName("Spirit Eye")
 
 local ENTITY_VARIANT_BLOODERFLY = Isaac.GetEntityVariantByName("Blooderfly")
 local ENTITY_VARIANT_SPIRIT_EYE = Isaac.GetEntityVariantByName("Spirit Eye")
+local ENTITY_VARIANT_INFESTED_BABY = Isaac.GetEntityVariantByName("Infested Baby")
+
 ---------------------------------------
 -- Trinket Declaration
 ---------------------------------------
@@ -156,6 +166,7 @@ local cyborg_pool = {
 local cyborg_progress = {}
 
 local birthControl_pool = {
+    PASSIVE_INFESTED_BABY,
     CollectibleType.COLLECTIBLE_BROTHER_BOBBY,
     CollectibleType.COLLECTIBLE_SISTER_MAGGY,
     CollectibleType.COLLECTIBLE_LITTLE_CHUBBY,
@@ -415,7 +426,7 @@ local function handleBloodDrive()
                 player:AddHearts(-1)
             end
         end
-        
+
         for _,ent in ipairs(Isaac.GetRoomEntities()) do
             if ent:IsVulnerableEnemy() and ent.FrameCount == 1 then
                 ent.MaxHitPoints = ent.MaxHitPoints - ent.MaxHitPoints/(12/bloodDriveTimesUsed)
@@ -863,6 +874,63 @@ local function applySpiritEyeCache(player, cache_flag)
         spirit_eye_exists = true
     end
 end
+
+---------------------------------------
+-- Infested Baby
+---------------------------------------
+local infestedEntity
+local infestedBabySpider
+local animationCooldown = 0
+
+function Alphabirth:onInfestedBabyUpdate(familiar)
+    familiar:ToFamiliar():FollowParent()
+    familiar.FireCooldown = 999999
+    if animationCooldown == 0 then
+        familiar:ToFamiliar():Shoot()
+    end
+    if infestedBabySpider and infestedBabySpider:IsDead() then
+        infestedBabySpider = nil
+    end
+    if Isaac.GetPlayer(0):GetFireDirection() ~= -1 and infestedBabySpider == nil then
+        infestedBabySpider = Isaac.Spawn(EntityType.ENTITY_FAMILIAR, FamiliarVariant.BLUE_SPIDER, 0, familiar.Position, Vector(0,0), familiar)
+        if Isaac.GetPlayer(0):GetFireDirection() == Direction.UP then
+            familiar:GetSprite():Play("ShootUp", 1)
+        elseif Isaac.GetPlayer(0):GetFireDirection() == Direction.DOWN then
+            familiar:GetSprite():Play("ShootDown", 1)
+        elseif Isaac.GetPlayer(0):GetFireDirection() == Direction.LEFT then
+            familiar:GetSprite():Play("ShootSide", 1)
+            familiar:GetSprite().FlipX = true
+        elseif Isaac.GetPlayer(0):GetFireDirection() == Direction.RIGHT then
+            familiar:GetSprite():Play("ShootSide", 1)
+        end
+        animationCooldown = 8
+        playSound(SoundEffect.SOUND_SPIDER_COUGH, 0.5, 0, false, 1)
+    end
+    for _, e in ipairs(Isaac.GetRoomEntities()) do
+        if e.Parent == familiar and e.Type == EntityType.ENTITY_TEAR then
+            e:Remove()
+        end
+    end
+    if animationCooldown > 0 then
+        animationCooldown = animationCooldown - 1
+    end
+end
+
+
+local function applyInfestedBabyCache(pl, fl)
+    if fl == CacheFlag.CACHE_FAMILIARS and pl:HasCollectible(PASSIVE_INFESTED_BABY) == false and infestedEntity then
+        infestedEntity:Remove()
+        infestedEntity = nil
+    end
+    if fl == CacheFlag.CACHE_FAMILIARS and pl:HasCollectible(PASSIVE_INFESTED_BABY) and not infestedEntity then
+        infestedEntity = Isaac.Spawn(EntityType.ENTITY_FAMILIAR, ENTITY_VARIANT_INFESTED_BABY, 0, pl.Position, Vector(0, 0), pl)
+    end
+end
+
+function Alphabirth:onInfestedBabyInit(familiar)
+
+end
+
 ---------------------------------------
 -- Post-Update Callback
 ---------------------------------------
@@ -915,6 +983,8 @@ function Alphabirth:modUpdate()
             Range = 0
         }
         bloodDriveTimesUsed = 0
+        spirit_eye_exists = false
+        blooderfly_exists = false
     end
 
     -- Max Deal with the Devil chance
@@ -978,7 +1048,9 @@ function Alphabirth:modUpdate()
         birthControlUpdate()
     end
 
-    handleBloodDrive()
+    if bloodDriveTimesUsed > 0 then
+        handleBloodDrive()
+    end
 
     if hasCyborg then
         local room = Game():GetRoom()
@@ -999,7 +1071,8 @@ function Alphabirth:modUpdate()
             local new_items = {
                     ACTIVE_CAULDRON, ACTIVE_BIONIC_ARM, ACTIVE_MIRROR, ACTIVE_SURGEON_SIMULATOR,
                     ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
-                    PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL
+                    PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL,
+                    PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY,ACTIVE_BLOOD_DRIVE
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -1073,6 +1146,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyBirthControlCache(player, cache_flag)
     applyCyborgCache(player, cache_flag)
     applySpiritEyeCache(player, cache_flag)
+    applyInfestedBabyCache(player, cache_flag)
 end
 
 -------------------
@@ -1108,6 +1182,9 @@ Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.blooderflyUpd
 
 Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onSpiritEyeInit, ENTITY_VARIANT_SPIRIT_EYE)
 Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.onSpiritEyeUpdate, ENTITY_VARIANT_SPIRIT_EYE)
+
+Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onInfestedBabyInit, ENTITY_VARIANT_INFESTED_BABY)
+Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.onInfestedBabyUpdate, ENTITY_VARIANT_INFESTED_BABY)
 -------------------
 -- Mod Updates
 -------------------
