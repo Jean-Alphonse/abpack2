@@ -870,21 +870,24 @@ end
 ---------------------------------------
 -- Infested Baby
 ---------------------------------------
-local spiderCooldown = 0
 local infestedEntity
+local infestedBabySpider
 
 function Alphabirth:onInfestedBabyUpdate(familiar)
     familiar:ToFamiliar():FollowParent()
-    familiar:ToFamiliar():MoveDelayed (20)
     familiar:ToFamiliar():Shoot()
-    familiar.FireCooldown = 60 * 4
-    if Isaac.GetPlayer(0):GetFireDirection() ~= -1 and spiderCooldown == 0 then
-        spiderCooldown = 60 * 4
-        Isaac.GetPlayer(0):AddBlueSpider(familiar.Position)
+    familiar.FireCooldown = 999999
+    if infestedBabySpider and infestedBabySpider:IsDead() then
+        infestedBabySpider = nil
+    end
+    if Isaac.GetPlayer(0):GetFireDirection() ~= -1 and infestedBabySpider == nil then
+        infestedBabySpider = Isaac.Spawn(EntityType.ENTITY_FAMILIAR, FamiliarVariant.BLUE_SPIDER, 0, familiar.Position, Vector(0,0), familiar)
         familiar:GetSprite():Play("ShootSide",1)
     end
-    if spiderCooldown > 0 and Isaac.GetPlayer(0):GetFireDirection() ~= -1  then
-        spiderCooldown = spiderCooldown - 1
+    for _, e in ipairs(Isaac.GetRoomEntities()) do
+        if e.Parent == familiar and e.Type == EntityType.ENTITY_TEAR then
+            e:Remove()
+        end
     end
 end
 
