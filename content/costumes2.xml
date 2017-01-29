@@ -4,4 +4,5 @@
     <costume anm2path="animation_costume_aimbot.anm2" priority="98" type="none" />
     <costume anm2path="animation_transformation_cyborg.anm2" priority="98" type="none" />
     <costume anm2path="animation_costume_hemophilia.anm2" priority="98" type="none" />
+    <costume anm2path="animation_costume_birthcontrol.anm2" priority="98" type="none" />
 </costumes>
