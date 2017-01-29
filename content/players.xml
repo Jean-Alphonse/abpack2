@@ -1,3 +1,6 @@
 <players root = "gfx/animations/costumes/players/" portraitroot="gfx/ui/boss/" nameimageroot="gfx/ui/boss/" bigportraitroot="gfx/ui/stage/">
-
+    <player name = "Endor" skin = "sheet_character_endor.png" hp = "6" damage="2.25" teardelay="7"
+        nameimage="playername_endor.png"
+        portrait="playerportrait_endor.png"
+        bigportrait="playerportraitbig_endor.png" skinColor="0" />
 </players>
