@@ -114,6 +114,7 @@ local ACTIVE_CAULDRON = Isaac.GetItemIdByName("Cauldron")
 local ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
 local ACTIVE_BIONIC_ARM = Isaac.GetItemIdByName("Bionic Arm")
 local ACTIVE_ALASTORS_CANDLE = Isaac.GetItemIdByName("Alastor's Candle")
+local ACTIVE_BLOOD_DRIVE = Isaac.GetItemIdByName("Blood Drive")
 
 ---------------------------------------
 -- Passive Declaration
@@ -386,6 +387,58 @@ local function handleAlastorsCandleFlames()
     end
 end
 
+---------------------------------------
+-- Blood Drive Logic
+---------------------------------------
+
+local bloodDriveTimesUsed = 0
+
+local function handleBloodDrive()
+    local currentRoom = Game():GetRoom()
+    local player = Isaac.GetPlayer(0)
+    if bloodDriveTimesUsed > 0 then
+        if player:GetMaxHearts() < bloodDriveTimesUsed * 2 then
+            player:AddMaxHearts(bloodDriveTimesUsed * 2 - player:GetMaxHearts())
+        end
+
+        if player:GetMaxHearts() == bloodDriveTimesUsed*2 then
+            if player:HasCollectible(CollectibleType.COLLECTIBLE_GUPPYS_PAW) then
+                player:RemoveCollectible(CollectibleType.COLLECTIBLE_GUPPYS_PAW)
+                Isaac.Spawn(5,100,CollectibleType.COLLECTIBLE_GUPPYS_PAW,player.Position,Vector(0,0),player)
+            end
+        end
+
+        if player:GetHearts() > player:GetMaxHearts() - (bloodDriveTimesUsed*2) then
+            if player:GetHearts() % 2 == 0 then
+                player:AddHearts(-2)
+            else
+                player:AddHearts(-1)
+            end
+        end
+        
+        for _,ent in ipairs(Isaac.GetRoomEntities()) do
+            if ent:IsVulnerableEnemy() and ent.FrameCount == 1 then
+                ent.MaxHitPoints = ent.MaxHitPoints - ent.MaxHitPoints/(12/bloodDriveTimesUsed)
+                ent.HitPoints = ent.MaxHitPoints
+                for i=1, bloodDriveTimesUsed do
+                    Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.BLOOD_EXPLOSION, 0, ent.Position, Vector(0,0),player)
+                end
+            end
+        end
+    end
+end
+
+function Alphabirth:triggerBloodDrive()
+    local player = Isaac.GetPlayer(0)
+    local total_hearts = player:GetHearts() + player:GetSoulHearts()
+    if total_hearts > 2 and bloodDriveTimesUsed < 13 and player:GetPlayerType() ~= PlayerType.PLAYER_XXX then
+        bloodDriveTimesUsed = bloodDriveTimesUsed + 1
+        player:TakeDamage(2, 0, EntityRef(player), 0)
+        player:AddMaxHearts(2)
+        Game():Darken(1, 8)
+        player:AnimateSad()
+    end
+end
 
 -------------------------------------------------------------------------------
 ---- PASSIVE ITEM LOGIC
@@ -861,6 +914,7 @@ function Alphabirth:modUpdate()
             Luck = 0,
             Range = 0
         }
+        bloodDriveTimesUsed = 0
     end
 
     -- Max Deal with the Devil chance
@@ -922,6 +976,10 @@ function Alphabirth:modUpdate()
 
     if Game():GetFrameCount() % 10 == 0 then
         birthControlUpdate()
+    end
+
+    if bloodDriveTimesUsed > 0 then
+        handleBloodDrive()
     end
 
     if hasCyborg then
@@ -1027,6 +1085,7 @@ Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerSurgeonSimula
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerMirror, ACTIVE_MIRROR)
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBionicArm, ACTIVE_BIONIC_ARM)
 Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerAlastorsCandle, ACTIVE_ALASTORS_CANDLE)
+Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBloodDrive, ACTIVE_BLOOD_DRIVE)
 
 
 -------------------
