@@ -873,22 +873,38 @@ end
 ---------------------------------------
 local infestedEntity
 local infestedBabySpider
+local animationCooldown = 0
 
 function Alphabirth:onInfestedBabyUpdate(familiar)
     familiar:ToFamiliar():FollowParent()
-    familiar:ToFamiliar():Shoot()
     familiar.FireCooldown = 999999
+    if animationCooldown == 0 then
+        familiar:ToFamiliar():Shoot()
+    end
     if infestedBabySpider and infestedBabySpider:IsDead() then
         infestedBabySpider = nil
     end
     if Isaac.GetPlayer(0):GetFireDirection() ~= -1 and infestedBabySpider == nil then
         infestedBabySpider = Isaac.Spawn(EntityType.ENTITY_FAMILIAR, FamiliarVariant.BLUE_SPIDER, 0, familiar.Position, Vector(0,0), familiar)
-        familiar:GetSprite():Play("ShootSide",1)
+        if Isaac.GetPlayer(0):GetFireDirection() == Direction.UP then
+            familiar:GetSprite():Play("ShootUp", 1)
+        elseif Isaac.GetPlayer(0):GetFireDirection() == Direction.DOWN then
+            familiar:GetSprite():Play("ShootDown", 1)
+        elseif Isaac.GetPlayer(0):GetFireDirection() == Direction.LEFT then
+            familiar:GetSprite():Play("ShootSide", 1)
+            familiar:GetSprite().FlipX = true
+        elseif Isaac.GetPlayer(0):GetFireDirection() == Direction.RIGHT then
+            familiar:GetSprite():Play("ShootSide", 1)
+        end
+        animationCooldown = 8
     end
     for _, e in ipairs(Isaac.GetRoomEntities()) do
         if e.Parent == familiar and e.Type == EntityType.ENTITY_TEAR then
             e:Remove()
         end
+    end
+    if animationCooldown > 0 then
+        animationCooldown = animationCooldown - 1
     end
 end
 
