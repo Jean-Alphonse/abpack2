@@ -21,6 +21,8 @@ local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accesso
 local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hemophilia.anm2")
 local BIRTH_CONTROL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_birthcontrol.anm2")
 
+local ENDOR_BODY_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorbody.anm2")
+local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorhead.anm2")
 ---------------------------------------
 -- Entity Flag Declaration
 ---------------------------------------
@@ -207,6 +209,8 @@ local birthControl_pool = {
     CollectibleType.COLLECTIBLE_BIG_CHUBBY,
     CollectibleType.COLLECTIBLE_ACID_BABY
 }
+
+local isEndor = false
 
 -------------------------------------------------------------------------------
 ---- ACTIVE ITEM LOGIC
@@ -924,6 +928,12 @@ function Alphabirth:modUpdate()
     local room = game:GetRoom()
     local frame = game:GetFrameCount()
 
+    --Endor
+    if isEndor and Isaac.GetPlayer(0):GetMaxHearts() > 0 then
+        Isaac.GetPlayer(0):AddSoulHearts(Isaac.GetPlayer(0):GetMaxHearts())
+        Isaac.GetPlayer(0):AddMaxHearts(-Isaac.GetPlayer(0):GetMaxHearts(), false)
+    end
+
     --Additional Alastor's Candle Logic
     if player:HasCollectible(ACTIVE_ALASTORS_CANDLE) and flames_exist then
         handleAlastorsCandleFlames()
@@ -965,6 +975,13 @@ function Alphabirth:modUpdate()
         bloodDriveTimesUsed = 0
         spirit_eye_exists = false
         blooderfly_exists = false
+
+        if Isaac.GetPlayer(0):GetName() == "Endor" then
+            Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
+            Isaac.GetPlayer(0):AddNullCostume(ENDOR_HEAD_COSTUME)
+            player:AddCollectible(ACTIVE_CAULDRON, 0, true)
+            player:AddCollectible(PASSIVE_SPIRIT_EYE, 0, true)
+        end
     end
 
     -- Max Deal with the Devil chance
@@ -1127,6 +1144,27 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyCyborgCache(player, cache_flag)
     applySpiritEyeCache(player, cache_flag)
     applyInfestedBabyCache(player, cache_flag)
+    if isEndor then
+        Isaac.GetPlayer(0).CanFly = true
+        Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
+        Isaac.GetPlayer(0):AddNullCostume(ENDOR_HEAD_COSTUME)
+        if cache_flag == CacheFlag.CACHE_DAMAGE then
+            player.Damage = player.Damage - 1.25
+        elseif cache_flag == CacheFlag.CACHE_SPEED then
+            player.MoveSpeed = player.MoveSpeed + 0.2
+        elseif cache_flag == CacheFlag.CACHE_FIREDELAY then
+            player.FireDelay = player.FireDelay - 3
+        end
+    end
+end
+
+function Alphabirth:playerInit()
+    isEndor = false
+    if Isaac.GetPlayer(0):GetName() == "Endor" then
+        isEndor = true
+        Isaac.GetPlayer(0):AddSoulHearts(Isaac.GetPlayer(0):GetMaxHearts())
+        Isaac.GetPlayer(0):AddMaxHearts(-Isaac.GetPlayer(0):GetMaxHearts(), false)
+    end
 end
 
 -------------------
@@ -1172,3 +1210,4 @@ Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.onInfestedBab
 Alphabirth:AddCallback(ModCallbacks.MC_POST_UPDATE, Alphabirth.modUpdate)
 Alphabirth:AddCallback(ModCallbacks.MC_POST_RENDER, Alphabirth.cauldronUpdate)
 Alphabirth:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, Alphabirth.evaluateCache)
+Alphabirth:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, Alphabirth.playerInit)

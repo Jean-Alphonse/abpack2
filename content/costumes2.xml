@@ -1,8 +1,12 @@
-<costumes anm2root = "gfx/animations/costumes/accessories/">
-    <costume anm2path="animation_costume_crackedrock.anm2" priority="98" type="none" />
-    <costume anm2path="animation_costume_gloomskull.anm2" priority="98" type="none" />
-    <costume anm2path="animation_costume_aimbot.anm2" priority="98" type="none" />
-    <costume anm2path="animation_transformation_cyborg.anm2" priority="98" type="none" />
-    <costume anm2path="animation_costume_hemophilia.anm2" priority="98" type="none" />
-    <costume anm2path="animation_costume_birthcontrol.anm2" priority="98" type="none" />
+<costumes anm2root = "gfx/animations/costumes/">
+    <costume anm2path="accessories/animation_costume_crackedrock.anm2" priority="98" type="none" />
+    <costume anm2path="accessories/animation_costume_gloomskull.anm2" hasSkinAlt="true" priority="98" type="none" />
+    <costume anm2path="accessories/animation_costume_aimbot.anm2" priority="98" type="none" />
+    <costume anm2path="accessories/animation_transformation_cyborg.anm2" priority="98" type="none" />
+    <costume anm2path="accessories/animation_costume_hemophilia.anm2" priority="98" type="none" />
+    <costume anm2path="accessories/animation_costume_birthcontrol.anm2" priority="98" type="none" />
+    <costume anm2path="accessories/animation_costume_hemophilia.anm2" priority="98" type="none" />
+
+    <costume anm2path="players/animation_character_endorbody.anm2" priority="200" isFlying="true" type="none" />
+    <costume anm2path="players/animation_character_endorhead.anm2" priority="200" type="none" />
 </costumes>
