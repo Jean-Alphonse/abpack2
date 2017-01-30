@@ -925,10 +925,20 @@ function Alphabirth:modUpdate()
     local player_type = player:GetPlayerType()
 
     --Endor
-    if player_type == endor_type and player:GetMaxHearts() > endor_health and frame > 1 then
-        player:AddEternalHearts((player:GetMaxHearts() - endor_health) / 2)
-        player:AddMaxHearts(-(player:GetMaxHearts() - endor_health), false)
-        endor_health = endor_health + 2
+    if player_type == endor_type and frame > 1 then
+        if player:GetMaxHearts() > endor_health then
+            player:AddEternalHearts((player:GetMaxHearts() - endor_health) / 2)
+            player:AddMaxHearts(-(player:GetMaxHearts() - endor_health), false)
+            endor_health = endor_health + 2
+        end
+        
+        for i = 1, 24 do
+            if player:IsBlackHeart(i) then
+                player:RemoveBlackHeart(i)
+                player:AddSoulHearts(-2)
+                player:TakeDamage(2, 0, EntityRef(player), 0)
+            end
+        end
     end
 
     --Additional Alastor's Candle Logic
