@@ -455,7 +455,7 @@ function Alphabirth:triggerCrackedRockEffect(dmg_target, dmg_amount, dmg_source,
                 dmg_target.Position,
                 Vector(0, 0), -- Velocity
                 player
-            )
+            ):ToEffect():SetRadii(5,15)
         end
     end
 end
