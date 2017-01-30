@@ -914,17 +914,21 @@ end
 local currentRoom = Game():GetRoom()
 local activeCharge
 local canDrop = false
+local endor_health = 0
+local endor_type = Isaac.GetPlayerTypeByName("Endor")
 
 function Alphabirth:modUpdate()
     local player = Isaac.GetPlayer(0)
     local game = Game()
     local room = game:GetRoom()
     local frame = game:GetFrameCount()
+    local player_type = player:GetPlayerType()
 
     --Endor
-    if isEndor and Isaac.GetPlayer(0):GetMaxHearts() > 0 then
-        Isaac.GetPlayer(0):AddSoulHearts(Isaac.GetPlayer(0):GetMaxHearts())
-        Isaac.GetPlayer(0):AddMaxHearts(-Isaac.GetPlayer(0):GetMaxHearts(), false)
+    if player_type == endor_type and player:GetMaxHearts() > endor_health and frame > 1 then
+        player:AddEternalHearts((player:GetMaxHearts() - endor_health) / 2)
+        player:AddMaxHearts(-(player:GetMaxHearts() - endor_health), false)
+        endor_health = endor_health + 2
     end
 
     --Additional Alastor's Candle Logic
@@ -969,11 +973,15 @@ function Alphabirth:modUpdate()
         spirit_eye_exists = false
         blooderfly_exists = false
 
-        if Isaac.GetPlayer(0):GetName() == "Endor" then
-            Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
-            Isaac.GetPlayer(0):AddNullCostume(ENDOR_HEAD_COSTUME)
+        if player_type == endor_type then
+            player:AddNullCostume(ENDOR_BODY_COSTUME)
+            player:AddNullCostume(ENDOR_HEAD_COSTUME)
             player:AddCollectible(ACTIVE_CAULDRON, 0, true)
             player:AddCollectible(PASSIVE_SPIRIT_EYE, 0, true)
+            player:AddMaxHearts(-player:GetMaxHearts())
+            player:AddSoulHearts(4)
+            player:AddEternalHearts(1)
+            endor_health = 2
         end
     end
 
@@ -1137,7 +1145,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyCyborgCache(player, cache_flag)
     applySpiritEyeCache(player, cache_flag)
     applyInfestedBabyCache(player, cache_flag)
-    if isEndor then
+    if player:GetPlayerType() == endor_type then
         Isaac.GetPlayer(0).CanFly = true
         Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
         Isaac.GetPlayer(0):AddNullCostume(ENDOR_HEAD_COSTUME)
@@ -1148,15 +1156,6 @@ function Alphabirth:evaluateCache(player, cache_flag)
         elseif cache_flag == CacheFlag.CACHE_FIREDELAY then
             player.FireDelay = player.FireDelay - 3
         end
-    end
-end
-
-function Alphabirth:playerInit()
-    isEndor = false
-    if Isaac.GetPlayer(0):GetName() == "Endor" then
-        isEndor = true
-        Isaac.GetPlayer(0):AddSoulHearts(Isaac.GetPlayer(0):GetMaxHearts())
-        Isaac.GetPlayer(0):AddMaxHearts(-Isaac.GetPlayer(0):GetMaxHearts(), false)
     end
 end
 
