@@ -28,6 +28,8 @@ local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/pla
 ---------------------------------------
 -- use FLAG_YOUR_FLAG = 1 << FlagID
 
+local FLAG_SPIRIT_EYE_SHOT = 1 << 38
+
 ---------------------------------------
 -- Curse Declaration
 ---------------------------------------
@@ -799,8 +801,6 @@ end
 -- Spirit Eye Logic
 ---------------------------------------
 local spirit_eye
-local can_collide = true
-local frames = 0
 local homing_tears = {}
 local tear_count = 6
 local TEAR_FLAGS = {
@@ -817,17 +817,9 @@ function Alphabirth:onSpiritEyeUpdate(_,familiar)
     local player = Isaac.GetPlayer(0)
     spirit_eye:MoveDiagonally(0.35)
 
-    if can_collide == false then
-        frames = frames + 1
-        if frames % 15 == 0 then
-            can_collide = true
-        end
-    end
-
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
-        if entity.Type == EntityType.ENTITY_TEAR and entity.Position:Distance(spirit_eye.Position) <= 25 and can_collide then
+        if entity.Type == EntityType.ENTITY_TEAR and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) then
             local direction_vector = entity.Velocity
-            can_collide = false
             entity:Die()
             for i = 1, tear_count do
                 local angle = 15
@@ -839,12 +831,13 @@ function Alphabirth:onSpiritEyeUpdate(_,familiar)
                 local shot_direction = Vector(cos_angle * direction_vector.X - sin_angle * direction_vector.Y,
                     sin_angle * direction_vector.X + cos_angle * direction_vector.Y
                 )
-                local magnitude = {0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.3, 1.4}
+                local magnitude = {0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2}
                 local shot_vector = shot_direction:__mul(magnitude[math.random(#magnitude)])
 
                 homing_tears[i] = player:FireTear(spirit_eye.Position, shot_vector, false, false, true)
                 homing_tears[i].TearFlags = TEAR_FLAGS.FLAG_HOMING
                 homing_tears[i].Color = Color(0.6, 0, 0.6, 0.5, 0, 0, 0)
+                homing_tears[i]:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
             end
         end
     end
