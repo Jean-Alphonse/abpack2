@@ -803,9 +803,19 @@ end
 local spirit_eye
 local homing_tears = {}
 local tear_count = 6
+local SPIRIT_SYNERGIES = {
+    CollectibleType.COLLECTIBLE_DR_FETUS,
+    CollectibleType.COLLECTIBLE_TECH_X,
+    CollectibleType.COLLECTIBLE_TECHNOLOGY,
+    CollectibleType.COLLECTIBLE_TECHNOLOGY_2,
+    CollectibleType.COLLECTIBLE_BRIMSTONE,
+    CollectibleType.COLLECTIBLE_MOMS_KNIFE
+}
 local TEAR_FLAGS = {
     FLAG_HOMING = 1 << 2
 }
+
+local knife_exists = false
 
 function Alphabirth:onSpiritEyeInit(_,familiar)
     if spirit_eye == nil then
@@ -815,29 +825,72 @@ end
 
 function Alphabirth:onSpiritEyeUpdate(_,familiar)
     local player = Isaac.GetPlayer(0)
-    spirit_eye:MoveDiagonally(0.35)
 
-    for _, entity in ipairs(Isaac.GetRoomEntities()) do
-        if entity.Type == EntityType.ENTITY_TEAR and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) then
-            local direction_vector = entity.Velocity
-            entity:Die()
-            for i = 1, tear_count do
-                local angle = 15
-                local random_angle = math.rad(math.random(-math.floor(angle), math.floor(angle)))
+    if player:HasCollectible(SPIRIT_SYNERGIES[1]) then -- DR_FETUS
+        spirit_eye:MoveDiagonally(0.35)
+        for _,entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity:ToBomb() and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) then
+                local bomb = player:FireBomb(spirit_eye.Position, entity.Velocity)
+                entity:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
+                entity:Remove()
+                bomb.ExplosionDamage = bomb.ExplosionDamage * 1.8
+                bomb.Color = Color(0.6, 0, 0.02, 1, 0, 0, 0)
+                bomb:SetExplosionCountdown(5)
+                bomb:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
+            end
+        end
+    elseif player:HasCollectible(SPIRIT_SYNERGIES[2]) then
+        spirit_eye:MoveDiagonally(0.44)
+        if Isaac.GetFrameCount() % 44 == 0 then
+            local laser = player:FireTechXLaser(spirit_eye.Position, spirit_eye.Velocity:__mul(2), 4)
+            laser.TearFlags = TEAR_FLAGS.FLAG_HOMING
+            laser:SetTimeout(6)
+        end
+    elseif player:HasCollectible(SPIRIT_SYNERGIES[3]) or player:HasCollectible(SPIRIT_SYNERGIES[4]) then --TECH 1 and 2
+        spirit_eye:FollowPosition(player.Position)
+        if Isaac.GetFrameCount() % 61 == 0 then
+            for i = 1, 3 do
+                local laser = player:FireTechLaser(spirit_eye.Position, 0, RandomVector(), false, false)
+                laser.TearFlags = TEAR_FLAGS.FLAG_HOMING
+            end
+        end
+    elseif player:HasCollectible(SPIRIT_SYNERGIES[5]) then -- BRIMSTONE
+        local x = math.cos(Game():GetFrameCount()/50)*25
+        local y = math.sin(Game():GetFrameCount()/50)*25
+        spirit_eye.Position = Vector(player.Position.X + x, player.Position.Y + y)
+        if Isaac.GetFrameCount() % 79 == 0 then
+            local laser = player:FireDelayedBrimstone(RandomVector():GetAngleDegrees(), spirit_eye)
+            laser.TearFlags = TEAR_FLAGS.FLAG_HOMING
+            laser:SetTimeout(6)
+        end
+    elseif player:HasCollectible(SPIRIT_SYNERGIES[6]) then -- MOMS KNIFE
+        spirit_eye:FollowPosition(player.Position:__mul(1.1))
+        if knife_exists == false then
+            local knife = player:FireKnife(spirit_eye, 0, false, 0)
+            knife_exists = true
+        end
+    else
+        spirit_eye:MoveDiagonally(0.35)
+        for _, entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity.Type == EntityType.ENTITY_TEAR and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) then
+                local direction_vector = entity.Velocity
+                entity:Die()
+                for i = 1, tear_count do
+                    local angle = 15
+                    local random_angle = math.rad(math.random(-math.floor(angle), math.floor(angle)))
+                    local cos_angle = math.cos(random_angle)
+                    local sin_angle = math.sin(random_angle)
+                    local shot_direction = Vector(cos_angle * direction_vector.X - sin_angle * direction_vector.Y,
+                        sin_angle * direction_vector.X + cos_angle * direction_vector.Y
+                    )
+                    local magnitude = {0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2}
+                    local shot_vector = shot_direction:__mul(magnitude[math.random(#magnitude)])
 
-                local cos_angle = math.cos(random_angle)
-                local sin_angle = math.sin(random_angle)
-
-                local shot_direction = Vector(cos_angle * direction_vector.X - sin_angle * direction_vector.Y,
-                    sin_angle * direction_vector.X + cos_angle * direction_vector.Y
-                )
-                local magnitude = {0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2}
-                local shot_vector = shot_direction:__mul(magnitude[math.random(#magnitude)])
-
-                homing_tears[i] = player:FireTear(spirit_eye.Position, shot_vector, false, false, true)
-                homing_tears[i].TearFlags = TEAR_FLAGS.FLAG_HOMING
-                homing_tears[i].Color = Color(0.6, 0, 0.6, 0.5, 0, 0, 0)
-                homing_tears[i]:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
+                    homing_tears[i] = player:FireTear(spirit_eye.Position, shot_vector, false, false, true)
+                    homing_tears[i].TearFlags = TEAR_FLAGS.FLAG_HOMING
+                    homing_tears[i].Color = Color(0.6, 0, 0.6, 0.5, 0, 0, 0)
+                    homing_tears[i]:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
+                end
             end
         end
     end
