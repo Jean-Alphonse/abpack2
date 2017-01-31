@@ -140,6 +140,7 @@ local PASSIVE_TECH_ALPHA = Isaac.GetItemIdByName("Tech Alpha")
 local PASSIVE_BIRTH_CONTROL = Isaac.GetItemIdByName("Birth Control")
 local PASSIVE_SPIRIT_EYE = Isaac.GetItemIdByName("Spirit Eye")
 local PASSIVE_INFESTED_BABY = Isaac.GetItemIdByName("Infested Baby")
+local PASSIVE_JUDAS_FEZ = Isaac.GetItemIdByName("Judas' Fez")
 
 ---------------------------------------
 -- Entity Variant Declaration
@@ -455,7 +456,7 @@ function Alphabirth:triggerCrackedRockEffect(dmg_target, dmg_amount, dmg_source,
                 dmg_target.Position,
                 Vector(0, 0), -- Velocity
                 player
-            )
+            ):ToEffect():SetRadii(5,15)
         end
     end
 end
@@ -605,6 +606,35 @@ local function applyGloomSkullCache(player, cache_flag)
 end
 
 ---------------------------------------
+-- Judas' Fez Logic
+---------------------------------------
+local health_reduction_applied = false
+local function applyJudasFezCache(player, cache_flag)
+    if cache_flag == CacheFlag.CACHE_DAMAGE and player:HasCollectible(PASSIVE_JUDAS_FEZ) then
+        player.Damage = player.Damage * 1.35
+        --player:AddNullCostume()
+        if not health_reduction_applied then
+            local hearts = player:GetHearts() - 2
+            player:AddMaxHearts(hearts * -1)
+            health_reduction_applied = true
+        end
+    end
+end
+
+local combat_rooms_visited = 0
+local function handleJudasFez()
+    local player = Isaac.GetPlayer(0)
+    local room = Game():GetRoom()
+    if room:IsFirstVisit() and not room:IsClear() and room:GetFrameCount() == 1 then
+       combat_rooms_visited = combat_rooms_visited + 1
+       if combat_rooms_visited == 3 then
+          player:UseCard(Card.CARD_DEVIL)
+          combat_rooms_visited = 0
+       end
+    end
+end
+
+---------------------------------------
 -- Cyborg Logic
 ---------------------------------------
 
@@ -717,16 +747,9 @@ end
 ---------------------------------------
 -- Blooderfly Logic
 ---------------------------------------
-function Alphabirth:onBlooderflyInit(_,familiar)
-    if blooderfly == nil then
-        Isaac.DebugString("PROBLEM SPAWNING BLOODERFLY")
-    end
-end
-
-local blooderfly
 local blooderfly_target = nil
 local in_range = false
-function Alphabirth:blooderflyUpdate(_,familiar)
+function Alphabirth:blooderflyUpdate(blooderfly)
     local player = Isaac.GetPlayer(0)
 
     if blooderfly_target == nil then
@@ -789,66 +812,153 @@ function Alphabirth:blooderflyUpdate(_,familiar)
     end
 end
 
-local blooderfly_exists = false
 local function applyBlooderflyCache(player, cache_flag)
-    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_BLOODERFLY) and blooderfly_exists == false then
-        blooderfly = Isaac.Spawn(EntityType.ENTITY_FAMILIAR, ENTITY_VARIANT_BLOODERFLY, 0, player.Position, Vector(0,0), player):ToFamiliar()
-        blooderfly_exists = true
+    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_BLOODERFLY) then
+        local blooderfly_exists = false
+        for _, entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity.Type == EntityType.ENTITY_FAMILIAR and
+                    entity.Variant == ENTITY_VARIANT_BLOODERFLY then
+                blooderfly_exists = true
+            end
+        end
+        
+        if not blooderfly_exists then
+            Isaac.Spawn(EntityType.ENTITY_FAMILIAR,
+                ENTITY_VARIANT_BLOODERFLY,
+                0,
+                player.Position,
+                Vector(0,0),
+                player)
+        end
     end
 end
 
 ---------------------------------------
 -- Spirit Eye Logic
 ---------------------------------------
-local spirit_eye
 local homing_tears = {}
 local tear_count = 6
+local SPIRIT_SYNERGIES = {
+    CollectibleType.COLLECTIBLE_DR_FETUS,
+    CollectibleType.COLLECTIBLE_TECH_X,
+    CollectibleType.COLLECTIBLE_TECHNOLOGY,
+    CollectibleType.COLLECTIBLE_TECHNOLOGY_2,
+    CollectibleType.COLLECTIBLE_BRIMSTONE,
+    CollectibleType.COLLECTIBLE_MOMS_KNIFE,
+    CollectibleType.COLLECTIBLE_EPIC_FETUS
+}
 local TEAR_FLAGS = {
     FLAG_HOMING = 1 << 2
 }
+local knife_exists = false
 
-function Alphabirth:onSpiritEyeInit(_,familiar)
-    if spirit_eye == nil then
-        Isaac.DebugString("Spawning Error : Spirit Eye")
-    end
-end
-
-function Alphabirth:onSpiritEyeUpdate(_,familiar)
+function Alphabirth:onSpiritEyeUpdate(spirit_eye)
     local player = Isaac.GetPlayer(0)
-    spirit_eye:MoveDiagonally(0.35)
+    local player_previous_tearcolor = player.TearColor
+    local player_previous_lasercolor = player.LaserColor
+    
+    player.TearColor = Color(0.6, 0, 0.6, 0.5, 0, 0, 0)
+    -- Since lasers are bright red by default, I put a very bright blue overlay on top. 
+    player.LaserColor = Color(1, 0, 0, 1, 0, 0, 255)
+    
+    if player:HasCollectible(SPIRIT_SYNERGIES[1]) then -- DR_FETUS
+        spirit_eye:MoveDiagonally(0.35)
+        for _,entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity:ToBomb() and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) then
+                local bomb = entity:ToBomb()
+                bomb:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
+                bomb.ExplosionDamage = bomb.ExplosionDamage * 1.8
+                bomb.Color = Color(0.6, 0, 0.6, 0.5, 0, 0, 0)
+            end
+        end
+    elseif player:HasCollectible(SPIRIT_SYNERGIES[2]) then -- TECH_X
+        spirit_eye:MoveDiagonally(0.44)
+        if Isaac.GetFrameCount() % 44 == 0 then
+            local laser = player:FireTechXLaser(spirit_eye.Position, spirit_eye.Velocity:__mul(2), 10)
+            laser.TearFlags = TEAR_FLAGS.FLAG_HOMING
+            laser:SetTimeout(10)
+        end
+    elseif player:HasCollectible(SPIRIT_SYNERGIES[3]) or player:HasCollectible(SPIRIT_SYNERGIES[4]) then --TECH_1 and TECH_2
+        spirit_eye:FollowPosition(player.Position)
+        if Isaac.GetFrameCount() % 61 == 0 then
+            for i = 1, 3 do
+                local laser = player:FireTechLaser(spirit_eye.Position, 0, RandomVector(), false, false)
+                laser.TearFlags = TEAR_FLAGS.FLAG_HOMING
+            end
+        end
+    elseif player:HasCollectible(SPIRIT_SYNERGIES[5]) then -- BRIMSTONE
+        spirit_eye:FollowPosition(player.Position)
+        if Isaac.GetFrameCount() % 79 == 0 then
+            local laser = player:FireDelayedBrimstone(RandomVector():GetAngleDegrees(), spirit_eye)
+            local rotation_roll = math.random(1, 2)
+            local rotation_speed = math.random(2.0, 3.0)
+            if rotation_roll == 1 then
+                rotation_speed = -rotation_speed
+            end
+            laser:SetActiveRotation(0, math.random(90, 180), rotation_speed, false)
+            laser:SetTimeout(24)
+        end
+    elseif player:HasCollectible(SPIRIT_SYNERGIES[6]) then -- MOMS_KNIFE
+        spirit_eye:FollowPosition(player.Position:__mul(1.1))
+        if knife_exists == false then
+            local knife = player:FireKnife(spirit_eye, 0, false, 0)
+            knife_exists = true
+        end
+    elseif player:HasCollectible(SPIRIT_SYNERGIES[7]) then -- EPIC_FETUS
+        spirit_eye:MoveDiagonally(0.5)
+        for _, entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity:IsVulnerableEnemy() and entity.Position:Distance(spirit_eye.Position) <= 25 and math.random(100) <= 5 then
+                entity:AddFreeze(EntityRef(spirit_eye), 100)
+            end
+        end
+    else
+        spirit_eye:MoveDiagonally(0.35)
+        for _, entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity.Type == EntityType.ENTITY_TEAR and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) then
+                local direction_vector = entity.Velocity
+                entity:Die()
+                for i = 1, tear_count do
+                    local angle = 15
+                    local random_angle = math.rad(math.random(-math.floor(angle), math.floor(angle)))
+                    local cos_angle = math.cos(random_angle)
+                    local sin_angle = math.sin(random_angle)
+                    local shot_direction = Vector(cos_angle * direction_vector.X - sin_angle * direction_vector.Y,
+                        sin_angle * direction_vector.X + cos_angle * direction_vector.Y
+                    )
+                    local magnitude = {0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2}
+                    local shot_vector = shot_direction:__mul(magnitude[math.random(#magnitude)])
 
-    for _, entity in ipairs(Isaac.GetRoomEntities()) do
-        if entity.Type == EntityType.ENTITY_TEAR and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) then
-            local direction_vector = entity.Velocity
-            entity:Die()
-            for i = 1, tear_count do
-                local angle = 15
-                local random_angle = math.rad(math.random(-math.floor(angle), math.floor(angle)))
-
-                local cos_angle = math.cos(random_angle)
-                local sin_angle = math.sin(random_angle)
-
-                local shot_direction = Vector(cos_angle * direction_vector.X - sin_angle * direction_vector.Y,
-                    sin_angle * direction_vector.X + cos_angle * direction_vector.Y
-                )
-                local magnitude = {0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2}
-                local shot_vector = shot_direction:__mul(magnitude[math.random(#magnitude)])
-
-                homing_tears[i] = player:FireTear(spirit_eye.Position, shot_vector, false, false, true)
-                homing_tears[i].TearFlags = TEAR_FLAGS.FLAG_HOMING
-                homing_tears[i].Color = Color(0.6, 0, 0.6, 0.5, 0, 0, 0)
-                homing_tears[i]:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
+                    homing_tears[i] = player:FireTear(spirit_eye.Position, shot_vector, false, false, true)
+                    homing_tears[i].TearFlags = TEAR_FLAGS.FLAG_HOMING
+                    homing_tears[i]:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
+                end
             end
         end
     end
+    
+    player.TearColor = player_previous_tearcolor
+    player.LaserColor = player_previous_lasercolor
+    homing_tears = {}
 end
 
-
-local spirit_eye_exists = false
 local function applySpiritEyeCache(player, cache_flag)
-    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_SPIRIT_EYE) and spirit_eye_exists == false then
-        spirit_eye = Isaac.Spawn(EntityType.ENTITY_FAMILIAR, ENTITY_VARIANT_SPIRIT_EYE, 0, player.Position, Vector(0,0), player):ToFamiliar()
-        spirit_eye_exists = true
+    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_SPIRIT_EYE) then
+        local spirit_eye_exists = false
+        for _, entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity.Type == EntityType.ENTITY_FAMILIAR and
+                    entity.Variant == ENTITY_VARIANT_SPIRIT_EYE then
+                spirit_eye_exists = true
+            end
+        end
+        
+        if not spirit_eye_exists then
+            Isaac.Spawn(EntityType.ENTITY_FAMILIAR,
+                ENTITY_VARIANT_SPIRIT_EYE,
+                0,
+                player.Position,
+                Vector(0,0),
+                player)
+        end
     end
 end
 
@@ -980,8 +1090,6 @@ function Alphabirth:modUpdate()
             Range = 0
         }
         bloodDriveTimesUsed = 0
-        spirit_eye_exists = false
-        blooderfly_exists = false
 
         if player_type == endor_type then
             player:AddNullCostume(ENDOR_BODY_COSTUME)
@@ -1060,6 +1168,13 @@ function Alphabirth:modUpdate()
         handleBloodDrive()
     end
 
+    -- Judas' Fez Handling
+    if player:HasCollectible(PASSIVE_JUDAS_FEZ) then
+        handleJudasFez()
+    else
+        health_reduction_applied = false
+    end
+
     if hasCyborg then
         local room = Game():GetRoom()
         if room:GetFrameCount() == 1 and room:IsFirstVisit() and room:IsAmbushActive() == true then
@@ -1080,7 +1195,7 @@ function Alphabirth:modUpdate()
                     ACTIVE_CAULDRON, ACTIVE_BIONIC_ARM, ACTIVE_MIRROR, ACTIVE_SURGEON_SIMULATOR,
                     ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
                     PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL,
-                    PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY,ACTIVE_BLOOD_DRIVE
+                    PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY, ACTIVE_BLOOD_DRIVE, PASSIVE_JUDAS_FEZ
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -1155,6 +1270,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyCyborgCache(player, cache_flag)
     applySpiritEyeCache(player, cache_flag)
     applyInfestedBabyCache(player, cache_flag)
+    applyJudasFezCache(player, cache_flag)
     if player:GetPlayerType() == endor_type then
         Isaac.GetPlayer(0).CanFly = true
         Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
@@ -1197,10 +1313,10 @@ Alphabirth:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHemoph
 -------------------
 -- Entity Handling
 -------------------
-Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onBlooderflyInit, ENTITY_VARIANT_BLOODERFLY)
+-- Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onBlooderflyInit, ENTITY_VARIANT_BLOODERFLY)
 Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.blooderflyUpdate, ENTITY_VARIANT_BLOODERFLY)
 
-Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onSpiritEyeInit, ENTITY_VARIANT_SPIRIT_EYE)
+-- Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onSpiritEyeInit, ENTITY_VARIANT_SPIRIT_EYE)
 Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.onSpiritEyeUpdate, ENTITY_VARIANT_SPIRIT_EYE)
 
 Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onInfestedBabyInit, ENTITY_VARIANT_INFESTED_BABY)
