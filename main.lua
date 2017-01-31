@@ -1,4 +1,5 @@
-local Alphabirth = RegisterMod("Alphabirth Pack 2", 1)
+local Alphabirth = {}
+Alphabirth_mod = RegisterMod("Alphabirth Pack 2", 1)
 
 ---------------------------------------
 -- Config
@@ -59,7 +60,7 @@ local function triggerCurses(player)
     end
 end
 
-Alphabirth:AddCallback(ModCallbacks.MC_POST_CURSE_EVAL, evalCurses)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_POST_CURSE_EVAL, evalCurses)
 
 ---------------------------------------
 -- Functions
@@ -137,6 +138,7 @@ local PASSIVE_GLOOM_SKULL = Isaac.GetItemIdByName("Gloom Skull")
 local PASSIVE_AIMBOT = Isaac.GetItemIdByName("Aimbot")
 local PASSIVE_BLOODERFLY = Isaac.GetItemIdByName("Blooderfly")
 local PASSIVE_TECH_ALPHA = Isaac.GetItemIdByName("Tech Alpha")
+local PASSIVE_BRUNCH = Isaac.GetItemIdByName("Brunch")
 local PASSIVE_BIRTH_CONTROL = Isaac.GetItemIdByName("Birth Control")
 local PASSIVE_SPIRIT_EYE = Isaac.GetItemIdByName("Spirit Eye")
 local PASSIVE_INFESTED_BABY = Isaac.GetItemIdByName("Infested Baby")
@@ -441,6 +443,21 @@ end
 -------------------------------------------------------------------------------
 ---- PASSIVE ITEM LOGIC
 -------------------------------------------------------------------------------
+---------------------------------------
+-- Brunch "Logic"
+---------------------------------------
+local has_brunch_health = false
+local function applyBrunchCache(player, cache_flag)
+    if cache_flag == CacheFlag.CACHE_TEARCOLOR and player:HasCollectible(PASSIVE_BRUNCH) then
+        player.Color = Color(0,1,0,1,0,0,0)
+        if not has_brunch_health then
+            player:AddMaxHearts(4)
+            player:AddHearts(4)
+            has_brunch_health = true
+        end
+    end
+end
+
 ---------------------------------------
 -- Cracked Rock Logic
 ---------------------------------------
@@ -1037,8 +1054,13 @@ function Alphabirth:modUpdate()
     --Endor
     if player_type == endor_type and frame > 1 then
         if player:GetMaxHearts() > endor_health then
-            player:AddEternalHearts((player:GetMaxHearts() - endor_health) / 2)
-            player:AddMaxHearts(-(player:GetMaxHearts() - endor_health), false)
+            health_change = player:GetMaxHearts() - endor_healths
+            player:AddEternalHearts(health_change / 2)
+            player:AddMaxHearts(-health_change, false)
+            endor_health = endor_health + health_change
+        end
+        
+        if player:GetMaxHearts() + player:GetEternalHearts() * 2 > endor_health then
             endor_health = endor_health + 2
         end
         
@@ -1090,6 +1112,7 @@ function Alphabirth:modUpdate()
             Range = 0
         }
         bloodDriveTimesUsed = 0
+        has_brunch_health = false
 
         if player_type == endor_type then
             player:AddNullCostume(ENDOR_BODY_COSTUME)
@@ -1099,7 +1122,6 @@ function Alphabirth:modUpdate()
             player:AddMaxHearts(-player:GetMaxHearts())
             player:AddSoulHearts(4)
             player:AddEternalHearts(1)
-            endor_health = 2
         end
     end
 
@@ -1271,6 +1293,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applySpiritEyeCache(player, cache_flag)
     applyInfestedBabyCache(player, cache_flag)
     applyJudasFezCache(player, cache_flag)
+    applyBrunchCache(player, cache_flag)
     if player:GetPlayerType() == endor_type then
         Isaac.GetPlayer(0).CanFly = true
         Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
@@ -1288,12 +1311,12 @@ end
 -------------------
 -- Active Handling
 -------------------
-Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerCauldron, ACTIVE_CAULDRON)
-Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerSurgeonSimulator, ACTIVE_SURGEON_SIMULATOR)
-Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerMirror, ACTIVE_MIRROR)
-Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBionicArm, ACTIVE_BIONIC_ARM)
-Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerAlastorsCandle, ACTIVE_ALASTORS_CANDLE)
-Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBloodDrive, ACTIVE_BLOOD_DRIVE)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerCauldron, ACTIVE_CAULDRON)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerSurgeonSimulator, ACTIVE_SURGEON_SIMULATOR)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerMirror, ACTIVE_MIRROR)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBionicArm, ACTIVE_BIONIC_ARM)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerAlastorsCandle, ACTIVE_ALASTORS_CANDLE)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBloodDrive, ACTIVE_BLOOD_DRIVE)
 
 
 -------------------
@@ -1307,25 +1330,25 @@ Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBloodDrive, A
 -------------------
 -- Take Damage Updates
 -------------------
-Alphabirth:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerCrackedRockEffect)
-Alphabirth:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHemophilia)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerCrackedRockEffect)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHemophilia)
 
 -------------------
 -- Entity Handling
 -------------------
 -- Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onBlooderflyInit, ENTITY_VARIANT_BLOODERFLY)
-Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.blooderflyUpdate, ENTITY_VARIANT_BLOODERFLY)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.blooderflyUpdate, ENTITY_VARIANT_BLOODERFLY)
 
 -- Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onSpiritEyeInit, ENTITY_VARIANT_SPIRIT_EYE)
-Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.onSpiritEyeUpdate, ENTITY_VARIANT_SPIRIT_EYE)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.onSpiritEyeUpdate, ENTITY_VARIANT_SPIRIT_EYE)
 
-Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onInfestedBabyInit, ENTITY_VARIANT_INFESTED_BABY)
-Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.onInfestedBabyUpdate, ENTITY_VARIANT_INFESTED_BABY)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onInfestedBabyInit, ENTITY_VARIANT_INFESTED_BABY)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.onInfestedBabyUpdate, ENTITY_VARIANT_INFESTED_BABY)
 -------------------
 -- Mod Updates
 -------------------
 
-Alphabirth:AddCallback(ModCallbacks.MC_POST_UPDATE, Alphabirth.modUpdate)
-Alphabirth:AddCallback(ModCallbacks.MC_POST_RENDER, Alphabirth.cauldronUpdate)
-Alphabirth:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, Alphabirth.evaluateCache)
-Alphabirth:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, Alphabirth.playerInit)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_POST_UPDATE, Alphabirth.modUpdate)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_POST_RENDER, Alphabirth.cauldronUpdate)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, Alphabirth.evaluateCache)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, Alphabirth.playerInit)
