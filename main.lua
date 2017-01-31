@@ -717,16 +717,9 @@ end
 ---------------------------------------
 -- Blooderfly Logic
 ---------------------------------------
-function Alphabirth:onBlooderflyInit(_,familiar)
-    if blooderfly == nil then
-        Isaac.DebugString("PROBLEM SPAWNING BLOODERFLY")
-    end
-end
-
-local blooderfly
 local blooderfly_target = nil
 local in_range = false
-function Alphabirth:blooderflyUpdate(_,familiar)
+function Alphabirth:blooderflyUpdate(blooderfly)
     local player = Isaac.GetPlayer(0)
 
     if blooderfly_target == nil then
@@ -789,18 +782,30 @@ function Alphabirth:blooderflyUpdate(_,familiar)
     end
 end
 
-local blooderfly_exists = false
 local function applyBlooderflyCache(player, cache_flag)
-    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_BLOODERFLY) and blooderfly_exists == false then
-        blooderfly = Isaac.Spawn(EntityType.ENTITY_FAMILIAR, ENTITY_VARIANT_BLOODERFLY, 0, player.Position, Vector(0,0), player):ToFamiliar()
-        blooderfly_exists = true
+    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_BLOODERFLY) then
+        local blooderfly_exists = false
+        for _, entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity.Type == EntityType.ENTITY_FAMILIAR and
+                    entity.Variant == ENTITY_VARIANT_BLOODERFLY then
+                blooderfly_exists = true
+            end
+        end
+        
+        if not blooderfly_exists then
+            Isaac.Spawn(EntityType.ENTITY_FAMILIAR,
+                ENTITY_VARIANT_BLOODERFLY,
+                0,
+                player.Position,
+                Vector(0,0),
+                player)
+        end
     end
 end
 
 ---------------------------------------
 -- Spirit Eye Logic
 ---------------------------------------
-local spirit_eye
 local homing_tears = {}
 local tear_count = 6
 local SPIRIT_SYNERGIES = {
@@ -818,13 +823,7 @@ local TEAR_FLAGS = {
 
 local knife_exists = false
 
-function Alphabirth:onSpiritEyeInit(_,familiar)
-    if spirit_eye == nil then
-        Isaac.DebugString("Spawning Error : Spirit Eye")
-    end
-end
-
-function Alphabirth:onSpiritEyeUpdate(_,familiar)
+function Alphabirth:onSpiritEyeUpdate(spirit_eye)
     local player = Isaac.GetPlayer(0)
     local player_previous_tearcolor = player.TearColor
     local player_previous_lasercolor = player.LaserColor
@@ -913,12 +912,24 @@ function Alphabirth:onSpiritEyeUpdate(_,familiar)
     homing_tears = {}
 end
 
-
-local spirit_eye_exists = false
 local function applySpiritEyeCache(player, cache_flag)
-    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_SPIRIT_EYE) and spirit_eye_exists == false then
-        spirit_eye = Isaac.Spawn(EntityType.ENTITY_FAMILIAR, ENTITY_VARIANT_SPIRIT_EYE, 0, player.Position, Vector(0,0), player):ToFamiliar()
-        spirit_eye_exists = true
+    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_SPIRIT_EYE) then
+        local spirit_eye_exists = false
+        for _, entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity.Type == EntityType.ENTITY_FAMILIAR and
+                    entity.Variant == ENTITY_VARIANT_SPIRIT_EYE then
+                spirit_eye_exists = true
+            end
+        end
+        
+        if not spirit_eye_exists then
+            Isaac.Spawn(EntityType.ENTITY_FAMILIAR,
+                ENTITY_VARIANT_SPIRIT_EYE,
+                0,
+                player.Position,
+                Vector(0,0),
+                player)
+        end
     end
 end
 
@@ -1036,8 +1047,6 @@ function Alphabirth:modUpdate()
             Range = 0
         }
         bloodDriveTimesUsed = 0
-        spirit_eye_exists = false
-        blooderfly_exists = false
 
         if Isaac.GetPlayer(0):GetName() == "Endor" then
             Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
@@ -1258,10 +1267,10 @@ Alphabirth:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHemoph
 -------------------
 -- Entity Handling
 -------------------
-Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onBlooderflyInit, ENTITY_VARIANT_BLOODERFLY)
+-- Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onBlooderflyInit, ENTITY_VARIANT_BLOODERFLY)
 Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.blooderflyUpdate, ENTITY_VARIANT_BLOODERFLY)
 
-Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onSpiritEyeInit, ENTITY_VARIANT_SPIRIT_EYE)
+-- Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onSpiritEyeInit, ENTITY_VARIANT_SPIRIT_EYE)
 Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.onSpiritEyeUpdate, ENTITY_VARIANT_SPIRIT_EYE)
 
 Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onInfestedBabyInit, ENTITY_VARIANT_INFESTED_BABY)
