@@ -1060,6 +1060,10 @@ function Alphabirth:modUpdate()
             endor_health = endor_health + health_change
         end
         
+        if player:GetMaxHearts() + player:GetEternalHearts() * 2 > endor_health then
+            endor_health = endor_health + 2
+        end
+        
         for i = 1, 24 do
             if player:IsBlackHeart(i) then
                 player:RemoveBlackHeart(i)
@@ -1118,7 +1122,6 @@ function Alphabirth:modUpdate()
             player:AddMaxHearts(-player:GetMaxHearts())
             player:AddSoulHearts(4)
             player:AddEternalHearts(1)
-            endor_health = 2
         end
     end
 
