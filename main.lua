@@ -140,6 +140,7 @@ local PASSIVE_TECH_ALPHA = Isaac.GetItemIdByName("Tech Alpha")
 local PASSIVE_BIRTH_CONTROL = Isaac.GetItemIdByName("Birth Control")
 local PASSIVE_SPIRIT_EYE = Isaac.GetItemIdByName("Spirit Eye")
 local PASSIVE_INFESTED_BABY = Isaac.GetItemIdByName("Infested Baby")
+local PASSIVE_JUDAS_FEZ = Isaac.GetItemIdByName("Judas' Fez")
 
 ---------------------------------------
 -- Entity Variant Declaration
@@ -605,6 +606,35 @@ local function applyGloomSkullCache(player, cache_flag)
 end
 
 ---------------------------------------
+-- Judas' Fez Logic
+---------------------------------------
+local health_reduction_applied = false
+local function applyJudasFezCache(player, cache_flag)
+    if cache_flag == CacheFlag.CACHE_DAMAGE and player:HasCollectible(PASSIVE_JUDAS_FEZ) then
+        player.Damage = player.Damage * 1.35
+        --player:AddNullCostume()
+        if not health_reduction_applied then
+            local hearts = player:GetHearts() - 2
+            player:AddMaxHearts(hearts * -1)
+            health_reduction_applied = true
+        end
+    end
+end
+
+local combat_rooms_visited = 0
+local function handleJudasFez()
+    local player = Isaac.GetPlayer(0)
+    local room = Game():GetRoom()
+    if room:IsFirstVisit() and not room:IsClear() and room:GetFrameCount() == 1 then
+       combat_rooms_visited = combat_rooms_visited + 1
+       if combat_rooms_visited == 3 then
+          player:UseCard(Card.CARD_DEVIL)
+          combat_rooms_visited = 0
+       end
+    end
+end
+
+---------------------------------------
 -- Cyborg Logic
 ---------------------------------------
 
@@ -820,7 +850,6 @@ local SPIRIT_SYNERGIES = {
 local TEAR_FLAGS = {
     FLAG_HOMING = 1 << 2
 }
-
 local knife_exists = false
 
 function Alphabirth:onSpiritEyeUpdate(spirit_eye)
@@ -1121,6 +1150,13 @@ function Alphabirth:modUpdate()
         handleBloodDrive()
     end
 
+    -- Judas' Fez Handling
+    if player:HasCollectible(PASSIVE_JUDAS_FEZ) then
+        handleJudasFez()
+    else
+        health_reduction_applied = false
+    end
+
     if hasCyborg then
         local room = Game():GetRoom()
         if room:GetFrameCount() == 1 and room:IsFirstVisit() and room:IsAmbushActive() == true then
@@ -1141,7 +1177,7 @@ function Alphabirth:modUpdate()
                     ACTIVE_CAULDRON, ACTIVE_BIONIC_ARM, ACTIVE_MIRROR, ACTIVE_SURGEON_SIMULATOR,
                     ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
                     PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL,
-                    PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY,ACTIVE_BLOOD_DRIVE
+                    PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY, ACTIVE_BLOOD_DRIVE, PASSIVE_JUDAS_FEZ
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -1216,6 +1252,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyCyborgCache(player, cache_flag)
     applySpiritEyeCache(player, cache_flag)
     applyInfestedBabyCache(player, cache_flag)
+    applyJudasFezCache(player, cache_flag)
     if isEndor then
         Isaac.GetPlayer(0).CanFly = true
         Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
