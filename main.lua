@@ -825,26 +825,37 @@ end
 
 function Alphabirth:onSpiritEyeUpdate(_,familiar)
     local player = Isaac.GetPlayer(0)
-
+    local player_previous_tearcolor = player.TearColor
+    local player_previous_lasercolor = player.LaserColor
+    
+    player.TearColor = Color(0.6, 0, 0.6, 0.5, 0, 0, 0)
+    -- Since lasers are bright red by default, I put a very bright blue overlay on top. 
+    player.LaserColor = Color(1, 0, 0, 1, 0, 0, 255)
+    
     if player:HasCollectible(SPIRIT_SYNERGIES[1]) then -- DR_FETUS
         spirit_eye:MoveDiagonally(0.35)
         for _,entity in ipairs(Isaac.GetRoomEntities()) do
             if entity:ToBomb() and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) then
-                local bomb = player:FireBomb(spirit_eye.Position, entity.Velocity)
-                entity:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
-                entity:Remove()
-                bomb.ExplosionDamage = bomb.ExplosionDamage * 1.8
-                bomb.Color = Color(0.6, 0, 0.02, 1, 0, 0, 0)
-                bomb:SetExplosionCountdown(5)
+                local bomb = entity:ToBomb()
+                for i=1, numberOfTears do
+                    homing_tears[i] = player:FireTear(spirit_eye.Position, Vector(math.random(-explosionRadius, explosionRadius),math.random(-explosionRadius, explosionRadius)), false, false, true)
+                    homing_tears[i].TearFlags = TEAR_FLAGS.FLAG_HOMING
+                    homing_tears[i].Scale = 1
+                    homing_tears[i].Height = -60
+                    homing_tears[i].FallingSpeed = -4 + math.random()*-4
+                    homing_tears[i].FallingAcceleration = math.random() + 0.5
+                end
                 bomb:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
+                bomb.ExplosionDamage = bomb.ExplosionDamage * 1.8
+                bomb.Color = Color(0.6, 0, 0.6, 0.5, 0, 0, 0)
             end
         end
     elseif player:HasCollectible(SPIRIT_SYNERGIES[2]) then
         spirit_eye:MoveDiagonally(0.44)
         if Isaac.GetFrameCount() % 44 == 0 then
-            local laser = player:FireTechXLaser(spirit_eye.Position, spirit_eye.Velocity:__mul(2), 4)
+            local laser = player:FireTechXLaser(spirit_eye.Position, spirit_eye.Velocity:__mul(2), 10)
             laser.TearFlags = TEAR_FLAGS.FLAG_HOMING
-            laser:SetTimeout(6)
+            laser:SetTimeout(10)
         end
     elseif player:HasCollectible(SPIRIT_SYNERGIES[3]) or player:HasCollectible(SPIRIT_SYNERGIES[4]) then --TECH 1 and 2
         spirit_eye:FollowPosition(player.Position)
@@ -855,13 +866,16 @@ function Alphabirth:onSpiritEyeUpdate(_,familiar)
             end
         end
     elseif player:HasCollectible(SPIRIT_SYNERGIES[5]) then -- BRIMSTONE
-        local x = math.cos(Game():GetFrameCount()/50)*25
-        local y = math.sin(Game():GetFrameCount()/50)*25
-        spirit_eye.Position = Vector(player.Position.X + x, player.Position.Y + y)
+        spirit_eye:FollowPosition(player.Position)
         if Isaac.GetFrameCount() % 79 == 0 then
             local laser = player:FireDelayedBrimstone(RandomVector():GetAngleDegrees(), spirit_eye)
-            laser.TearFlags = TEAR_FLAGS.FLAG_HOMING
-            laser:SetTimeout(6)
+            local rotation_roll = math.random(1, 2)
+            local rotation_speed = math.random(2.0, 3.0)
+            if rotation_roll == 1 then
+                rotation_speed = -rotation_speed
+            end
+            laser:SetActiveRotation(0, math.random(90, 180), rotation_speed, false)
+            laser:SetTimeout(24)
         end
     elseif player:HasCollectible(SPIRIT_SYNERGIES[6]) then -- MOMS KNIFE
         spirit_eye:FollowPosition(player.Position:__mul(1.1))
@@ -888,12 +902,15 @@ function Alphabirth:onSpiritEyeUpdate(_,familiar)
 
                     homing_tears[i] = player:FireTear(spirit_eye.Position, shot_vector, false, false, true)
                     homing_tears[i].TearFlags = TEAR_FLAGS.FLAG_HOMING
-                    homing_tears[i].Color = Color(0.6, 0, 0.6, 0.5, 0, 0, 0)
                     homing_tears[i]:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
                 end
             end
         end
     end
+    
+    player.TearColor = player_previous_tearcolor
+    player.LaserColor = player_previous_lasercolor
+    homing_tears = {}
 end
 
 
