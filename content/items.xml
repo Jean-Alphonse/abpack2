@@ -12,6 +12,7 @@
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Tech Alpha" />
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Aimbot" description = "H4x Sh0t"/>
     <passive gfx="collectible_birthcontrol.png" cache="all" name="Birth Control" />
+    <passive gfx="collectible_crackedrock.png" cache="damage" devilprice="2" name = "Judas' Fez" />
 
     <familiar gfx="collectible_blooderfly.png" cache="familiars" name="Blooderfly" description="Blood Friend" />
     <familiar gfx="collectible_spiriteye.png" cache="familiars" name="Spirit Eye" description="Spirit Friend" />
