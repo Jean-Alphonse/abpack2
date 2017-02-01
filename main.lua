@@ -33,6 +33,7 @@ local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/pla
 local FLAG_SPIRIT_EYE_SHOT = 1 << 38
 local FLAG_HEMOPHILIA_SHOT = 1 << 39
 local FLAG_HEMOPHILIA_APPLIED = 1 << 40
+local FLAG_QUILL_FEATHER_APLLIED = 1 << 41
 
 ---------------------------------------
 -- Curse Declaration
@@ -843,6 +844,47 @@ local function applyBirthControlCache (pl, fl)
     end
 end
 
+---------------------------------------
+-- Quill Feather Logic
+---------------------------------------
+
+local function applyQuillFeatherCache(player, flag)
+    if Isaac.GetPlayer(0):HasCollectible(PASSIVE_QUILL_FEATHER) and flag == CacheFlag.CACHE_TEARCOLOR then
+        Isaac.DebugString("str")
+        Isaac.GetPlayer(0).TearColor = Color(0,0,0,1,0,0,0)
+    end
+end
+
+local quillFeatherNumberOfTears = math.random(5,12)
+local function handleQuillFeather()
+    local player = Isaac.GetPlayer(0)
+    local chance = 5 + player.Luck * 2
+    for _,e in ipairs(Isaac.GetRoomEntities()) do
+        if e.Type == EntityType.ENTITY_TEAR and math.random(1,700) < chance and not e:HasEntityFlags(FLAG_QUILL_FEATHER_APLLIED) and e.FrameCount < 60 then
+            Isaac.DebugString("str")
+            quillFeatherNumberOfTears = math.random(5,12)
+            tears = {}
+            for i=1,quillFeatherNumberOfTears do
+                local direction_vector = e.Velocity
+                local angle = 15
+                local random_angle = math.rad(math.random(-math.floor(angle), math.floor(angle)))
+                local cos_angle = math.cos(random_angle)
+                local sin_angle = math.sin(random_angle)
+                local shot_direction = Vector(cos_angle * direction_vector.X - sin_angle * direction_vector.Y,
+                    sin_angle * direction_vector.X + cos_angle * direction_vector.Y
+                )
+                local magnitude = {0.8,0.9,1,1.1,1.2}
+                local shot_vector = shot_direction:__mul(magnitude[math.random(#magnitude)*player.ShotSpeed])
+
+                tears[i] = player:FireTear(e.Position, shot_vector, false, false, true)
+                tears[i].Height = -20
+                tears[i]:AddEntityFlags(FLAG_QUILL_FEATHER_APLLIED)
+            end
+            e:Remove()
+        end
+    end
+end
+
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
 -------------------------------------------------------------------------------
@@ -1125,46 +1167,6 @@ function Alphabirth:onInfestedBabyInit(familiar)
 end
 
 ---------------------------------------
--- Quill Feather Logic
----------------------------------------
-
-local function applyQuillFeatherCache(player, flag)
-    if player:HasCollectible(PASSIVE_QUILL_FEATHER) and flag == CacheFlag.CACHE_TEARCOLOR then
-        player.TearColor = Color(1, 1, 1, 1, 1, 1, 1)
-    end
-end
-
-local quillFeatherNumberOfTears = math.random(10,20)
-local quillFeatherTears = {}
-local function handleQuillFeather()
-    local player = Isaac.GetPlayer(0)
-    local chance = 1 + player.Luck * 2
-    for _,e in ipairs(Isaac.GetRoomEntities()) do
-        if e.Type == EntityType.ENTITY_TEAR and math.random(1, 100) < chance then
-            Isaac.DebugString("str")
-            quillFeatherNumberOfTears = math.random(10,20)
-            for i=1, numberOfTears do
-                local angle = 15
-                local random_angle = math.rad(math.random(-math.floor(angle), math.floor(angle)))
-                local cos_angle = math.cos(random_angle)
-                local sin_angle = math.sin(random_angle)
-                local shot_direction = Vector(cos_angle * direction_vector.X - sin_angle * direction_vector.Y,
-                    sin_angle * direction_vector.X + cos_angle * direction_vector.Y
-                )
-                local magnitude = {0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2}
-                local shot_vector = shot_direction:__mul(magnitude[math.random(#magnitude)])
-                quillFeatherTears[i] = player:FireTear(dmg_target.Position,
-                    shot_vector,
-                    false,
-                    false,
-                    true
-                )
-            end
-        end
-    end
-end
-
----------------------------------------
 -- Post-Update Callback
 ---------------------------------------
 local currentRoom = Game():GetRoom()
@@ -1227,7 +1229,6 @@ function Alphabirth:modUpdate()
     triggerCurses(player)
 
     if player:HasCollectible(PASSIVE_QUILL_FEATHER) then
-        Isaac.DebugString("str")
         handleQuillFeather()
     end
 
