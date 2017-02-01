@@ -3,12 +3,12 @@
     <active gfx="collectible_empty.png" maxcharges="0" name="Cauldron" />
     <active gfx="collectible_mirror.png" maxcharges="0" name="Mirror" />
     <active gfx="collectible_bionicarm.png" maxcharges="12" name="Bionic Arm" />
-    <active gfx="collectible_alastorscandle.png" maxcharges="3" name="Alastor's Candle" description ="The dark shines brightest"/>
+    <active gfx="collectible_alastorscandle.png" maxcharges="3" name="Alastor's Candle" devilprice="1" description ="The dark shines brightest"/>
     <active gfx="collectible_blooddrive.png" maxcharges="0" name="Blood Drive" />
 
     <passive gfx="collectible_crackedrock.png" cache="tearcolor" devilprice="1" name = "Cracked Rock" />
     <passive gfx="collectible_hemophilia.png" cache="tearcolor" name="Hemophilia" description="What a bloody mess..." />
-    <passive gfx="collectible_gloomskull.png" cache="damage" name="Gloom Skull" description="Damage up + Evil Up + You Feel Scared" />
+    <passive gfx="collectible_gloomskull.png" cache="damage" name="Gloom Skull" devilprice="1" description="Damage up + Evil Up + You Feel Scared" />
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Tech Alpha" />
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Aimbot" description = "H4x Sh0t"/>
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Brunch" description = "Some kind of holy amalgamate...!"/>
@@ -18,6 +18,6 @@
 
     <familiar gfx="collectible_blooderfly.png" cache="familiars" name="Blooderfly" description="Blood Friend" />
     <familiar gfx="collectible_spiriteye.png" cache="familiars" name="Spirit Eye" description="Spirit Friend" />
-    <familiar gfx="collectible_infestedbaby.png" cache="familiars" name="Infested Baby" />
+    <familiar gfx="collectible_infestedbaby.png" cache="familiars" devilprice="1" name="Infested Baby" />
 
 </items>
