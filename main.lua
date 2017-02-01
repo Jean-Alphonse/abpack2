@@ -31,6 +31,8 @@ local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/pla
 -- use FLAG_YOUR_FLAG = 1 << FlagID
 
 local FLAG_SPIRIT_EYE_SHOT = 1 << 38
+local FLAG_HEMOPHILIA_SHOT = 1 << 39
+local FLAG_HEMOPHILIA_APPLIED = 1 << 40
 
 ---------------------------------------
 -- Curse Declaration
@@ -305,7 +307,12 @@ function Alphabirth:triggerMirror()
     -- Animate the teleportation.
     -- Further randomize the selection.
     for rand_key, entity in pairs(Isaac.GetRoomEntities()) do
-        if entity:IsActiveEnemy() and entity.Type ~= 306 then
+        if entity:IsActiveEnemy() and 
+                entity.Type ~= 306 and -- Portals
+                entity.Type ~= 304 and -- The Thing
+                entity.Type ~= EntityType.ENTITY_RAGE_CREEP and
+                entity.Type ~= EntityType.ENTITY_BLIND_CREEP and
+                entity.Type ~= EntityType.ENTITY_WALL_CREEP then
         	local player_pos = player.Position
         	local entity_pos = entity.Position
 
@@ -519,7 +526,7 @@ local function handleTechAlpha(player)
             roll_max = roll_max * 2
         end
 
-        if entity.Type == EntityType.ENTITY_TEAR then
+        if entity.Type == EntityType.ENTITY_TEAR and not entity:HasEntityFlags(FLAG_HEMOPHILIA_SHOT) then
             entity_will_shoot = true
         elseif entity.Type == EntityType.ENTITY_BOMBDROP then
             if player:HasCollectible(CollectibleType.COLLECTIBLE_DR_FETUS) then
@@ -574,25 +581,47 @@ end
 ---------------------------------------
 
 local explosionRadius = 4
-local numberOfTears = 15
+local tear_cap = 15
+local tear_min = 4
 local tears = {}
 
 function Alphabirth:triggerHemophilia(dmg_target, dmg_amount, dmg_source, dmg_flags)
     local player = Isaac.GetPlayer(0)
-    if dmg_target:IsActiveEnemy() and dmg_target.HitPoints <= dmg_amount and player:HasCollectible(PASSIVE_HEMOPHILIA) and math.random(1,3) == 1 then
-        Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.PLAYER_CREEP_RED,0,dmg_target.Position,Vector(0, 0),player)
-        Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.LARGE_BLOOD_EXPLOSION,0,dmg_target.Position,Vector(0, 0),player)
-        for i=1, numberOfTears do
-            tears[i] = player:FireTear(dmg_target.Position, Vector(math.random(-explosionRadius, explosionRadius),math.random(-explosionRadius, explosionRadius)), false, false, true)
-            tears[i]:ChangeVariant(1)
-            tears[i].TearFlags = 0
-            tears[i].Scale = 1
-            tears[i].Height = -60
-            tears[i].FallingSpeed = -4 + math.random()*-4
-            tears[i].FallingAcceleration = math.random() + 0.5
+    if dmg_target:IsActiveEnemy() and 
+            dmg_target.HitPoints <= dmg_amount and
+            player:HasCollectible(PASSIVE_HEMOPHILIA) and 
+            math.random(1,3) == 1 then
+        if not dmg_target:HasEntityFlags(FLAG_HEMOPHILIA_APPLIED) then
+            local numberOfTears = 8 + player.Luck
+            local tear_offset = math.random(-2,2)
+            numberOfTears = numberOfTears + tear_offset
+            if numberOfTears > tear_cap then
+                numberOfTears = tear_cap
+            elseif numberOfTears < tear_min then
+                numberOfTears = tear_min
+            end
+            
+            for i=1, numberOfTears do
+                tears[i] = player:FireTear(dmg_target.Position, 
+                    Vector(math.random(-explosionRadius, explosionRadius),
+                    math.random(-explosionRadius, explosionRadius)), 
+                    false, 
+                    false, 
+                    true
+                )
+                tears[i]:ChangeVariant(1)
+                tears[i].TearFlags = 0
+                tears[i].Scale = 1
+                tears[i].Height = -60
+                tears[i].FallingSpeed = -4 + math.random()*-4
+                tears[i].FallingAcceleration = math.random() + 0.5
+                tears[i]:AddEntityFlags(FLAG_HEMOPHILIA_SHOT)
+            end
+            
+            dmg_target:BloodExplode()
+            dmg_target:AddEntityFlags(FLAG_HEMOPHILIA_APPLIED)
+            tears = {}
         end
-        dmg_target:BloodyExplosion()
-        tears = {}
     end
 end
 
