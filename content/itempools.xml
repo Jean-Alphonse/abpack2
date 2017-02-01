@@ -1,5 +1,91 @@
 <ItemPools>
+    <Pool Name="boss">
+        <Item Name="Brunch" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+    </Pool>
+
+    <Pool Name="treasure">
+        <Item Name="Mirror" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Bionic Arm" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Alastor's Candle" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Blood Drive" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Hemophilia" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Tech Alpha" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Aimbot" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Birth Control" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Hot Coals" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Blooderfly" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Infested Baby" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+    </Pool>
+
+    <Pool Name="shop">
+        <Item Name="Cauldron" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Surgeon Simulator" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+    </Pool>
+
     <Pool Name="devil">
         <Item Name="Cracked Rock" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Judas Fez" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Infested Baby" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
+
+    <Pool Name="angel">
+
+    </Pool>
+
+    <Pool Name="secret">
+        <Item Name="Cauldron" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Alastor's Candle" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Gloom Skull" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Hot Coals" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Spirit Eye" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+    </Pool>
+
+    <Pool Name="beggar">
+
+    </Pool>
+
+    <Pool Name="redChest">
+        <Item Name="Alastor's Candle" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Gloom Skull" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Birth Control" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Spirit Eye" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+    </Pool>
+
+    <Pool Name="greedTreasure">
+        <Item Name="Mirror" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Bionic Arm" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Alastor's Candle" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Blood Drive" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Hemophilia" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Tech Alpha" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Aimbot" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Birth Control" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Hot Coals" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Blooderfly" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Infested Baby" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+    </Pool>
+
+    <Pool Name="greedShop">
+        <Item Name="Cauldron" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Surgeon Simulator" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+    </Pool>
+
+    <Pool Name="greedDevil">
+        <Item Name="Cracked Rock" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Judas Fez" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Infested Baby" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+    </Pool>
+
+    <Pool Name="greedAngel">
+
+    </Pool>
+
+    <Pool Name="greedSecret">
+        <Item Name="Cauldron" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Alastor's Candle" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Gloom Skull" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Hot Coals" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Spirit Eye" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+    </Pool>
+
 </ItemPools>
