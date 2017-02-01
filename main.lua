@@ -144,6 +144,7 @@ local PASSIVE_BIRTH_CONTROL = Isaac.GetItemIdByName("Birth Control")
 local PASSIVE_SPIRIT_EYE = Isaac.GetItemIdByName("Spirit Eye")
 local PASSIVE_INFESTED_BABY = Isaac.GetItemIdByName("Infested Baby")
 local PASSIVE_JUDAS_FEZ = Isaac.GetItemIdByName("Judas' Fez")
+local PASSIVE_HOT_COALS = Isaac.GetItemIdByName("Hot Coals")
 
 ---------------------------------------
 -- Entity Variant Declaration
@@ -650,6 +651,63 @@ local function handleJudasFez()
           combat_rooms_visited = 0
        end
     end
+end
+
+
+---------------------------------------
+-- Hot Coals Logic
+---------------------------------------
+local dmg_modifier = 0
+local frame_count = 0
+local function applyHotCoalsUpdate(player, cache_flag)
+    if player:HasCollectible(PASSIVE_HOT_COALS) and cache_flag == CacheFlag.CACHE_DAMAGE then
+        player.Damage = player.Damage + dmg_modifier
+    end
+end
+
+local function handleHotCoals()
+    local player = Isaac.GetPlayer(0)
+    local direction = player:GetMovementVector()
+    if (direction:Length() == 0.0) then
+        dmg_modifier = 0
+        frame_count = 0
+    else
+        dmg_modifier = 2
+        trail = Isaac.Spawn(EntityType.ENTITY_EFFECT,
+            EffectVariant.PLAYER_CREEP_BLACKPOWDER ,
+            1,
+            player.Position,
+            Vector(0, 0),
+            player
+        ):ToEffect()
+
+        trail:SetTimeout(15)
+        trail:SetColor(Color(0.5,0,0,0.5,100,100,100), 0, 0, false, false)
+
+        frame_count = frame_count + 1
+        if frame_count == 121 then
+            Isaac.Spawn(
+                EntityType.ENTITY_EFFECT,
+                EffectVariant.POOF01,
+                0,
+                player.Position,
+                Vector(0, 0),
+                player
+            )
+
+            flame = Isaac.Spawn(
+                EntityType.ENTITY_EFFECT,
+                EffectVariant.RED_CANDLE_FLAME,
+                0,
+                player.Position,
+                Vector(0,0),
+                player
+            ):ToEffect()
+            frame_count = 0
+        end
+    end
+    player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
+    player:EvaluateItems()
 end
 
 ---------------------------------------
@@ -1183,6 +1241,10 @@ function Alphabirth:modUpdate()
         handleTechAlpha(player)
     end
 
+    if player:HasCollectible(PASSIVE_HOT_COALS) then
+        handleHotCoals()
+    end
+
     if Game():GetFrameCount() % 10 == 0 then
         birthControlUpdate()
     end
@@ -1218,7 +1280,8 @@ function Alphabirth:modUpdate()
                     ACTIVE_CAULDRON, ACTIVE_BIONIC_ARM, ACTIVE_MIRROR, ACTIVE_SURGEON_SIMULATOR,
                     ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
                     PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL,
-                    PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY, ACTIVE_BLOOD_DRIVE, PASSIVE_JUDAS_FEZ
+                    PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY, ACTIVE_BLOOD_DRIVE, PASSIVE_JUDAS_FEZ,
+                    PASSIVE_HOT_COALS
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -1295,6 +1358,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyInfestedBabyCache(player, cache_flag)
     applyJudasFezCache(player, cache_flag)
     applyBrunchCache(player, cache_flag)
+    applyHotCoalsUpdate(player, cache_flag)
     if player:GetPlayerType() == endor_type then
         Isaac.GetPlayer(0).CanFly = true
         Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
