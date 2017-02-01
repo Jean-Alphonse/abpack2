@@ -26,10 +26,12 @@
         <Item Name="Cracked Rock" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Judas Fez" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Infested Baby" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Alastor's Candle" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Gloom Skull" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="angel">
-
+        <Item Name="Spirit Eye" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="secret">
@@ -42,6 +44,14 @@
 
     <Pool Name="beggar">
 
+    </Pool>
+
+    <Pool Name="demonBeggar">
+        <Item Name="Cracked Rock" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Judas Fez" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Infested Baby" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Alastor's Candle" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Gloom Skull" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="redChest">
@@ -74,10 +84,11 @@
         <Item Name="Cracked Rock" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Judas Fez" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Infested Baby" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Gloom Skull" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="greedAngel">
-
+        <Item Name="Spirit Eye" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="greedSecret">
@@ -86,6 +97,18 @@
         <Item Name="Gloom Skull" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Hot Coals" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Spirit Eye" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Alastor's Candle" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+    </Pool>
+
+    <Pool Name="challenge">
+        <Item Name="Blooderfly" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Infested Baby" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Spirit Eye" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Cauldron" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+    </Pool>
+
+    <Pool Name="goldenChest">
+        <Item Name="Gloom Skull" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
 </ItemPools>
