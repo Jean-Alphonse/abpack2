@@ -657,11 +657,11 @@ end
 ---------------------------------------
 -- Hot Coals Logic
 ---------------------------------------
-local dmg_modifier = 0
+local dmg_modifier = 1
 local frame_count = 0
 local function applyHotCoalsUpdate(player, cache_flag)
     if player:HasCollectible(PASSIVE_HOT_COALS) and cache_flag == CacheFlag.CACHE_DAMAGE then
-        player.Damage = player.Damage + dmg_modifier
+        player.Damage = player.Damage * dmg_modifier
     end
 end
 
@@ -669,10 +669,10 @@ local function handleHotCoals()
     local player = Isaac.GetPlayer(0)
     local direction = player:GetMovementVector()
     if (direction:Length() == 0.0) then
-        dmg_modifier = 0
+        dmg_modifier = 0.8
         frame_count = 0
     else
-        dmg_modifier = 2
+        dmg_modifier = 1.4
         trail = Isaac.Spawn(EntityType.ENTITY_EFFECT,
             EffectVariant.PLAYER_CREEP_BLACKPOWDER ,
             1,
