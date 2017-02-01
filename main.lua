@@ -21,6 +21,7 @@ local AIMBOT_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accesso
 local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_transformation_cyborg.anm2")
 local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hemophilia.anm2")
 local BIRTH_CONTROL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_birthcontrol.anm2")
+local JUDAS_FEZ_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_judasfez.anm2")
 
 local ENDOR_BODY_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorbody.anm2")
 local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorhead.anm2")
@@ -629,7 +630,7 @@ local health_reduction_applied = false
 local function applyJudasFezCache(player, cache_flag)
     if cache_flag == CacheFlag.CACHE_DAMAGE and player:HasCollectible(PASSIVE_JUDAS_FEZ) then
         player.Damage = player.Damage * 1.35
-        --player:AddNullCostume()
+        player:AddNullCostume(JUDAS_FEZ_COSTUME)
         if not health_reduction_applied then
             local hearts = player:GetHearts() - 2
             player:AddMaxHearts(hearts * -1)
