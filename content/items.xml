@@ -14,7 +14,7 @@
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Brunch" description = "Some kind of holy amalgamate...!"/>
     <passive gfx="collectible_birthcontrol.png" cache="all" name="Birth Control" />
     <passive gfx="collectible_judasfez.png" cache="damage" devilprice="1" name = "Judas' Fez" />
-    <passive gfx="collectible_crackedrock.png" cache="damage" name = "Hot Coals"/>
+    <passive gfx="collectible_hotcoals.png" cache="damage tearcolor" name = "Hot Coals"/>
 
     <familiar gfx="collectible_blooderfly.png" cache="familiars" name="Blooderfly" description="Blood Friend" />
     <familiar gfx="collectible_spiriteye.png" cache="familiars" name="Spirit Eye" description="Spirit Friend" />
