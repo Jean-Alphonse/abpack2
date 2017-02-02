@@ -37,6 +37,14 @@ local FLAG_HEMOPHILIA_APPLIED = 1 << 40
 local FLAG_QUILL_FEATHER_APLLIED = 1 << 41
 
 ---------------------------------------
+-- Tear Flag Easy Access
+---------------------------------------
+local TEAR_FLAGS = {
+    FLAG_HOMING = 1 << 2,
+    FLAG_IPECAC = 1 << 12
+}
+
+---------------------------------------
 -- Curse Declaration
 ---------------------------------------
 -- use CURSE_YOUR_CURSE = 1 << CurseID
@@ -906,12 +914,14 @@ function Alphabirth:onHostUpdate(host)
             if host.StateFrame == 27 then -- Approximate attack frame.
                 if host.Variant == ENTITY_VARIANT_BRIMSTONE_HOST then
                     player_saved_position = host:GetData()[0]
-                    direction_angle = (player_saved_position - host.Position):GetAngleDegrees()
-                    EntityLaser.ShootAngle(1, host.Position, direction_angle, 30, Vector(0,0), host)
+                    local direction_vector = (player_saved_position - host.Position):Normalized()
+                    local direction_angle = direction_vector:GetAngleDegrees()
+                    local brimstone_laser = EntityLaser.ShootAngle(1, host.Position, direction_angle, 20, Vector(0,0), host)
                 end
                 
                 for _, entity in ipairs(Isaac.GetRoomEntities()) do
                     if entity.Type == EntityType.ENTITY_PROJECTILE and
+                            entity.Variant == 0 and
                             entity.SpawnerType == EntityType.ENTITY_HOST and
                             entity.SpawnerVariant >= 200 then
                         entity:Remove()
@@ -944,7 +954,7 @@ function Alphabirth:triggerHostTakeDamage(dmg_target, dmg_amount, dmg_flags, dmg
             return false
         end
         
-        if host.State == NpcState.STATE_IDLE then
+        if host.State == NpcState.STATE_IDLE or host.State == NpcState.STATE_SPECIAL then
             return false
         end
     end
@@ -1052,9 +1062,6 @@ local SPIRIT_SYNERGIES = {
     CollectibleType.COLLECTIBLE_BRIMSTONE,
     CollectibleType.COLLECTIBLE_MOMS_KNIFE,
     CollectibleType.COLLECTIBLE_EPIC_FETUS
-}
-local TEAR_FLAGS = {
-    FLAG_HOMING = 1 << 2
 }
 local knife_exists = false
 
