@@ -855,18 +855,17 @@ local function applyQuillFeatherCache(player, flag)
     end
 end
 
-local quillFeatherNumberOfTears = math.random(5,12)
+local quillFeatherNumberOfTears = 15
 local function handleQuillFeather()
     local player = Isaac.GetPlayer(0)
     local chance = 5 + player.Luck * 2
     for _,e in ipairs(Isaac.GetRoomEntities()) do
-        if e.Type == EntityType.ENTITY_TEAR and math.random(1,700) < chance and not e:HasEntityFlags(FLAG_QUILL_FEATHER_APLLIED) and e.FrameCount < 60 then
+        if e.Type == EntityType.ENTITY_TEAR and math.random(1,50) < chance and not e:HasEntityFlags(FLAG_QUILL_FEATHER_APLLIED) and e.FrameCount == 1 then
             Isaac.DebugString("str")
-            quillFeatherNumberOfTears = math.random(5,12)
             tears = {}
             for i=1,quillFeatherNumberOfTears do
                 local direction_vector = e.Velocity
-                local angle = 15
+                local angle = 30
                 local random_angle = math.rad(math.random(-math.floor(angle), math.floor(angle)))
                 local cos_angle = math.cos(random_angle)
                 local sin_angle = math.sin(random_angle)
