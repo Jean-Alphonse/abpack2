@@ -155,6 +155,7 @@ local PASSIVE_HOT_COALS = Isaac.GetItemIdByName("Hot Coals")
 local ENTITY_VARIANT_BLOODERFLY = Isaac.GetEntityVariantByName("Blooderfly")
 local ENTITY_VARIANT_SPIRIT_EYE = Isaac.GetEntityVariantByName("Spirit Eye")
 local ENTITY_VARIANT_INFESTED_BABY = Isaac.GetEntityVariantByName("Infested Baby")
+local ENTITY_VARIANT_BRIMSTONE_HOST = Isaac.GetEntityVariantByName("Brimstone Host")
 
 ---------------------------------------
 -- Trinket Declaration
@@ -850,6 +851,60 @@ end
 ---- ENTITY LOGIC (Familiars, Enemies, Bosses)
 -------------------------------------------------------------------------------
 ---------------------------------------
+-- Host Logic
+---------------------------------------
+function Alphabirth:onHostUpdate(host)
+    local player = Isaac.GetPlayer(0)
+    if host.Variant >= 200 then
+        if host.State == NpcState.STATE_ATTACK then
+            if host.StateFrame == 27 then -- Approximate attack frame.
+                if host.Variant == ENTITY_VARIANT_BRIMSTONE_HOST then
+                    player_saved_position = host:GetData()[0]
+                    direction_angle = (player_saved_position - host.Position):GetAngleDegrees()
+                    EntityLaser.ShootAngle(1, host.Position, direction_angle, 30, Vector(0,0), host)
+                end
+                
+                for _, entity in ipairs(Isaac.GetRoomEntities()) do
+                    if entity.Type == EntityType.ENTITY_PROJECTILE and
+                            entity.SpawnerType == EntityType.ENTITY_HOST and
+                            entity.SpawnerVariant >= 200 then
+                        entity:Remove()
+                    end
+                end
+            elseif host.StateFrame == 20 then -- Attack the position the player was in earlier.
+                host:GetData()[0] = player.Position
+            end
+        elseif host.State == NpcState.STATE_SPECIAL then
+            local host_sprite = host:GetSprite()
+            if not host_sprite:IsPlaying("Bombed") then
+                host_sprite:Play("Bombed", true)
+            end
+            
+            if host.StateFrame == 15 then
+                host.State = NpcState.STATE_IDLE
+            end
+        end
+    end
+end
+
+function Alphabirth:triggerHostTakeDamage(dmg_target, dmg_amount, dmg_flags, dmg_source)
+    if dmg_target.Variant >= 200 then
+        local host = dmg_target:ToNPC()
+        Isaac.DebugString(host.State)
+        if host.State ~= NpcState.STATE_ATTACK and dmg_flags == DamageFlag.DAMAGE_EXPLOSION then
+            host.State = NpcState.STATE_SPECIAL
+            host.StateFrame = 0
+            host.ProjectileCooldown = 30
+            return false
+        end
+        
+        if host.State == NpcState.STATE_IDLE then
+            return false
+        end
+    end
+end
+
+---------------------------------------
 -- Blooderfly Logic
 ---------------------------------------
 local blooderfly_target = nil
@@ -1426,6 +1481,7 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBloodDriv
 -------------------
 Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerCrackedRockEffect)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHemophilia)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHostTakeDamage, EntityType.ENTITY_HOST)
 
 -------------------
 -- Entity Handling
@@ -1438,6 +1494,8 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.onSpiritE
 
 Alphabirth_mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onInfestedBabyInit, ENTITY_VARIANT_INFESTED_BABY)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.onInfestedBabyUpdate, ENTITY_VARIANT_INFESTED_BABY)
+
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onHostUpdate, EntityType.ENTITY_HOST)
 -------------------
 -- Mod Updates
 -------------------
