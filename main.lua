@@ -22,6 +22,7 @@ local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accesso
 local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hemophilia.anm2")
 local BIRTH_CONTROL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_birthcontrol.anm2")
 local JUDAS_FEZ_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_judasfez.anm2")
+local HOT_COALS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hotcoals.anm2")
 
 local ENDOR_BODY_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorbody.anm2")
 local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorhead.anm2")
@@ -693,6 +694,9 @@ local frame_count = 0
 local function applyHotCoalsUpdate(player, cache_flag)
     if player:HasCollectible(PASSIVE_HOT_COALS) and cache_flag == CacheFlag.CACHE_DAMAGE then
         player.Damage = player.Damage * dmg_modifier
+    end
+    if player:HasCollectible(PASSIVE_HOT_COALS) and cache_flag == CacheFlag.CACHE_TEARCOLOR then
+        player:AddNullCostume(HOT_COALS_COSTUME)
     end
 end
 
