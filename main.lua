@@ -34,6 +34,7 @@ local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/pla
 local FLAG_SPIRIT_EYE_SHOT = 1 << 38
 local FLAG_HEMOPHILIA_SHOT = 1 << 39
 local FLAG_HEMOPHILIA_APPLIED = 1 << 40
+local FLAG_QUILL_FEATHER_APLLIED = 1 << 41
 
 ---------------------------------------
 -- Curse Declaration
@@ -148,6 +149,7 @@ local PASSIVE_SPIRIT_EYE = Isaac.GetItemIdByName("Spirit Eye")
 local PASSIVE_INFESTED_BABY = Isaac.GetItemIdByName("Infested Baby")
 local PASSIVE_JUDAS_FEZ = Isaac.GetItemIdByName("Judas' Fez")
 local PASSIVE_HOT_COALS = Isaac.GetItemIdByName("Hot Coals")
+local PASSIVE_QUILL_FEATHER = Isaac.GetItemIdByName("Quill Feather")
 
 ---------------------------------------
 -- Entity Variant Declaration
@@ -308,7 +310,7 @@ function Alphabirth:triggerMirror()
     -- Animate the teleportation.
     -- Further randomize the selection.
     for rand_key, entity in pairs(Isaac.GetRoomEntities()) do
-        if entity:IsActiveEnemy() and 
+        if entity:IsActiveEnemy() and
                 entity.Type ~= 306 and -- Portals
                 entity.Type ~= 304 and -- The Thing
                 entity.Type ~= EntityType.ENTITY_RAGE_CREEP and
@@ -588,9 +590,9 @@ local tears = {}
 
 function Alphabirth:triggerHemophilia(dmg_target, dmg_amount, dmg_source, dmg_flags)
     local player = Isaac.GetPlayer(0)
-    if dmg_target:IsActiveEnemy() and 
+    if dmg_target:IsActiveEnemy() and
             dmg_target.HitPoints <= dmg_amount and
-            player:HasCollectible(PASSIVE_HEMOPHILIA) and 
+            player:HasCollectible(PASSIVE_HEMOPHILIA) and
             math.random(1,3) == 1 then
         if not dmg_target:HasEntityFlags(FLAG_HEMOPHILIA_APPLIED) then
             local numberOfTears = 8 + player.Luck
@@ -601,13 +603,13 @@ function Alphabirth:triggerHemophilia(dmg_target, dmg_amount, dmg_source, dmg_fl
             elseif numberOfTears < tear_min then
                 numberOfTears = tear_min
             end
-            
+
             for i=1, numberOfTears do
-                tears[i] = player:FireTear(dmg_target.Position, 
+                tears[i] = player:FireTear(dmg_target.Position,
                     Vector(math.random(-explosionRadius, explosionRadius),
-                    math.random(-explosionRadius, explosionRadius)), 
-                    false, 
-                    false, 
+                    math.random(-explosionRadius, explosionRadius)),
+                    false,
+                    false,
                     true
                 )
                 tears[i]:ChangeVariant(1)
@@ -618,7 +620,7 @@ function Alphabirth:triggerHemophilia(dmg_target, dmg_amount, dmg_source, dmg_fl
                 tears[i].FallingAcceleration = math.random() + 0.5
                 tears[i]:AddEntityFlags(FLAG_HEMOPHILIA_SHOT)
             end
-            
+
             dmg_target:BloodExplode()
             dmg_target:AddEntityFlags(FLAG_HEMOPHILIA_APPLIED)
             tears = {}
@@ -846,6 +848,46 @@ local function applyBirthControlCache (pl, fl)
     end
 end
 
+---------------------------------------
+-- Quill Feather Logic
+---------------------------------------
+
+local function applyQuillFeatherCache(player, flag)
+    if Isaac.GetPlayer(0):HasCollectible(PASSIVE_QUILL_FEATHER) and flag == CacheFlag.CACHE_TEARCOLOR then
+        Isaac.DebugString("str")
+        Isaac.GetPlayer(0).TearColor = Color(0,0,0,1,0,0,0)
+    end
+end
+
+local quillFeatherNumberOfTears = 15
+local function handleQuillFeather()
+    local player = Isaac.GetPlayer(0)
+    local chance = 5 + player.Luck * 2
+    for _,e in ipairs(Isaac.GetRoomEntities()) do
+        if e.Type == EntityType.ENTITY_TEAR and math.random(1,50) < chance and not e:HasEntityFlags(FLAG_QUILL_FEATHER_APLLIED) and e.FrameCount == 1 then
+            Isaac.DebugString("str")
+            tears = {}
+            for i=1,quillFeatherNumberOfTears do
+                local direction_vector = e.Velocity
+                local angle = 30
+                local random_angle = math.rad(math.random(-math.floor(angle), math.floor(angle)))
+                local cos_angle = math.cos(random_angle)
+                local sin_angle = math.sin(random_angle)
+                local shot_direction = Vector(cos_angle * direction_vector.X - sin_angle * direction_vector.Y,
+                    sin_angle * direction_vector.X + cos_angle * direction_vector.Y
+                )
+                local magnitude = {0.8,0.9,1,1.1,1.2}
+                local shot_vector = shot_direction:__mul(magnitude[math.random(#magnitude)*player.ShotSpeed])
+
+                tears[i] = player:FireTear(e.Position, shot_vector, false, false, true)
+                tears[i].Height = -20
+                tears[i]:AddEntityFlags(FLAG_QUILL_FEATHER_APLLIED)
+            end
+            e:Remove()
+        end
+    end
+end
+
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
 -------------------------------------------------------------------------------
@@ -930,7 +972,7 @@ local function applyBlooderflyCache(player, cache_flag)
                 blooderfly_exists = true
             end
         end
-        
+
         if not blooderfly_exists then
             Isaac.Spawn(EntityType.ENTITY_FAMILIAR,
                 ENTITY_VARIANT_BLOODERFLY,
@@ -965,11 +1007,11 @@ function Alphabirth:onSpiritEyeUpdate(spirit_eye)
     local player = Isaac.GetPlayer(0)
     local player_previous_tearcolor = player.TearColor
     local player_previous_lasercolor = player.LaserColor
-    
+
     player.TearColor = Color(0.6, 0, 0.6, 0.5, 0, 0, 0)
-    -- Since lasers are bright red by default, I put a very bright blue overlay on top. 
+    -- Since lasers are bright red by default, I put a very bright blue overlay on top.
     player.LaserColor = Color(1, 0, 0, 1, 0, 0, 255)
-    
+
     if player:HasCollectible(SPIRIT_SYNERGIES[1]) then -- DR_FETUS
         spirit_eye:MoveDiagonally(0.35)
         for _,entity in ipairs(Isaac.GetRoomEntities()) do
@@ -1044,7 +1086,7 @@ function Alphabirth:onSpiritEyeUpdate(spirit_eye)
             end
         end
     end
-    
+
     player.TearColor = player_previous_tearcolor
     player.LaserColor = player_previous_lasercolor
     homing_tears = {}
@@ -1059,7 +1101,7 @@ local function applySpiritEyeCache(player, cache_flag)
                 spirit_eye_exists = true
             end
         end
-        
+
         if not spirit_eye_exists then
             Isaac.Spawn(EntityType.ENTITY_FAMILIAR,
                 ENTITY_VARIANT_SPIRIT_EYE,
@@ -1072,7 +1114,7 @@ local function applySpiritEyeCache(player, cache_flag)
 end
 
 ---------------------------------------
--- Infested Baby
+-- Infested Baby Logic
 ---------------------------------------
 local infestedEntity
 local infestedBabySpider
@@ -1151,11 +1193,11 @@ function Alphabirth:modUpdate()
             player:AddMaxHearts(-health_change, false)
             endor_health = endor_health + health_change
         end
-        
+
         if player:GetMaxHearts() + player:GetEternalHearts() * 2 > endor_health then
             endor_health = endor_health + 2
         end
-        
+
         for i = 1, 24 do
             if player:IsBlackHeart(i) then
                 player:RemoveBlackHeart(i)
@@ -1188,6 +1230,10 @@ function Alphabirth:modUpdate()
         handleCrackedRockSpawnChance()
     end
     triggerCurses(player)
+
+    if player:HasCollectible(PASSIVE_QUILL_FEATHER) then
+        handleQuillFeather()
+    end
 
     -- Reset variables each run
     if frame == 1 then
@@ -1314,7 +1360,7 @@ function Alphabirth:modUpdate()
                     ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
                     PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL,
                     PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY, ACTIVE_BLOOD_DRIVE, PASSIVE_JUDAS_FEZ,
-                    PASSIVE_HOT_COALS
+                    PASSIVE_HOT_COALS, PASSIVE_QUILL_FEATHER
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -1392,6 +1438,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyJudasFezCache(player, cache_flag)
     applyBrunchCache(player, cache_flag)
     applyHotCoalsUpdate(player, cache_flag)
+    applyQuillFeatherCache(player, cache_flag)
     if player:GetPlayerType() == endor_type then
         Isaac.GetPlayer(0).CanFly = true
         Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
