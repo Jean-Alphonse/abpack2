@@ -905,9 +905,12 @@ end
 
 function Alphabirth:triggerNaudizEffect()
     local player = Isaac.GetPlayer(0)
-    local consumables = {player:GetNumCoins(), player:GetNumBombs(), player.GetNumKeys()}
+    local coins = player:GetNumCoins()
+    local bombs = player:GetNumBombs()
+    local keys = player:GetNumKeys()
+    local consumables = {coins, bombs, keys}
     local max = 99
-    local toGive
+    local toGive = 1
     for i=1, #consumables do
         if consumables[i] < max then
             max = consumables[i]
@@ -921,6 +924,7 @@ function Alphabirth:triggerNaudizEffect()
     elseif toGive == 3 then
         player:AddKeys(10)
     end
+    return true
 end
 
 -------------------------------------------------------------------------------
