@@ -23,6 +23,7 @@ local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/acc
 local BIRTH_CONTROL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_birthcontrol.anm2")
 local JUDAS_FEZ_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_judasfez.anm2")
 local HOT_COALS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hotcoals.anm2")
+local TECH_ALPHA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_techalpha.anm2")
 
 local ENDOR_BODY_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorbody.anm2")
 local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorhead.anm2")
@@ -727,6 +728,13 @@ local function handleTechAlpha(player)
                 end
             end
         end
+    end
+end
+
+local function applyTechAlphaCache ()
+    local player = Isaac.GetPlayer(0)
+    if player:HasCollectible(PASSIVE_TECH_ALPHA) then
+        player:AddNullCostume(TECH_ALPHA_COSTUME)
     end
 end
 
@@ -1528,7 +1536,7 @@ function Alphabirth:modUpdate()
                     ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
                     PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL,
                     PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY, ACTIVE_BLOOD_DRIVE, PASSIVE_JUDAS_FEZ,
-                    PASSIVE_HOT_COALS, ACTIVE_CHALICE_OF_BLOOD, PASSIVE_QUILL_FEATHER
+                    PASSIVE_HOT_COALS, PASSIVE_QUILL_FEATHER, PASSIVE_BRUNCH, ACTIVE_CHALICE_OF_BLOOD
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -1608,7 +1616,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyHotCoalsUpdate(player, cache_flag)
     applyChaliceOfBloodCache(player, cache_flag)
     applyQuillFeatherCache(player, cache_flag)
-  
+    applyTechAlphaCache(player, cache_flag)
     if player:GetPlayerType() == endor_type then
         Isaac.GetPlayer(0).CanFly = true
         Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
