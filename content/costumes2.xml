@@ -7,6 +7,8 @@
     <costume anm2path="accessories/animation_costume_birthcontrol.anm2" priority="98" type="none" />
     <costume anm2path="accessories/animation_costume_hemophilia.anm2" priority="98" type="none" />
     <costume anm2path="accessories/animation_costume_judasfez.anm2" priority="98" type="none" />
+    <costume anm2path="accessories/animation_costume_hotcoals.anm2" priority="98" type="none" />
+    <costume anm2path="accessories/animation_costume_techalpha.anm2" priority="98" type="none" />
 
     <costume anm2path="players/animation_character_endorbody.anm2" priority="200" isFlying="true" type="none" />
     <costume anm2path="players/animation_character_endorhead.anm2" priority="200" type="none" />
