@@ -132,6 +132,7 @@ local ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
 local ACTIVE_BIONIC_ARM = Isaac.GetItemIdByName("Bionic Arm")
 local ACTIVE_ALASTORS_CANDLE = Isaac.GetItemIdByName("Alastor's Candle")
 local ACTIVE_BLOOD_DRIVE = Isaac.GetItemIdByName("Blood Drive")
+local ACTIVE_CHALICE_OF_BLOOD = Isaac.GetItemIdByName("Chalice of Blood")
 
 ---------------------------------------
 -- Passive Declaration
@@ -154,10 +155,14 @@ local PASSIVE_QUILL_FEATHER = Isaac.GetItemIdByName("Quill Feather")
 ---------------------------------------
 -- Entity Variant Declaration
 ---------------------------------------
-
+-- Familiars
 local ENTITY_VARIANT_BLOODERFLY = Isaac.GetEntityVariantByName("Blooderfly")
 local ENTITY_VARIANT_SPIRIT_EYE = Isaac.GetEntityVariantByName("Spirit Eye")
 local ENTITY_VARIANT_INFESTED_BABY = Isaac.GetEntityVariantByName("Infested Baby")
+
+-- Effects
+local ENTITY_VARIANT_ALASTORS_FLAME = Isaac.GetEntityVariantByName("Alastor's Flame")
+local ENTITY_VARIANT_CHALICE_OF_BLOOD = Isaac.GetEntityVariantByName("Chalice of Blood")
 
 ---------------------------------------
 -- Trinket Declaration
@@ -451,6 +456,96 @@ function Alphabirth:triggerBloodDrive()
         player:AnimateSad()
     end
 end
+
+---------------------------------------
+-- Chalice of Blood Logic
+---------------------------------------
+local chalice
+local chalice_souls = 0
+local soul_limit = 10
+local CHALICE_STATS = {
+    DAMAGE = 1,
+    CAN_FLY = false
+}
+local function applyChaliceOfBloodCache(player, cache_flag)
+    if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) then
+        if cache_flag == CacheFlag.CACHE_DAMAGE then
+            player.Damage = player.Damage * CHALICE_STATS.DAMAGE
+        end
+        if cache_flag == CacheFlag.CACHE_FLYING then
+            player.CanFly = CHALICE_STATS.CAN_FLY
+        end
+    end
+end
+
+function Alphabirth:triggerChaliceOfBlood()
+    local player = Isaac.GetPlayer(0)
+    local room = Game():GetRoom()
+
+    if chalice_souls <= soul_limit then
+        chalice = Isaac.Spawn(
+            3,
+            ENTITY_VARIANT_CHALICE_OF_BLOOD,
+            0,
+            player.Position,
+            Vector(0,0),
+            player
+        )
+    else
+        CHALICE_STATS.DAMAGE = 2
+        CHALICE_STATS.CAN_FLY = true
+        player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
+        player:AddCacheFlags(CacheFlag.CACHE_FLYING)
+        player:EvaluateItems()
+        chalice_souls = 0
+    end
+    return true
+end
+
+local function handleChaliceOfBlood()
+    local player = Isaac.GetPlayer(0)
+    local room = Game():GetRoom()
+    -- Remove Chalice if room is clear
+    if room:GetFrameCount() == 1 then
+        CHALICE_STATS.DAMAGE = 1
+        CHALICE_STATS.CAN_FLY = false
+        player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
+        player:AddCacheFlags(CacheFlag.CACHE_FLYING)
+        player:EvaluateItems()
+    end
+
+    if room:IsClear() and chalice ~= nil then
+        Isaac.Spawn(
+            EntityType.ENTITY_EFFECT,
+            EffectVariant.POOF02,
+            0,            -- Entity Subtype
+            chalice.Position,
+            Vector(0, 0), -- Velocity
+            nil
+        )
+        chalice:Remove()
+        chalice = nil
+    end
+
+    if chalice ~= nil then
+        for _, entity in ipairs(Isaac.GetRoomEntities()) do
+            local entity_is_close = entity.Position:Distance(chalice.Position) <= 100
+            if entity:IsDead() and entity:ToNPC() and entity_is_close then
+                playSound(SoundEffect.SOUND_SUMMONSOUND, 0.5, 0, false, 0.8)
+                Isaac.Spawn(
+                    EntityType.ENTITY_EFFECT,
+                    EffectVariant.POOF02,
+                    0,            -- Entity Subtype
+                    entity.Position,
+                    Vector(0, 0), -- Velocity
+                    nil
+                )
+                chalice_souls = chalice_souls + 1
+            end
+        end
+    end
+end
+
 
 -------------------------------------------------------------------------------
 ---- PASSIVE ITEM LOGIC
@@ -1332,6 +1427,11 @@ function Alphabirth:modUpdate()
         handleBloodDrive()
     end
 
+    -- Chalice of blood handling
+    if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) then
+       handleChaliceOfBlood()
+    end
+
     -- Judas' Fez Handling
     if player:HasCollectible(PASSIVE_JUDAS_FEZ) then
         handleJudasFez()
@@ -1360,7 +1460,7 @@ function Alphabirth:modUpdate()
                     ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
                     PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL,
                     PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY, ACTIVE_BLOOD_DRIVE, PASSIVE_JUDAS_FEZ,
-                    PASSIVE_HOT_COALS, PASSIVE_QUILL_FEATHER
+                    PASSIVE_HOT_COALS, ACTIVE_CHALICE_OF_BLOOD, PASSIVE_QUILL_FEATHER
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -1438,7 +1538,9 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyJudasFezCache(player, cache_flag)
     applyBrunchCache(player, cache_flag)
     applyHotCoalsUpdate(player, cache_flag)
+    applyChaliceOfBloodCache(player, cache_flag)
     applyQuillFeatherCache(player, cache_flag)
+  
     if player:GetPlayerType() == endor_type then
         Isaac.GetPlayer(0).CanFly = true
         Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
@@ -1462,6 +1564,7 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerMirror, A
 Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBionicArm, ACTIVE_BIONIC_ARM)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerAlastorsCandle, ACTIVE_ALASTORS_CANDLE)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBloodDrive, ACTIVE_BLOOD_DRIVE)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerChaliceOfBlood, ACTIVE_CHALICE_OF_BLOOD)
 
 
 -------------------
@@ -1481,6 +1584,7 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHe
 -------------------
 -- Entity Handling
 -------------------
+
 -- Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onBlooderflyInit, ENTITY_VARIANT_BLOODERFLY)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.blooderflyUpdate, ENTITY_VARIANT_BLOODERFLY)
 

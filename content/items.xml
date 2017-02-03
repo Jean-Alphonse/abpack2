@@ -5,6 +5,7 @@
     <active gfx="collectible_bionicarm.png" maxcharges="12" name="Bionic Arm" />
     <active gfx="collectible_alastorscandle.png" maxcharges="3" name="Alastor's Candle" devilprice="1" description ="The dark shines brightest"/>
     <active gfx="collectible_blooddrive.png" maxcharges="0" name="Blood Drive" />
+    <active gfx="collectible_chaliceofblood.png" cache="damage flying" maxcharges="3" name="Chalice of Blood" description="Kills fill" />
 
     <passive gfx="collectible_crackedrock.png" cache="tearcolor" devilprice="1" name="Cracked Rock" />
     <passive gfx="collectible_hemophilia.png" cache="tearcolor" name="Hemophilia" description="What a bloody mess..." />
