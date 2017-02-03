@@ -22,7 +22,6 @@ local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accesso
 local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hemophilia.anm2")
 local BIRTH_CONTROL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_birthcontrol.anm2")
 local JUDAS_FEZ_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_judasfez.anm2")
-local HOT_COALS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hotcoals.anm2")
 
 local ENDOR_BODY_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorbody.anm2")
 local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorhead.anm2")
@@ -163,6 +162,13 @@ local ENTITY_VARIANT_INFESTED_BABY = Isaac.GetEntityVariantByName("Infested Baby
 -- Trinket Declaration
 ---------------------------------------
 -- use TRINKET_YOUR_ITEM = TrinketID
+
+---------------------------------------
+-- Pocket Items Declaration
+---------------------------------------
+-- use POCKETITEM_YOUR_NAME = PocketItemID
+
+local POCKETITEM_NAUDIZ = Isaac.GetCardIdByName("Naudiz")
 
 ---------------------------------------
 -- Variables that need to be loaded early
@@ -695,9 +701,6 @@ local function applyHotCoalsUpdate(player, cache_flag)
     if player:HasCollectible(PASSIVE_HOT_COALS) and cache_flag == CacheFlag.CACHE_DAMAGE then
         player.Damage = player.Damage * dmg_modifier
     end
-    if player:HasCollectible(PASSIVE_HOT_COALS) and cache_flag == CacheFlag.CACHE_TEARCOLOR then
-        player:AddNullCostume(HOT_COALS_COSTUME)
-    end
 end
 
 local function handleHotCoals()
@@ -891,6 +894,34 @@ end
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
 -------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+---- POCKET ITEMS LOGIC
+-------------------------------------------------------------------------------
+
+---------------------------------------
+-- Naudiz Logic
+---------------------------------------
+
+function Alphabirth:triggerNaudizEffect()
+    local player = Isaac.GetPlayer(0)
+    local consumables = {player:GetNumCoins(), player:GetNumBombs(), player.GetNumKeys()}
+    local max = 99
+    local toGive
+    for i=1, #consumables do
+        if consumables[i] < max then
+            max = consumables[i]
+            toGive = i
+        end
+    end
+    if toGive == 1 then
+        player:AddCoins(10)
+    elseif toGive == 2 then
+        player:AddBombs(10)
+    elseif toGive == 3 then
+        player:AddKeys(10)
+    end
+end
 
 -------------------------------------------------------------------------------
 ---- ENTITY LOGIC (Familiars, Enemies, Bosses)
@@ -1463,6 +1494,12 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBionicArm
 Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerAlastorsCandle, ACTIVE_ALASTORS_CANDLE)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBloodDrive, ACTIVE_BLOOD_DRIVE)
 
+
+-------------------
+-- Pocket Handleing
+-------------------
+
+Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_CARD, Alphabirth.triggerNaudizEffect, POCKETITEM_NAUDIZ)
 
 -------------------
 -- Passive Handling
