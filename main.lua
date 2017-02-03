@@ -460,18 +460,27 @@ end
 ---------------------------------------
 local chalice
 local chalice_souls = 0
-
+local soul_limit = 10
 local CHALICE_STATS = {
-    DAMAGE = 0,
-    IS_FLYING = false
+    DAMAGE = 1,
+    CAN_FLY = false
 }
 local function applyChaliceOfBloodCache(player, cache_flag)
-
+    if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) then
+        if cache_flag == CacheFlag.CACHE_DAMAGE then
+            player.Damage = player.Damage * CHALICE_STATS.DAMAGE
+        end
+        if cache_flag == CacheFlag.CACHE_FLYING then
+            player.CanFly = CHALICE_STATS.CAN_FLY
+        end
+    end
 end
 
 function Alphabirth:triggerChaliceOfBlood()
     local player = Isaac.GetPlayer(0)
-    if chalice_souls < 15 then
+    local room = Game():GetRoom()
+
+    if chalice_souls <= soul_limit then
         chalice = Isaac.Spawn(
             3,
             ENTITY_VARIANT_CHALICE_OF_BLOOD,
@@ -481,7 +490,12 @@ function Alphabirth:triggerChaliceOfBlood()
             player
         )
     else
-
+        CHALICE_STATS.DAMAGE = 2
+        CHALICE_STATS.CAN_FLY = true
+        player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
+        player:AddCacheFlags(CacheFlag.CACHE_FLYING)
+        player:EvaluateItems()
+        chalice_souls = 0
     end
     return true
 end
@@ -490,12 +504,20 @@ local function handleChaliceOfBlood()
     local player = Isaac.GetPlayer(0)
     local room = Game():GetRoom()
     -- Remove Chalice if room is clear
+    if room:GetFrameCount() == 1 then
+        CHALICE_STATS.DAMAGE = 1
+        CHALICE_STATS.CAN_FLY = false
+        player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
+        player:AddCacheFlags(CacheFlag.CACHE_FLYING)
+        player:EvaluateItems()
+    end
+
     if room:IsClear() and chalice ~= nil then
         Isaac.Spawn(
             EntityType.ENTITY_EFFECT,
-            EffectVariant.POOF01,
+            EffectVariant.POOF02,
             0,            -- Entity Subtype
-            player.Position,
+            chalice.Position,
             Vector(0, 0), -- Velocity
             nil
         )
@@ -504,13 +526,10 @@ local function handleChaliceOfBlood()
     end
 
     if chalice ~= nil then
-
         for _, entity in ipairs(Isaac.GetRoomEntities()) do
-
             local entity_is_close = entity.Position:Distance(chalice.Position) <= 100
-
             if entity:IsDead() and entity:ToNPC() and entity_is_close then
-
+                playSound(SoundEffect.SOUND_SUMMONSOUND, 0.5, 0, false, 0.8)
                 Isaac.Spawn(
                     EntityType.ENTITY_EFFECT,
                     EffectVariant.POOF02,
@@ -519,10 +538,6 @@ local function handleChaliceOfBlood()
                     Vector(0, 0), -- Velocity
                     nil
                 )
-                -- local soul = SpawnWisp
-                -- move soul to chalice
-                -- remove soul
-
                 chalice_souls = chalice_souls + 1
             end
         end
@@ -1367,7 +1382,7 @@ function Alphabirth:modUpdate()
     end
 
     -- Chalice of blood handling
-    if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) and chalice_exists then
+    if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) then
        handleChaliceOfBlood()
     end
 
