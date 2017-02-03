@@ -462,18 +462,22 @@ end
 ---------------------------------------
 local chalice
 local chalice_souls = 0
-local soul_limit = 10
+local soul_limit = 15
 local CHALICE_STATS = {
     DAMAGE = 1,
-    CAN_FLY = false
+    SPEED = 0,
+    SHOTSPEED = 0
 }
 local function applyChaliceOfBloodCache(player, cache_flag)
     if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) then
         if cache_flag == CacheFlag.CACHE_DAMAGE then
             player.Damage = player.Damage * CHALICE_STATS.DAMAGE
         end
-        if cache_flag == CacheFlag.CACHE_FLYING then
-            player.CanFly = CHALICE_STATS.CAN_FLY
+        if cache_flag == CacheFlag.CACHE_SPEED then
+            player.MoveSpeed = player.MoveSpeed + CHALICE_STATS.SPEED
+        end
+        if cache_flag == CacheFlag.CACHE_SHOTSPEED then
+            player.ShotSpeed = player.ShotSpeed + CHALICE_STATS.SHOTSPEED
         end
     end
 end
@@ -482,7 +486,12 @@ function Alphabirth:triggerChaliceOfBlood()
     local player = Isaac.GetPlayer(0)
     local room = Game():GetRoom()
 
-    if chalice_souls <= soul_limit then
+    if chalice_souls < soul_limit then
+
+        if chalice ~= nil then
+           chalice:Remove()
+        end
+
         chalice = Isaac.Spawn(
             3,
             ENTITY_VARIANT_CHALICE_OF_BLOOD,
@@ -493,11 +502,14 @@ function Alphabirth:triggerChaliceOfBlood()
         )
     else
         CHALICE_STATS.DAMAGE = 2
-        CHALICE_STATS.CAN_FLY = true
+        CHALICE_STATS.SPEED = 1
+        CHALICE_STATS.SHOTSPEED = 1
         player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
-        player:AddCacheFlags(CacheFlag.CACHE_FLYING)
+        player:AddCacheFlags(CacheFlag.CACHE_SPEED)
+        player:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED)
         player:EvaluateItems()
         chalice_souls = 0
+        Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.PLAYER_CREEP_RED,0,player.Position,Vector(0, 0),player)
     end
     return true
 end
@@ -505,12 +517,26 @@ end
 local function handleChaliceOfBlood()
     local player = Isaac.GetPlayer(0)
     local room = Game():GetRoom()
+
+    local soul_limit_modifier = player.Luck
+    -- Update soul limit value
+    if player.Luck >= 5 then
+        soul_limit_modifier = 5
+    end
+    if player.Luck <= -5 then
+        soul_limit_modifier = -5
+    end
+
+    soul_limit = 15 - soul_limit_modifier
+
     -- Remove Chalice if room is clear
     if room:GetFrameCount() == 1 then
         CHALICE_STATS.DAMAGE = 1
-        CHALICE_STATS.CAN_FLY = false
+        CHALICE_STATS.SPEED = 0
+        CHALICE_STATS.SHOTSPEED = 0
         player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
-        player:AddCacheFlags(CacheFlag.CACHE_FLYING)
+        player:AddCacheFlags(CacheFlag.CACHE_SPEED)
+        player:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED)
         player:EvaluateItems()
     end
 
@@ -530,7 +556,7 @@ local function handleChaliceOfBlood()
     if chalice ~= nil then
         for _, entity in ipairs(Isaac.GetRoomEntities()) do
             local entity_is_close = entity.Position:Distance(chalice.Position) <= 100
-            if entity:IsDead() and entity:ToNPC() and entity_is_close then
+            if entity:IsDead() and entity:ToNPC() and entity_is_close and not entity:IsBoss() then
                 playSound(SoundEffect.SOUND_SUMMONSOUND, 0.5, 0, false, 0.8)
                 Isaac.Spawn(
                     EntityType.ENTITY_EFFECT,
@@ -544,8 +570,38 @@ local function handleChaliceOfBlood()
             end
         end
     end
+
+    if chalice_souls >= soul_limit and chalice ~= nil then
+        playSound(SoundEffect.SOUND_SUMMONSOUND, 0.5, 0, false, 0.9)
+        Isaac.Spawn(
+            EntityType.ENTITY_EFFECT,
+            EffectVariant.POOF02,
+            0,            -- Entity Subtype
+            chalice.Position,
+            Vector(0, 0), -- Velocity
+            nil
+        )
+        chalice:Remove()
+        chalice = nil
+    end
 end
 
+function Alphabirth:chaliceOfBloodUpdate()
+    local player = Isaac.GetPlayer(0)
+    if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) then
+        local sprite = Sprite()
+        sprite:Load("gfx/animations/animation_sprite_chaliceofblood.anm2", true)
+        if chalice_souls <= soul_limit then
+            sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_chaliceofblood.png")
+        else
+            sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_chaliceofblood2.png")
+        end
+        sprite:LoadGraphics()
+        sprite:Play("Idle", true)
+        sprite.Offset = Vector(16,16)
+        sprite:RenderLayer(0, Vector(0, 0))
+    end
+end
 
 -------------------------------------------------------------------------------
 ---- PASSIVE ITEM LOGIC
@@ -1346,6 +1402,7 @@ function Alphabirth:modUpdate()
         }
         bloodDriveTimesUsed = 0
         has_brunch_health = false
+        chalice_souls = 0
 
         if player_type == endor_type then
             player:AddNullCostume(ENDOR_BODY_COSTUME)
@@ -1376,7 +1433,18 @@ function Alphabirth:modUpdate()
                 sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_cauldron3.png")
             end
 			sprite:LoadGraphics()
-		end
+        end
+        if entity.Type == EntityType.ENTITY_PICKUP and
+                entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and
+                entity.SubType == ACTIVE_CHALICE_OF_BLOOD then
+            local sprite = entity:GetSprite()
+            if chalice_souls <= soul_limit then
+                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood.png")
+            else
+                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood2.png")
+            end
+            sprite:LoadGraphics()
+        end
 	end
     --Cyborg Transformation Detector
     if Game():GetFrameCount() % 60 == 0 then
@@ -1599,5 +1667,6 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.onInfeste
 
 Alphabirth_mod:AddCallback(ModCallbacks.MC_POST_UPDATE, Alphabirth.modUpdate)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_POST_RENDER, Alphabirth.cauldronUpdate)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_POST_RENDER, Alphabirth.chaliceOfBloodUpdate)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, Alphabirth.evaluateCache)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, Alphabirth.playerInit)
