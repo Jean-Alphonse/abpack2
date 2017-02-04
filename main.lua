@@ -474,16 +474,12 @@ local chalice_souls = 0
 local soul_limit = 15
 local CHALICE_STATS = {
     DAMAGE = 1,
-    SPEED = 0,
     SHOTSPEED = 0
 }
 local function applyChaliceOfBloodCache(player, cache_flag)
     if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) then
         if cache_flag == CacheFlag.CACHE_DAMAGE then
             player.Damage = player.Damage * CHALICE_STATS.DAMAGE
-        end
-        if cache_flag == CacheFlag.CACHE_SPEED then
-            player.MoveSpeed = player.MoveSpeed + CHALICE_STATS.SPEED
         end
         if cache_flag == CacheFlag.CACHE_SHOTSPEED then
             player.ShotSpeed = player.ShotSpeed + CHALICE_STATS.SHOTSPEED
@@ -511,10 +507,8 @@ function Alphabirth:triggerChaliceOfBlood()
         )
     else
         CHALICE_STATS.DAMAGE = 2
-        CHALICE_STATS.SPEED = 1
         CHALICE_STATS.SHOTSPEED = 0.4
         player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
-        player:AddCacheFlags(CacheFlag.CACHE_SPEED)
         player:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED)
         player:EvaluateItems()
         chalice_souls = 0
@@ -530,10 +524,8 @@ local function handleChaliceOfBlood()
     -- Remove Chalice if room is clear
     if room:GetFrameCount() == 1 then
         CHALICE_STATS.DAMAGE = 1
-        CHALICE_STATS.SPEED = 0
         CHALICE_STATS.SHOTSPEED = 0
         player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
-        player:AddCacheFlags(CacheFlag.CACHE_SPEED)
         player:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED)
         player:EvaluateItems()
     end
@@ -541,7 +533,7 @@ local function handleChaliceOfBlood()
     if room:IsClear() and chalice ~= nil then
         Isaac.Spawn(
             EntityType.ENTITY_EFFECT,
-            EffectVariant.POOF02,
+            EffectVariant.POOF01,
             0,            -- Entity Subtype
             chalice.Position,
             Vector(0, 0), -- Velocity
@@ -573,7 +565,7 @@ local function handleChaliceOfBlood()
         playSound(SoundEffect.SOUND_SUMMONSOUND, 0.5, 0, false, 0.9)
         Isaac.Spawn(
             EntityType.ENTITY_EFFECT,
-            EffectVariant.POOF02,
+            EffectVariant.POOF01,
             0,            -- Entity Subtype
             chalice.Position,
             Vector(0, 0), -- Velocity
