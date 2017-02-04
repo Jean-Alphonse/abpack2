@@ -510,20 +510,19 @@ function Alphabirth:triggerAbyss(damaged_entity, damage_amount, damage_flag, dam
     if player:HasCollectible(PASSIVE_ABYSS) then
         local damaged_npc = damaged_entity:ToNPC()
         if damaged_npc then
-            if damaged_entity:IsActiveEnemy(false) and damaged_entity:IsVulnerableEnemy() and not damaged_npc:IsBoss() then
-                local apply_void_roll = math.random(10,80 - player.Luck)
-                if apply_void_roll < 11 then
-                    damaged_entity:AddEntityFlags(FLAG_VOID)
-                    damaged_entity:AddEntityFlags(EntityFlag.FLAG_FREEZE)
-                end
+            if damaged_entity:IsActiveEnemy(false) and damaged_entity:IsVulnerableEnemy() and not damaged_npc:IsBoss() and damage_source.Variant == 4800 then
+                damaged_entity:AddEntityFlags(FLAG_VOID)
+                damaged_entity:AddEntityFlags(EntityFlag.FLAG_FREEZE)
             end
         end
     end
 end
 
 local function handleAbyss()
+    local player = Isaac.GetPlayer(0)
+    local roll = math.random(1,80 - player.Luck)
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
-        if entity.Type == EntityType.ENTITY_TEAR and entity.Variant ~= ENTITY_VARIANT_ABYSS_TEAR then
+        if entity.Type == EntityType.ENTITY_TEAR and entity.Variant ~= ENTITY_VARIANT_ABYSS_TEAR and entity.FrameCount == 1 and roll < 11 then
             entity:ToTear():ChangeVariant(4800)
             entity:GetSprite():ReplaceSpritesheet(0, 'gfx/animations/effects/sheet_tears_abyss.png')
             entity:GetSprite():LoadGraphics()
