@@ -767,13 +767,15 @@ local function handleAbyss()
         if entity:HasEntityFlags(FLAG_VOID) then
             entity.Friction = 0
             entity.Velocity = Vector(0,0)
+            entity:GetData()[0] = entity.Color
+            entity.Color = Color(0,0,0,1,0,0,0)
             for _, entity2 in ipairs(Isaac.GetRoomEntities()) do
                 local entity2_npc = entity2:ToNPC()
                 if entity2_npc then
-                    if entity2:IsActiveEnemy(false) and entity2:IsVulnerableEnemy() and not entity2_npc:IsBoss() then
+                    if entity2:IsActiveEnemy(false) and entity2:IsVulnerableEnemy() and not entity2_npc:IsBoss() and not entity2:HasEntityFlags(FLAG_VOID) then
                         if entity2.Position:Distance(entity.Position) < 120 then
                             local direction_vector = entity.Position - entity2.Position
-                            direction_vector = direction_vector:Normalized() * 2
+                            direction_vector = direction_vector:Normalized() * 3
                             entity2.Velocity = entity2.Velocity + direction_vector
                         end
                     end
@@ -782,6 +784,7 @@ local function handleAbyss()
 
             lose_flag_roll = math.random(1,300)
             if lose_flag_roll == 1 then
+                entity.Color = entity:GetData()[0]
                 entity:ClearEntityFlags(FLAG_VOID)
                 entity:ClearEntityFlags(EntityFlag.FLAG_FREEZE)
             end
