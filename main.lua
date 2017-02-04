@@ -757,7 +757,7 @@ end
 
 local function handleAbyss()
     local player = Isaac.GetPlayer(0)
-    local roll = math.random(1,80 - player.Luck)
+    local roll = math.random(1,80 - player.Luck*3)
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
         if entity.Type == EntityType.ENTITY_TEAR and entity.Variant ~= ENTITY_VARIANT_ABYSS_TEAR and entity.FrameCount == 1 and roll < 11 then
             entity:GetSprite():ReplaceSpritesheet(0, 'gfx/animations/effects/sheet_tears_abyss.png')
@@ -1631,7 +1631,8 @@ function Alphabirth:modUpdate()
                     ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
                     PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL,
                     PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY, ACTIVE_BLOOD_DRIVE, PASSIVE_JUDAS_FEZ,
-                    PASSIVE_HOT_COALS, PASSIVE_QUILL_FEATHER, PASSIVE_BRUNCH, ACTIVE_CHALICE_OF_BLOOD
+                    PASSIVE_HOT_COALS, PASSIVE_QUILL_FEATHER, PASSIVE_BRUNCH, ACTIVE_CHALICE_OF_BLOOD,
+                    PASSIVE_ABYSS
             }
             local row = 31
             for i, item in ipairs(new_items) do
