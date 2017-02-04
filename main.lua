@@ -1236,7 +1236,8 @@ function Alphabirth:onHostUpdate(host)
                     player_saved_position = host:GetData()[0]
                     local direction_vector = (player_saved_position - host.Position):Normalized()
                     local direction_angle = direction_vector:GetAngleDegrees()
-                    local brimstone_laser = EntityLaser.ShootAngle(1, host.Position, direction_angle, 15, Vector(0,0), host)
+                    local brimstone_laser = EntityLaser.ShootAngle(1, host.Position, direction_angle, 15, Vector(0,-8), host)
+                    brimstone_laser.DepthOffset = 200
                 end
                 
                 for _, entity in ipairs(Isaac.GetRoomEntities()) do
