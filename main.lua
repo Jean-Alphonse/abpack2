@@ -23,7 +23,7 @@ local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/acc
 local ABYSS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_abyss.anm2")
 local BIRTH_CONTROL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_birthcontrol.anm2")
 local JUDAS_FEZ_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_judasfez.anm2")
-local HOT_COALS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hotcoals.anm2")
+--local HOT_COALS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hotcoals.anm2")
 local TECH_ALPHA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_techalpha.anm2")
 local QUILL_FEATHER_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_quillfeather.anm2")
 
@@ -200,6 +200,8 @@ local cyborg_progress = {}
 
 local birthControl_pool = {
     PASSIVE_INFESTED_BABY,
+    PASSIVE_BLOODERFLY,
+    PASSIVE_SPIRIT_EYE,
     CollectibleType.COLLECTIBLE_BROTHER_BOBBY,
     CollectibleType.COLLECTIBLE_SISTER_MAGGY,
     CollectibleType.COLLECTIBLE_LITTLE_CHUBBY,
@@ -631,12 +633,20 @@ function Alphabirth:triggerCrackedRockEffect(dmg_target, dmg_amount, dmg_source,
         if(math.random(1, upper_limit_luck_modifier) <= 10) then
             Isaac.Spawn(
                 EntityType.ENTITY_EFFECT,
-                EffectVariant.SHOCKWAVE_RANDOM,
+                EffectVariant.SHOCKWAVE,
                 0,            -- Entity Subtype
                 dmg_target.Position,
                 Vector(0, 0), -- Velocity
                 player
-            ):ToEffect():SetRadii(5,15)
+            ):ToEffect():SetRadii(5,10)
+            Isaac.Spawn(
+                EntityType.ENTITY_EFFECT,
+                EffectVariant.SHOCKWAVE,
+                0,            -- Entity Subtype
+                dmg_target.Position,
+                Vector(0, 0), -- Velocity
+                player
+            ):ToEffect():SetRadii(2,8)
         end
     end
 end
@@ -879,12 +889,14 @@ local health_reduction_applied = false
 local function applyJudasFezCache(player, cache_flag)
     if cache_flag == CacheFlag.CACHE_DAMAGE and player:HasCollectible(PASSIVE_JUDAS_FEZ) then
         player.Damage = player.Damage * 1.35
-        player:AddNullCostume(JUDAS_FEZ_COSTUME)
         if not health_reduction_applied then
             local hearts = player:GetHearts() - 2
             player:AddMaxHearts(hearts * -1)
             health_reduction_applied = true
         end
+    end
+    if cache_flag == CacheFlag.CACHE_TEARCOLOR and player:HasCollectible(PASSIVE_JUDAS_FEZ) then
+        player:AddNullCostume(JUDAS_FEZ_COSTUME)
     end
 end
 
@@ -933,7 +945,7 @@ local function handleHotCoals()
         trail:SetColor(Color(0.5,0,0,0.5,100,100,100), 0, 0, false, false)
 
         frame_count = frame_count + 1
-        if frame_count == 121 then
+        if frame_count == 150 then
             Isaac.Spawn(
                 EntityType.ENTITY_EFFECT,
                 EffectVariant.POOF01,
@@ -1150,7 +1162,7 @@ function Alphabirth:blooderflyUpdate(blooderfly)
 
     if blooderfly_target == nil then
         blooderfly:FollowPosition(player.Position)
-        blooderfly_target = chooseRandomTarget()
+        blooderfly_target = findClosestEnemy(player)
     else
         local dir = blooderfly_target.Position:__sub(blooderfly.Position)
         local hyp = math.sqrt(dir.X * dir.X + dir.Y * dir.Y)
@@ -1260,7 +1272,8 @@ function Alphabirth:onSpiritEyeUpdate(spirit_eye)
     if player:HasCollectible(SPIRIT_SYNERGIES[1]) then -- DR_FETUS
         spirit_eye:MoveDiagonally(0.35)
         for _,entity in ipairs(Isaac.GetRoomEntities()) do
-            if entity:ToBomb() and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) then
+            if entity:ToBomb() and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) and not
+            entity:HasEntityFlags(FLAG_QUILL_FEATHER_APLLIED) then
                 local bomb = entity:ToBomb()
                 bomb:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
                 bomb.ExplosionDamage = bomb.ExplosionDamage * 1.8
@@ -1310,7 +1323,8 @@ function Alphabirth:onSpiritEyeUpdate(spirit_eye)
     else
         spirit_eye:MoveDiagonally(0.35)
         for _, entity in ipairs(Isaac.GetRoomEntities()) do
-            if entity.Type == EntityType.ENTITY_TEAR and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) then
+            if entity.Type == EntityType.ENTITY_TEAR and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) and not
+            entity:HasEntityFlags(FLAG_QUILL_FEATHER_APLLIED) then
                 local direction_vector = entity.Velocity
                 entity:Die()
                 for i = 1, tear_count do
