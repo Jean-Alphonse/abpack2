@@ -6,11 +6,20 @@
     <entity anm2path="familiars/animation_familiar_spiriteye.anm2" baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="0" collisionRadius="2" friction="1.2" id="3" name="Spirit Eye" numGridCollisionPoints="12" shadowSize="11" stageHP="0" variant="240">
         <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
     </entity>
+    
+    <entity anm2path="familiars/animation_familiar_infestedbaby.anm2" baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="0" collisionRadius="2" friction="1.2" id="3" name="Infested Baby" numGridCollisionPoints="12" shadowSize="11" stageHP="0" variant="241">
+        <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
+    </entity>
+    
+    <entity anm2path="enemies/animation_enemy_brimhost.anm2" baseHP="14" boss="0" champion="0" collisionDamage="0" collisionMass="15" collisionRadius="13" friction="0.3" id="27" name="Brimstone Host" numGridCollisionPoints="12" shadowSize="25" stageHP="2" variant="200" portrait="24">
+        <gibs amount="6" blood="1" bone="1" eye="0" gut="0" large="0" worm="1" />
+        <preload-snd id="166" /> <!-- SOUND_ANIMAL_SQUISH -->
+    </entity>
 
     <entity anm2path="effects/animation_effect_alastorscandle.anm2" baseHP="0" boss="0" champion="0" collisionDamage="8" collisionMass="0.1" collisionRadius="9" friction="1" id="3" name="Alastor's Flame" numGridCollisionPoints="10" shadowSize="10" stageHP="0" variant="239">
         <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
     </entity>
-
+    
     <entity anm2path="effects/animation_effect_chaliceofblood.anm2" baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="99" collisionRadius="9" friction="0" id="3" name="Chalice of Blood" numGridCollisionPoints="10" shadowSize="10" stageHP="0" variant="242">
         <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
     </entity>
@@ -18,4 +27,5 @@
     <entity anm2path="familiars/animation_familiar_infestedbaby.anm2" baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="0" collisionRadius="2" friction="1.2" id="3" name="Infested Baby" numGridCollisionPoints="12" shadowSize="11" stageHP="0" variant="241">
         <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
     </entity>
+
 </entities>
