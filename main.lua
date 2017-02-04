@@ -772,12 +772,20 @@ local function handleAbyss()
             for _, entity2 in ipairs(Isaac.GetRoomEntities()) do
                 local entity2_npc = entity2:ToNPC()
                 if entity2_npc then
-                    if entity2:IsActiveEnemy(false) and entity2:IsVulnerableEnemy() and not entity2_npc:IsBoss() and not entity2:HasEntityFlags(FLAG_VOID) then
-                        if entity2.Position:Distance(entity.Position) < 120 then
-                            local direction_vector = entity.Position - entity2.Position
-                            direction_vector = direction_vector:Normalized() * 3
-                            entity2.Velocity = entity2.Velocity + direction_vector
-                        end
+                    if entity2:IsActiveEnemy(false) and 
+                            entity2:IsVulnerableEnemy() and not 
+                            entity2_npc:IsBoss() and not 
+                            entity2:HasEntityFlags(FLAG_VOID) then
+                        local direction_vector = entity.Position - entity2.Position
+                        direction_vector = direction_vector:Normalized() * 2
+                        entity2.Velocity = entity2.Velocity + direction_vector
+                    elseif entity2.Type == EntityType.ENTITY_PICKUP and
+                            entity2.Variant ~= PickupVariant.PICKUP_COLLECTIBLE and
+                            entity2.Variant ~= PickupVariant.PICKUP_BIGCHEST and
+                            entity2.Variant ~= PickupVariant.PICKUP_BED then
+                        local direction_vector = entity.Position - entity2.Position
+                        direction_vector = direction_vector:Normalized() * 2
+                        entity2.Velocity = entity2.Velocity + direction_vector
                     end
                 end
             end
