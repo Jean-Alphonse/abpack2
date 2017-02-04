@@ -37,6 +37,8 @@ local FLAG_VOID = 1 << 37
 
 local FLAG_SPIRIT_EYE_SHOT = 1 << 38
 local FLAG_HEMOPHILIA_SHOT = 1 << 39
+local FLAG_ABYSS_SHOT = 1 << 42
+
 local FLAG_HEMOPHILIA_APPLIED = 1 << 40
 local FLAG_QUILL_FEATHER_APLLIED = 1 << 41
 
@@ -742,7 +744,10 @@ function Alphabirth:triggerAbyss(damaged_entity, damage_amount, damage_flag, dam
     if player:HasCollectible(PASSIVE_ABYSS) then
         local damaged_npc = damaged_entity:ToNPC()
         if damaged_npc then
-            if damaged_entity:IsActiveEnemy(false) and damaged_entity:IsVulnerableEnemy() and not damaged_npc:IsBoss() and damage_source.Variant == 4800 then
+            if damaged_entity:IsActiveEnemy(false) and 
+                    damaged_entity:IsVulnerableEnemy() and not 
+                    damaged_npc:IsBoss() and 
+                    damage_source.Entity:HasEntityFlags(FLAG_ABYSS_SHOT) then
                 damaged_entity:AddEntityFlags(FLAG_VOID)
                 damaged_entity:AddEntityFlags(EntityFlag.FLAG_FREEZE)
             end
@@ -755,9 +760,9 @@ local function handleAbyss()
     local roll = math.random(1,80 - player.Luck)
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
         if entity.Type == EntityType.ENTITY_TEAR and entity.Variant ~= ENTITY_VARIANT_ABYSS_TEAR and entity.FrameCount == 1 and roll < 11 then
-            entity:ToTear():ChangeVariant(4800)
             entity:GetSprite():ReplaceSpritesheet(0, 'gfx/animations/effects/sheet_tears_abyss.png')
             entity:GetSprite():LoadGraphics()
+            entity:AddEntityFlags(FLAG_ABYSS_SHOT)
         end
         if entity:HasEntityFlags(FLAG_VOID) then
             entity.Friction = 0
