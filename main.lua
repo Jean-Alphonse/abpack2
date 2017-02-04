@@ -171,6 +171,13 @@ local ENTITY_VARIANT_CHALICE_OF_BLOOD = Isaac.GetEntityVariantByName("Chalice of
 -- use TRINKET_YOUR_ITEM = TrinketID
 
 ---------------------------------------
+-- Pocket Items Declaration
+---------------------------------------
+-- use POCKETITEM_YOUR_NAME = PocketItemID
+
+local POCKETITEM_NAUDIZ = Isaac.GetCardIdByName("Naudiz")
+
+---------------------------------------
 -- Variables that need to be loaded early
 ---------------------------------------
 
@@ -854,9 +861,6 @@ local function applyHotCoalsUpdate(player, cache_flag)
     if player:HasCollectible(PASSIVE_HOT_COALS) and cache_flag == CacheFlag.CACHE_DAMAGE then
         player.Damage = player.Damage * dmg_modifier
     end
-    if player:HasCollectible(PASSIVE_HOT_COALS) and cache_flag == CacheFlag.CACHE_TEARCOLOR then
-        player:AddNullCostume(HOT_COALS_COSTUME)
-    end
 end
 
 local function handleHotCoals()
@@ -1050,6 +1054,38 @@ end
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
 -------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+---- POCKET ITEMS LOGIC
+-------------------------------------------------------------------------------
+
+---------------------------------------
+-- Naudiz Logic
+---------------------------------------
+
+function Alphabirth:triggerNaudizEffect()
+    local player = Isaac.GetPlayer(0)
+    local coins = player:GetNumCoins()
+    local bombs = player:GetNumBombs()
+    local keys = player:GetNumKeys()
+    local consumables = {coins, bombs, keys}
+    local max = 99
+    local toGive = 1
+    for i=1, #consumables do
+        if consumables[i] < max then
+            max = consumables[i]
+            toGive = i
+        end
+    end
+    if toGive == 1 then
+        player:AddCoins(10)
+    elseif toGive == 2 then
+        player:AddBombs(10)
+    elseif toGive == 3 then
+        player:AddKeys(10)
+    end
+    return true
+end
 
 -------------------------------------------------------------------------------
 ---- ENTITY LOGIC (Familiars, Enemies, Bosses)
@@ -1642,6 +1678,12 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerAlastorsC
 Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBloodDrive, ACTIVE_BLOOD_DRIVE)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerChaliceOfBlood, ACTIVE_CHALICE_OF_BLOOD)
 
+
+-------------------
+-- Pocket Handleing
+-------------------
+
+Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_CARD, Alphabirth.triggerNaudizEffect, POCKETITEM_NAUDIZ)
 
 -------------------
 -- Passive Handling
