@@ -1260,6 +1260,29 @@ function Alphabirth:onHostUpdate(host)
                 host.State = NpcState.STATE_IDLE
             end
         end
+    elseif host.FrameCount == 1 then
+        local level = Game():GetLevel()
+        local stage = level:GetAbsoluteStage()
+        local spawnroll = math.random(1,3)
+        if spawnroll == 1 then
+            Isaac.DebugString(tostring(stage))
+            local canreplace = false
+            if stage == LevelStage.STAGE3_1 or stage == LevelStage.STAGE3_2 then
+                canreplace = true
+            elseif stage == LevelStage.STAGE5 and not level:IsAltStage() then
+                canreplace = true
+            end
+            
+            if canreplace then
+                Isaac.Spawn(EntityType.ENTITY_HOST,
+                    ENTITY_VARIANT_BRIMSTONE_HOST,
+                    0,
+                    host.Position,
+                    host.Velocity,
+                    host)
+                host:Remove()
+            end
+        end
     end
 end
 
