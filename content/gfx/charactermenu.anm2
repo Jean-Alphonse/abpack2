@@ -2,7 +2,7 @@
 	<Info CreatedBy="Unknown" CreatedOn="03-Feb-17 20:46:53" Version="28" Fps="30"/>
 	<Content>
 		<Spritesheets>
-			<Spritesheet Path="..\..\..\..\..\..\Pictures\Sprites\stuff\things\my sprites\teamalpha\characters\charactermenu.png" Id="0"/>
+			<Spritesheet Path="charactermenu.png" Id="0"/>
 		</Spritesheets>
 		<Layers>
 			<Layer Name="Background" Id="0" SpritesheetId="0"/>
