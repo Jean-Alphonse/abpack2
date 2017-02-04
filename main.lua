@@ -19,6 +19,7 @@ local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/ac
 local AIMBOT_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_aimbot.anm2")
 local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_transformation_cyborg.anm2")
 local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hemophilia.anm2")
+local ABYSS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_abyss.anm2")
 
 ---------------------------------------
 -- Entity Flag Declaration
@@ -127,7 +128,7 @@ local PASSIVE_BLOODERFLY = Isaac.GetItemIdByName("Blooderfly")
 local PASSIVE_TECH_ALPHA = Isaac.GetItemIdByName("Tech Alpha")
 local PASSIVE_BIRTH_CONTROL = Isaac.GetItemIdByName("Birth Control")
 local PASSIVE_SPIRIT_EYE = Isaac.GetItemIdByName("Spirit Eye")
-local PASSIVE_VOID_TEARS = Isaac.GetItemIdByName("Void Tears")
+local PASSIVE_ABYSS = Isaac.GetItemIdByName("Abyss")
 
 ---------------------------------------
 -- Entity Variant Declaration
@@ -135,6 +136,7 @@ local PASSIVE_VOID_TEARS = Isaac.GetItemIdByName("Void Tears")
 
 local ENTITY_VARIANT_BLOODERFLY = Isaac.GetEntityVariantByName("Blooderfly")
 local ENTITY_VARIANT_SPIRIT_EYE = Isaac.GetEntityVariantByName("Spirit Eye")
+local ENTITY_VARIANT_ABYSS_TEAR = Isaac.GetEntityVariantByName("Abyss Tear")
 ---------------------------------------
 -- Trinket Declaration
 ---------------------------------------
@@ -449,7 +451,7 @@ local function handleTechAlpha(player)
         if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
             roll_max = roll_max * 2
         end
-        
+
         if entity.Type == EntityType.ENTITY_TEAR then
             entity_will_shoot = true
         elseif entity.Type == EntityType.ENTITY_BOMBDROP then
@@ -467,7 +469,7 @@ local function handleTechAlpha(player)
                 entity_will_shoot = true
             end
         end
-        
+
         if entity_will_shoot then
             local laser_roll = math.random(1,roll_max)
             if laser_roll == 1 then
@@ -485,7 +487,7 @@ local function handleTechAlpha(player)
                         end
                     end
                 end
-                
+
                 if closest_enemy then
                     local direction_vector = closest_enemy.Position - entity.Position
                     direction_vector = direction_vector:Normalized() * (player.ShotSpeed * 13)
@@ -501,16 +503,16 @@ local function handleTechAlpha(player)
 end
 
 ---------------------------------------
--- Void Tear Logic
+-- ABYSS Logic
 ---------------------------------------
-function Alphabirth:triggerVoidTears(damaged_entity, damage_amount, damage_flag, damage_source, invincible_frames)
+function Alphabirth:triggerAbyss(damaged_entity, damage_amount, damage_flag, damage_source, invincible_frames)
     local player = Isaac.GetPlayer(0)
-    if player:HasCollectible(PASSIVE_VOID_TEARS) then
+    if player:HasCollectible(PASSIVE_ABYSS) then
         local damaged_npc = damaged_entity:ToNPC()
         if damaged_npc then
             if damaged_entity:IsActiveEnemy(false) and damaged_entity:IsVulnerableEnemy() and not damaged_npc:IsBoss() then
-                local apply_void_roll = math.random(1,8)
-                if apply_void_roll == 1 then
+                local apply_void_roll = math.random(10,80 - player.Luck)
+                if apply_void_roll < 11 then
                     damaged_entity:AddEntityFlags(FLAG_VOID)
                     damaged_entity:AddEntityFlags(EntityFlag.FLAG_FREEZE)
                 end
@@ -519,8 +521,13 @@ function Alphabirth:triggerVoidTears(damaged_entity, damage_amount, damage_flag,
     end
 end
 
-local function handleVoidTears()
+local function handleAbyss()
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
+        if entity.Type == EntityType.ENTITY_TEAR and entity.Variant ~= ENTITY_VARIANT_ABYSS_TEAR then
+            entity:ToTear():ChangeVariant(4800)
+            entity:GetSprite():ReplaceSpritesheet(0, 'gfx/animations/effects/sheet_tears_abyss.png')
+            entity:GetSprite():LoadGraphics()
+        end
         if entity:HasEntityFlags(FLAG_VOID) then
             entity.Friction = 0
             entity.Velocity = Vector(0,0)
@@ -536,13 +543,19 @@ local function handleVoidTears()
                     end
                 end
             end
-            
+
             lose_flag_roll = math.random(1,300)
             if lose_flag_roll == 1 then
                 entity:ClearEntityFlags(FLAG_VOID)
                 entity:ClearEntityFlags(EntityFlag.FLAG_FREEZE)
             end
         end
+    end
+end
+
+local function applyAbyssCache(player, cache_flag)
+    if player:HasCollectible(PASSIVE_ABYSS) then
+        player:AddNullCostume(ABYSS_COSTUME)
     end
 end
 
@@ -962,13 +975,13 @@ function Alphabirth:modUpdate()
 
     activeCharge = charge
     handleAimbot()
-    
+
     if player:HasCollectible(PASSIVE_TECH_ALPHA) then
         handleTechAlpha(player)
     end
-    
-    if player:HasCollectible(PASSIVE_VOID_TEARS) then
-        handleVoidTears()
+
+    if player:HasCollectible(PASSIVE_ABYSS) then
+        handleAbyss()
     end
 
     if Game():GetFrameCount() % 10 == 0 then
@@ -987,7 +1000,7 @@ function Alphabirth:modUpdate()
             end
         end
     end
-                    
+
     -- Spawn items in starting room
     if starting_room_enabled then
         if frame == 1 then
@@ -1068,6 +1081,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyBirthControlCache(player, cache_flag)
     applyCyborgCache(player, cache_flag)
     applySpiritEyeCache(player, cache_flag)
+    applyAbyssCache(player, cache_flag)
 end
 
 -------------------
@@ -1093,7 +1107,7 @@ Alphabirth:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerAlastorsCandl
 -------------------
 Alphabirth:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerCrackedRockEffect)
 Alphabirth:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHemophilia)
-Alphabirth:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerVoidTears)
+Alphabirth:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerAbyss)
 
 -------------------
 -- Entity Handling
