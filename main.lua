@@ -1228,7 +1228,7 @@ end
 -- Host Logic
 ---------------------------------------
 function Alphabirth:onHostUpdate(host)
-    local player = Isaac.GetPlayer(0)
+    local player = host:GetPlayerTarget()
     if host.Variant >= 200 then
         if host.State == NpcState.STATE_ATTACK then
             if host.StateFrame == 27 then -- Approximate attack frame.
