@@ -4,8 +4,10 @@
     <active gfx="collectible_mirror.png" maxcharges="0" name="Mirror" description="Am...Am I? I? He? Me?"/>
     <active gfx="collectible_bionicarm.png" maxcharges="12" name="Bionic Arm" description="An extension of me"/>
     <active gfx="collectible_alastorscandle.png" maxcharges="3" name="Alastor's Candle" devilprice="1" description ="The dark shines brightest"/>
+    <active gfx="collectible_blacklight.png" maxcharges="0" name="Blacklight" />
     <active gfx="collectible_blooddrive.png" maxcharges="0" name="Blood Drive" description="Blood for Blood"/>
     <active gfx="collectible_empty.png" cache="damage shotspeed" maxcharges="1" devilprice="1" name="Chalice of Blood" description="Kills Fill" />
+
 
     <passive gfx="collectible_crackedrock.png" cache="tearcolor" devilprice="1" name="Cracked Rock" description="Shockwave Shots"/>
     <passive gfx="collectible_hemophilia.png" cache="tearcolor" name="Hemophilia" description="What a bloody mess..." />

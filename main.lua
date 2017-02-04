@@ -139,6 +139,7 @@ local ACTIVE_BIONIC_ARM = Isaac.GetItemIdByName("Bionic Arm")
 local ACTIVE_ALASTORS_CANDLE = Isaac.GetItemIdByName("Alastor's Candle")
 local ACTIVE_BLOOD_DRIVE = Isaac.GetItemIdByName("Blood Drive")
 local ACTIVE_CHALICE_OF_BLOOD = Isaac.GetItemIdByName("Chalice of Blood")
+local ACTIVE_BLACKLIGHT = Isaac.GetItemIdByName("Blacklight")
 
 ---------------------------------------
 -- Passive Declaration
@@ -605,6 +606,41 @@ function Alphabirth:chaliceOfBloodUpdate()
     end
 end
 
+----------------------------------------
+-- Blacklight Logic
+----------------------------------------
+
+local blacklightUses = 0
+local darkenCooldown = 0
+local timesTillMax = 20
+function Alphabirth:triggerBlacklight()
+    if blacklightUses < timesTillMax then
+        blacklightUses = blacklightUses + 1
+        darkenCooldown = 0
+        for i, entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity:IsVulnerableEnemy() then
+                if entity.HitPoints - 40 <= 0 then
+                    entity:Kill()
+                else
+                    entity.HitPoints = entity.HitPoints - 40
+                end
+            end
+        end
+        return true
+    end
+end
+
+
+local function handleBlacklight()
+    if blacklightUses > 0 and darkenCooldown == 0 then
+        Game():Darken(3 - (blacklightUses/((timesTillMax)/2)), 200)
+        darkenCooldown = 195
+    end
+    if darkenCooldown > 0 then
+        darkenCooldown = darkenCooldown - 1
+    end
+end
+
 -------------------------------------------------------------------------------
 ---- PASSIVE ITEM LOGIC
 -------------------------------------------------------------------------------
@@ -754,9 +790,9 @@ function Alphabirth:triggerAbyss(damaged_entity, damage_amount, damage_flag, dam
     if player:HasCollectible(PASSIVE_ABYSS) then
         local damaged_npc = damaged_entity:ToNPC()
         if damaged_npc then
-            if damaged_entity:IsActiveEnemy(false) and 
-                    damaged_entity:IsVulnerableEnemy() and not 
-                    damaged_npc:IsBoss() and 
+            if damaged_entity:IsActiveEnemy(false) and
+                    damaged_entity:IsVulnerableEnemy() and not
+                    damaged_npc:IsBoss() and
                     damage_source.Entity:HasEntityFlags(FLAG_ABYSS_SHOT) then
                 local entity_has_void = false
                 for _, entity in ipairs(Isaac.GetRoomEntities()) do
@@ -1537,6 +1573,8 @@ function Alphabirth:modUpdate()
         bloodDriveTimesUsed = 0
         has_brunch_health = false
         chalice_souls = 0
+        blacklightUses = 0
+        darkenCooldown = 0
 
         if player_type == endor_type then
             player:AddNullCostume(ENDOR_BODY_COSTUME)
@@ -1617,6 +1655,7 @@ function Alphabirth:modUpdate()
 
     activeCharge = charge
     handleAimbot()
+    handleBlacklight()
 
     if player:HasCollectible(PASSIVE_TECH_ALPHA) then
         handleTechAlpha(player)
@@ -1671,7 +1710,7 @@ function Alphabirth:modUpdate()
                     PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL,
                     PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY, ACTIVE_BLOOD_DRIVE, PASSIVE_JUDAS_FEZ,
                     PASSIVE_HOT_COALS, PASSIVE_QUILL_FEATHER, PASSIVE_BRUNCH, ACTIVE_CHALICE_OF_BLOOD,
-                    PASSIVE_ABYSS
+                    PASSIVE_ABYSS, ACTIVE_BLACKLIGHT
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -1777,6 +1816,7 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBionicArm
 Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerAlastorsCandle, ACTIVE_ALASTORS_CANDLE)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBloodDrive, ACTIVE_BLOOD_DRIVE)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerChaliceOfBlood, ACTIVE_CHALICE_OF_BLOOD)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBlacklight, ACTIVE_BLACKLIGHT)
 
 
 -------------------
