@@ -748,8 +748,17 @@ function Alphabirth:triggerAbyss(damaged_entity, damage_amount, damage_flag, dam
                     damaged_entity:IsVulnerableEnemy() and not 
                     damaged_npc:IsBoss() and 
                     damage_source.Entity:HasEntityFlags(FLAG_ABYSS_SHOT) then
-                damaged_entity:AddEntityFlags(FLAG_VOID)
-                damaged_entity:AddEntityFlags(EntityFlag.FLAG_FREEZE)
+                local entity_has_void = false
+                for _, entity in ipairs(Isaac.GetRoomEntities()) do
+                    if entity:HasEntityFlags(FLAG_VOID) then
+                        entity_has_void = true
+                    end
+                end
+                
+                if not entity_has_void then
+                    damaged_entity:AddEntityFlags(FLAG_VOID)
+                    damaged_entity:AddEntityFlags(EntityFlag.FLAG_FREEZE)
+                end
             end
         end
     end
@@ -757,7 +766,12 @@ end
 
 local function handleAbyss()
     local player = Isaac.GetPlayer(0)
-    local roll = math.random(1,80 - player.Luck*3)
+    local luck_modifier = 80 - player.Luck * 3
+    if luck_modifier < 2 then
+        luck_modifier = 2
+    end
+    
+    local roll = math.random(1,luck_modifier)
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
         if entity.Type == EntityType.ENTITY_TEAR and entity.Variant ~= ENTITY_VARIANT_ABYSS_TEAR and entity.FrameCount == 1 and roll < 11 then
             entity:GetSprite():ReplaceSpritesheet(0, 'gfx/animations/effects/sheet_tears_abyss.png')
@@ -777,14 +791,14 @@ local function handleAbyss()
                             entity2_npc:IsBoss() and not 
                             entity2:HasEntityFlags(FLAG_VOID) then
                         local direction_vector = entity.Position - entity2.Position
-                        direction_vector = direction_vector:Normalized() * 2
+                        direction_vector = direction_vector:Normalized() * 3
                         entity2.Velocity = entity2.Velocity + direction_vector
                     elseif entity2.Type == EntityType.ENTITY_PICKUP and
                             entity2.Variant ~= PickupVariant.PICKUP_COLLECTIBLE and
                             entity2.Variant ~= PickupVariant.PICKUP_BIGCHEST and
                             entity2.Variant ~= PickupVariant.PICKUP_BED then
                         local direction_vector = entity.Position - entity2.Position
-                        direction_vector = direction_vector:Normalized() * 2
+                        direction_vector = direction_vector:Normalized() * 3
                         entity2.Velocity = entity2.Velocity + direction_vector
                     end
                 end
