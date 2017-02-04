@@ -15,11 +15,13 @@
         <Item Name="Hot Coals" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Blooderfly" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Infested Baby" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Quill Feather" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="shop">
         <Item Name="Cauldron" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Surgeon Simulator" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Quill Feather" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="devil">
@@ -28,6 +30,7 @@
         <Item Name="Infested Baby" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Alastor's Candle" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Gloom Skull" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Chalice of Blood" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="angel">
@@ -40,6 +43,7 @@
         <Item Name="Gloom Skull" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Hot Coals" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Spirit Eye" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Abyss" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="beggar">
@@ -52,6 +56,7 @@
         <Item Name="Infested Baby" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Alastor's Candle" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Gloom Skull" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Chalice of Blood" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="redChest">
@@ -59,6 +64,7 @@
         <Item Name="Gloom Skull" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Birth Control" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Spirit Eye" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Abyss" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="greedTreasure">
@@ -73,11 +79,13 @@
         <Item Name="Hot Coals" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Blooderfly" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Infested Baby" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Quill Feather" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="greedShop">
         <Item Name="Cauldron" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Surgeon Simulator" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Quill Feather" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="greedDevil">
@@ -85,6 +93,7 @@
         <Item Name="Judas Fez" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Infested Baby" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Gloom Skull" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Chalice of Blood" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="greedAngel">
@@ -98,6 +107,7 @@
         <Item Name="Hot Coals" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Spirit Eye" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Alastor's Candle" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Abyss" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="challenge">
@@ -105,6 +115,7 @@
         <Item Name="Infested Baby" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Spirit Eye" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
         <Item Name="Cauldron" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
+        <Item Name="Abyss" Weight="1" DecreaseBy="1" RemoveOn="0.1"/>
     </Pool>
 
     <Pool Name="goldenChest">

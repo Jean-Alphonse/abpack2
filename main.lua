@@ -20,9 +20,12 @@ local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/ac
 local AIMBOT_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_aimbot.anm2")
 local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_transformation_cyborg.anm2")
 local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hemophilia.anm2")
+local ABYSS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_abyss.anm2")
 local BIRTH_CONTROL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_birthcontrol.anm2")
 local JUDAS_FEZ_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_judasfez.anm2")
-local HOT_COALS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hotcoals.anm2")
+--local HOT_COALS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hotcoals.anm2")
+local TECH_ALPHA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_techalpha.anm2")
+local QUILL_FEATHER_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_quillfeather.anm2")
 
 local ENDOR_BODY_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorbody.anm2")
 local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorhead.anm2")
@@ -30,9 +33,12 @@ local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/pla
 -- Entity Flag Declaration
 ---------------------------------------
 -- use FLAG_YOUR_FLAG = 1 << FlagID
+local FLAG_VOID = 1 << 37
 
 local FLAG_SPIRIT_EYE_SHOT = 1 << 38
 local FLAG_HEMOPHILIA_SHOT = 1 << 39
+local FLAG_ABYSS_SHOT = 1 << 42
+
 local FLAG_HEMOPHILIA_APPLIED = 1 << 40
 local FLAG_QUILL_FEATHER_APLLIED = 1 << 41
 
@@ -140,6 +146,8 @@ local ACTIVE_SURGEON_SIMULATOR = Isaac.GetItemIdByName("Surgeon Simulator")
 local ACTIVE_BIONIC_ARM = Isaac.GetItemIdByName("Bionic Arm")
 local ACTIVE_ALASTORS_CANDLE = Isaac.GetItemIdByName("Alastor's Candle")
 local ACTIVE_BLOOD_DRIVE = Isaac.GetItemIdByName("Blood Drive")
+local ACTIVE_CHALICE_OF_BLOOD = Isaac.GetItemIdByName("Chalice of Blood")
+local ACTIVE_BLACKLIGHT = Isaac.GetItemIdByName("Blacklight")
 
 ---------------------------------------
 -- Passive Declaration
@@ -154,6 +162,7 @@ local PASSIVE_TECH_ALPHA = Isaac.GetItemIdByName("Tech Alpha")
 local PASSIVE_BRUNCH = Isaac.GetItemIdByName("Brunch")
 local PASSIVE_BIRTH_CONTROL = Isaac.GetItemIdByName("Birth Control")
 local PASSIVE_SPIRIT_EYE = Isaac.GetItemIdByName("Spirit Eye")
+local PASSIVE_ABYSS = Isaac.GetItemIdByName("Abyss")
 local PASSIVE_INFESTED_BABY = Isaac.GetItemIdByName("Infested Baby")
 local PASSIVE_JUDAS_FEZ = Isaac.GetItemIdByName("Judas' Fez")
 local PASSIVE_HOT_COALS = Isaac.GetItemIdByName("Hot Coals")
@@ -162,16 +171,29 @@ local PASSIVE_QUILL_FEATHER = Isaac.GetItemIdByName("Quill Feather")
 ---------------------------------------
 -- Entity Variant Declaration
 ---------------------------------------
-
+-- Familiars
 local ENTITY_VARIANT_BLOODERFLY = Isaac.GetEntityVariantByName("Blooderfly")
 local ENTITY_VARIANT_SPIRIT_EYE = Isaac.GetEntityVariantByName("Spirit Eye")
+local ENTITY_VARIANT_ABYSS_TEAR = Isaac.GetEntityVariantByName("Abyss Tear")
 local ENTITY_VARIANT_INFESTED_BABY = Isaac.GetEntityVariantByName("Infested Baby")
+
+-- Enemies
 local ENTITY_VARIANT_BRIMSTONE_HOST = Isaac.GetEntityVariantByName("Brimstone Host")
 
+-- Effects
+local ENTITY_VARIANT_ALASTORS_FLAME = Isaac.GetEntityVariantByName("Alastor's Flame")
+local ENTITY_VARIANT_CHALICE_OF_BLOOD = Isaac.GetEntityVariantByName("Chalice of Blood")
 ---------------------------------------
 -- Trinket Declaration
 ---------------------------------------
 -- use TRINKET_YOUR_ITEM = TrinketID
+
+---------------------------------------
+-- Pocket Items Declaration
+---------------------------------------
+-- use POCKETITEM_YOUR_NAME = PocketItemID
+
+local POCKETITEM_NAUDIZ = Isaac.GetCardIdByName("Naudiz")
 
 ---------------------------------------
 -- Variables that need to be loaded early
@@ -190,6 +212,8 @@ local cyborg_progress = {}
 
 local birthControl_pool = {
     PASSIVE_INFESTED_BABY,
+    PASSIVE_BLOODERFLY,
+    PASSIVE_SPIRIT_EYE,
     CollectibleType.COLLECTIBLE_BROTHER_BOBBY,
     CollectibleType.COLLECTIBLE_SISTER_MAGGY,
     CollectibleType.COLLECTIBLE_LITTLE_CHUBBY,
@@ -461,6 +485,173 @@ function Alphabirth:triggerBloodDrive()
     end
 end
 
+---------------------------------------
+-- Chalice of Blood Logic
+---------------------------------------
+local chalice
+local chalice_souls = 0
+local soul_limit = 15
+local CHALICE_STATS = {
+    DAMAGE = 1,
+    SHOTSPEED = 0
+}
+local function applyChaliceOfBloodCache(player, cache_flag)
+    if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) then
+        if cache_flag == CacheFlag.CACHE_DAMAGE then
+            player.Damage = player.Damage * CHALICE_STATS.DAMAGE
+        end
+        if cache_flag == CacheFlag.CACHE_SHOTSPEED then
+            player.ShotSpeed = player.ShotSpeed + CHALICE_STATS.SHOTSPEED
+        end
+    end
+end
+
+function Alphabirth:triggerChaliceOfBlood()
+    local player = Isaac.GetPlayer(0)
+    local room = Game():GetRoom()
+
+    if chalice_souls < soul_limit then
+
+        if chalice ~= nil then
+           chalice:Remove()
+        end
+
+        chalice = Isaac.Spawn(
+            3,
+            ENTITY_VARIANT_CHALICE_OF_BLOOD,
+            0,
+            player.Position,
+            Vector(0,0),
+            player
+        )
+    else
+        CHALICE_STATS.DAMAGE = 2
+        CHALICE_STATS.SHOTSPEED = 0.4
+        player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
+        player:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED)
+        player:EvaluateItems()
+        chalice_souls = 0
+        Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.PLAYER_CREEP_RED,0,player.Position,Vector(0, 0),player)
+    end
+    return true
+end
+
+local function handleChaliceOfBlood()
+    local player = Isaac.GetPlayer(0)
+    local room = Game():GetRoom()
+
+    -- Remove Chalice if room is clear
+    if room:GetFrameCount() == 1 then
+        CHALICE_STATS.DAMAGE = 1
+        CHALICE_STATS.SHOTSPEED = 0
+        player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
+        player:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED)
+        player:EvaluateItems()
+    end
+
+    if room:IsClear() and chalice ~= nil then
+        Isaac.Spawn(
+            EntityType.ENTITY_EFFECT,
+            EffectVariant.POOF01,
+            0,            -- Entity Subtype
+            chalice.Position,
+            Vector(0, 0), -- Velocity
+            nil
+        )
+        chalice:Remove()
+        chalice = nil
+    end
+
+    if chalice ~= nil then
+        for _, entity in ipairs(Isaac.GetRoomEntities()) do
+            local entity_is_close = entity.Position:Distance(chalice.Position) <= 100
+            if entity:IsDead() and entity:ToNPC() and entity_is_close and not entity:IsBoss() then
+                playSound(SoundEffect.SOUND_SUMMONSOUND, 0.5, 0, false, 0.8)
+                Isaac.Spawn(
+                    EntityType.ENTITY_EFFECT,
+                    EffectVariant.POOF02,
+                    0,            -- Entity Subtype
+                    entity.Position,
+                    Vector(0, 0), -- Velocity
+                    nil
+                )
+                chalice_souls = chalice_souls + 1
+            end
+        end
+    end
+
+    if chalice_souls >= soul_limit and chalice ~= nil then
+        playSound(SoundEffect.SOUND_SUMMONSOUND, 0.5, 0, false, 0.9)
+        Isaac.Spawn(
+            EntityType.ENTITY_EFFECT,
+            EffectVariant.POOF01,
+            0,            -- Entity Subtype
+            chalice.Position,
+            Vector(0, 0), -- Velocity
+            nil
+        )
+        chalice:Remove()
+        chalice = nil
+    end
+end
+
+function Alphabirth:chaliceOfBloodUpdate()
+    local player = Isaac.GetPlayer(0)
+    if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) then
+        local sprite = Sprite()
+        sprite:Load("gfx/animations/animation_sprite_chaliceofblood.anm2", true)
+        if chalice_souls <= 5 then
+            sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_chaliceofblood.png")
+        elseif chalice_souls <= 10 then
+            sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_chaliceofblood2.png")
+        elseif chalice_souls < 15 then
+            sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_chaliceofblood3.png")
+        else
+            sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_chaliceofblood4.png")
+        end
+
+        sprite:LoadGraphics()
+        sprite:Play("Idle", true)
+        sprite.Offset = Vector(16,16)
+        sprite:RenderLayer(0, Vector(0, 0))
+    end
+end
+
+----------------------------------------
+-- Blacklight Logic
+----------------------------------------
+
+local blacklightUses = 0
+local darkenCooldown = 0
+local timesTillMax = 20
+function Alphabirth:triggerBlacklight()
+    if blacklightUses < timesTillMax then
+        blacklightUses = blacklightUses + 1
+        darkenCooldown = 0
+        for i, entity in ipairs(Isaac.GetRoomEntities()) do
+            if entity:IsVulnerableEnemy() then
+                if entity.HitPoints - 40 <= 0 then
+                    entity:Kill()
+                else
+                    entity.HitPoints = entity.HitPoints - 40
+                end
+            end
+        end
+        return true
+    end
+end
+
+
+local function handleBlacklight()
+    if blacklightUses > 0 and darkenCooldown == 0 then
+        Game():Darken(3 - (blacklightUses/((timesTillMax)/2)), 200)
+        darkenCooldown = 195
+    end
+    if darkenCooldown > 0 then
+        darkenCooldown = darkenCooldown - 1
+    end
+end
+
 -------------------------------------------------------------------------------
 ---- PASSIVE ITEM LOGIC
 -------------------------------------------------------------------------------
@@ -489,12 +680,20 @@ function Alphabirth:triggerCrackedRockEffect(dmg_target, dmg_amount, dmg_source,
         if(math.random(1, upper_limit_luck_modifier) <= 10) then
             Isaac.Spawn(
                 EntityType.ENTITY_EFFECT,
-                EffectVariant.SHOCKWAVE_RANDOM,
+                EffectVariant.SHOCKWAVE,
                 0,            -- Entity Subtype
                 dmg_target.Position,
                 Vector(0, 0), -- Velocity
                 player
-            ):ToEffect():SetRadii(5,15)
+            ):ToEffect():SetRadii(5,10)
+            Isaac.Spawn(
+                EntityType.ENTITY_EFFECT,
+                EffectVariant.SHOCKWAVE,
+                0,            -- Entity Subtype
+                dmg_target.Position,
+                Vector(0, 0), -- Velocity
+                player
+            ):ToEffect():SetRadii(2,8)
         end
     end
 end
@@ -537,7 +736,6 @@ local function handleTechAlpha(player)
         if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
             roll_max = roll_max * 2
         end
-
         if entity.Type == EntityType.ENTITY_TEAR and not entity:HasEntityFlags(FLAG_HEMOPHILIA_SHOT) then
             entity_will_shoot = true
         elseif entity.Type == EntityType.ENTITY_BOMBDROP then
@@ -575,7 +773,7 @@ local function handleTechAlpha(player)
                 end
 
                 if closest_enemy then
-                    direction_vector = closest_enemy.Position - entity.Position
+                    local direction_vector = closest_enemy.Position - entity.Position
                     direction_vector = direction_vector:Normalized() * (player.ShotSpeed * 13)
                     if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
                         player:FireTechXLaser(entity.Position, direction_vector, 30)
@@ -585,6 +783,97 @@ local function handleTechAlpha(player)
                 end
             end
         end
+    end
+end
+
+local function applyTechAlphaCache ()
+    local player = Isaac.GetPlayer(0)
+    if player:HasCollectible(PASSIVE_TECH_ALPHA) then
+        player:AddNullCostume(TECH_ALPHA_COSTUME)
+    end
+end
+
+---------------------------------------
+-- ABYSS Logic
+---------------------------------------
+function Alphabirth:triggerAbyss(damaged_entity, damage_amount, damage_flag, damage_source, invincible_frames)
+    local player = Isaac.GetPlayer(0)
+    if player:HasCollectible(PASSIVE_ABYSS) then
+        local damaged_npc = damaged_entity:ToNPC()
+        if damaged_npc then
+            if damaged_entity:IsActiveEnemy(false) and
+                    damaged_entity:IsVulnerableEnemy() and not
+                    damaged_npc:IsBoss() and
+                    damage_source.Entity:HasEntityFlags(FLAG_ABYSS_SHOT) then
+                local entity_has_void = false
+                for _, entity in ipairs(Isaac.GetRoomEntities()) do
+                    if entity:HasEntityFlags(FLAG_VOID) then
+                        entity_has_void = true
+                    end
+                end
+                
+                if not entity_has_void then
+                    damaged_entity:AddEntityFlags(FLAG_VOID)
+                    damaged_entity:AddEntityFlags(EntityFlag.FLAG_FREEZE)
+                end
+            end
+        end
+    end
+end
+
+local function handleAbyss()
+    local player = Isaac.GetPlayer(0)
+    local luck_modifier = 80 - player.Luck * 3
+    if luck_modifier < 2 then
+        luck_modifier = 2
+    end
+    
+    local roll = math.random(1,luck_modifier)
+    for _, entity in ipairs(Isaac.GetRoomEntities()) do
+        if entity.Type == EntityType.ENTITY_TEAR and entity.Variant ~= ENTITY_VARIANT_ABYSS_TEAR and entity.FrameCount == 1 and roll < 11 then
+            entity:GetSprite():ReplaceSpritesheet(0, 'gfx/animations/effects/sheet_tears_abyss.png')
+            entity:GetSprite():LoadGraphics()
+            entity:AddEntityFlags(FLAG_ABYSS_SHOT)
+        end
+        if entity:HasEntityFlags(FLAG_VOID) then
+            entity.Friction = 0
+            entity.Velocity = Vector(0,0)
+            entity:GetData()[0] = entity.Color
+            entity.Color = Color(0,0,0,1,0,0,0)
+            for _, entity2 in ipairs(Isaac.GetRoomEntities()) do
+                local entity2_npc = entity2:ToNPC()
+                if entity2_npc then
+                    if entity2:IsActiveEnemy(false) and 
+                            entity2:IsVulnerableEnemy() and not 
+                            entity2_npc:IsBoss() and not 
+                            entity2:HasEntityFlags(FLAG_VOID) then
+                        local direction_vector = entity.Position - entity2.Position
+                        direction_vector = direction_vector:Normalized() * 3
+                        entity2.Velocity = entity2.Velocity + direction_vector
+                    elseif entity2.Type == EntityType.ENTITY_PICKUP and
+                            entity2.Variant ~= PickupVariant.PICKUP_COLLECTIBLE and
+                            entity2.Variant ~= PickupVariant.PICKUP_BIGCHEST and
+                            entity2.Variant ~= PickupVariant.PICKUP_BED then
+                        local direction_vector = entity.Position - entity2.Position
+                        direction_vector = direction_vector:Normalized() * 3
+                        entity2.Velocity = entity2.Velocity + direction_vector
+                    end
+                end
+            end
+
+            lose_flag_roll = math.random(1,300)
+            if lose_flag_roll == 1 then
+                entity.Color = entity:GetData()[0]
+                entity:ClearEntityFlags(FLAG_VOID)
+                entity:ClearEntityFlags(EntityFlag.FLAG_FREEZE)
+            end
+        end
+    end
+end
+
+local function applyAbyssCache(player, cache_flag)
+    if player:HasCollectible(PASSIVE_ABYSS) then
+        player:AddNullCostume(ABYSS_COSTUME)
     end
 end
 
@@ -672,12 +961,14 @@ local health_reduction_applied = false
 local function applyJudasFezCache(player, cache_flag)
     if cache_flag == CacheFlag.CACHE_DAMAGE and player:HasCollectible(PASSIVE_JUDAS_FEZ) then
         player.Damage = player.Damage * 1.35
-        player:AddNullCostume(JUDAS_FEZ_COSTUME)
         if not health_reduction_applied then
             local hearts = player:GetHearts() - 2
             player:AddMaxHearts(hearts * -1)
             health_reduction_applied = true
         end
+    end
+    if cache_flag == CacheFlag.CACHE_TEARCOLOR and player:HasCollectible(PASSIVE_JUDAS_FEZ) then
+        player:AddNullCostume(JUDAS_FEZ_COSTUME)
     end
 end
 
@@ -704,9 +995,6 @@ local function applyHotCoalsUpdate(player, cache_flag)
     if player:HasCollectible(PASSIVE_HOT_COALS) and cache_flag == CacheFlag.CACHE_DAMAGE then
         player.Damage = player.Damage * dmg_modifier
     end
-    if player:HasCollectible(PASSIVE_HOT_COALS) and cache_flag == CacheFlag.CACHE_TEARCOLOR then
-        player:AddNullCostume(HOT_COALS_COSTUME)
-    end
 end
 
 local function handleHotCoals()
@@ -729,7 +1017,7 @@ local function handleHotCoals()
         trail:SetColor(Color(0.5,0,0,0.5,100,100,100), 0, 0, false, false)
 
         frame_count = frame_count + 1
-        if frame_count == 121 then
+        if frame_count == 150 then
             Isaac.Spawn(
                 EntityType.ENTITY_EFFECT,
                 EffectVariant.POOF01,
@@ -863,7 +1151,7 @@ end
 
 local function applyQuillFeatherCache(player, flag)
     if Isaac.GetPlayer(0):HasCollectible(PASSIVE_QUILL_FEATHER) and flag == CacheFlag.CACHE_TEARCOLOR then
-        Isaac.DebugString("str")
+        Isaac.GetPlayer(0):AddNullCostume(QUILL_FEATHER_COSTUME)
         Isaac.GetPlayer(0).TearColor = Color(0,0,0,1,0,0,0)
     end
 end
@@ -900,6 +1188,38 @@ end
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
 -------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+---- POCKET ITEMS LOGIC
+-------------------------------------------------------------------------------
+
+---------------------------------------
+-- Naudiz Logic
+---------------------------------------
+
+function Alphabirth:triggerNaudizEffect()
+    local player = Isaac.GetPlayer(0)
+    local coins = player:GetNumCoins()
+    local bombs = player:GetNumBombs()
+    local keys = player:GetNumKeys()
+    local consumables = {coins, bombs, keys}
+    local max = 99
+    local toGive = 1
+    for i=1, #consumables do
+        if consumables[i] < max then
+            max = consumables[i]
+            toGive = i
+        end
+    end
+    if toGive == 1 then
+        player:AddCoins(10)
+    elseif toGive == 2 then
+        player:AddBombs(10)
+    elseif toGive == 3 then
+        player:AddKeys(10)
+    end
+    return true
+end
 
 -------------------------------------------------------------------------------
 ---- ENTITY LOGIC (Familiars, Enemies, Bosses)
@@ -970,7 +1290,7 @@ function Alphabirth:blooderflyUpdate(blooderfly)
 
     if blooderfly_target == nil then
         blooderfly:FollowPosition(player.Position)
-        blooderfly_target = chooseRandomTarget()
+        blooderfly_target = findClosestEnemy(player)
     else
         local dir = blooderfly_target.Position:__sub(blooderfly.Position)
         local hyp = math.sqrt(dir.X * dir.X + dir.Y * dir.Y)
@@ -1077,7 +1397,8 @@ function Alphabirth:onSpiritEyeUpdate(spirit_eye)
     if player:HasCollectible(SPIRIT_SYNERGIES[1]) then -- DR_FETUS
         spirit_eye:MoveDiagonally(0.35)
         for _,entity in ipairs(Isaac.GetRoomEntities()) do
-            if entity:ToBomb() and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) then
+            if entity:ToBomb() and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) and not
+            entity:HasEntityFlags(FLAG_QUILL_FEATHER_APLLIED) then
                 local bomb = entity:ToBomb()
                 bomb:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
                 bomb.ExplosionDamage = bomb.ExplosionDamage * 1.8
@@ -1127,7 +1448,8 @@ function Alphabirth:onSpiritEyeUpdate(spirit_eye)
     else
         spirit_eye:MoveDiagonally(0.35)
         for _, entity in ipairs(Isaac.GetRoomEntities()) do
-            if entity.Type == EntityType.ENTITY_TEAR and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) then
+            if entity.Type == EntityType.ENTITY_TEAR and entity.Position:Distance(spirit_eye.Position) <= 25 and not entity:HasEntityFlags(FLAG_SPIRIT_EYE_SHOT) and not
+            entity:HasEntityFlags(FLAG_QUILL_FEATHER_APLLIED) then
                 local direction_vector = entity.Velocity
                 entity:Die()
                 for i = 1, tear_count do
@@ -1302,6 +1624,7 @@ function Alphabirth:modUpdate()
         cauldron_points = 0
         didMax = false
         hasCyborg = false
+        spirit_eye_exists = false
         cyborg_progress = {}
         birthControlStats = {
             HP = 0,
@@ -1313,6 +1636,9 @@ function Alphabirth:modUpdate()
         }
         bloodDriveTimesUsed = 0
         has_brunch_health = false
+        chalice_souls = 0
+        blacklightUses = 0
+        darkenCooldown = 0
 
         if player_type == endor_type then
             player:AddNullCostume(ENDOR_BODY_COSTUME)
@@ -1343,7 +1669,23 @@ function Alphabirth:modUpdate()
                 sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_cauldron3.png")
             end
 			sprite:LoadGraphics()
-		end
+        end
+
+        if entity.Type == EntityType.ENTITY_PICKUP and
+                entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and
+                entity.SubType == ACTIVE_CHALICE_OF_BLOOD then
+            local sprite = entity:GetSprite()
+            if chalice_souls <= 5 then
+                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood.png")
+            elseif chalice_souls <= 10 then
+                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood2.png")
+            elseif chalice_souls < 15 then
+                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood3.png")
+            else
+                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood4.png")
+            end
+            sprite:LoadGraphics()
+        end
 	end
     --Cyborg Transformation Detector
     if Game():GetFrameCount() % 60 == 0 then
@@ -1377,11 +1719,15 @@ function Alphabirth:modUpdate()
 
     activeCharge = charge
     handleAimbot()
+    handleBlacklight()
 
     if player:HasCollectible(PASSIVE_TECH_ALPHA) then
         handleTechAlpha(player)
     end
 
+    if player:HasCollectible(PASSIVE_ABYSS) then
+        handleAbyss()
+    end
     if player:HasCollectible(PASSIVE_HOT_COALS) then
         handleHotCoals()
     end
@@ -1392,6 +1738,11 @@ function Alphabirth:modUpdate()
 
     if bloodDriveTimesUsed > 0 then
         handleBloodDrive()
+    end
+
+    -- Chalice of blood handling
+    if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) then
+       handleChaliceOfBlood()
     end
 
     -- Judas' Fez Handling
@@ -1422,7 +1773,8 @@ function Alphabirth:modUpdate()
                     ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
                     PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL,
                     PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY, ACTIVE_BLOOD_DRIVE, PASSIVE_JUDAS_FEZ,
-                    PASSIVE_HOT_COALS, PASSIVE_QUILL_FEATHER
+                    PASSIVE_HOT_COALS, PASSIVE_QUILL_FEATHER, PASSIVE_BRUNCH, ACTIVE_CHALICE_OF_BLOOD,
+                    PASSIVE_ABYSS, ACTIVE_BLACKLIGHT
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -1496,11 +1848,14 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyBirthControlCache(player, cache_flag)
     applyCyborgCache(player, cache_flag)
     applySpiritEyeCache(player, cache_flag)
+    applyAbyssCache(player, cache_flag)
     applyInfestedBabyCache(player, cache_flag)
     applyJudasFezCache(player, cache_flag)
     applyBrunchCache(player, cache_flag)
     applyHotCoalsUpdate(player, cache_flag)
+    applyChaliceOfBloodCache(player, cache_flag)
     applyQuillFeatherCache(player, cache_flag)
+    applyTechAlphaCache(player, cache_flag)
     if player:GetPlayerType() == endor_type then
         Isaac.GetPlayer(0).CanFly = true
         Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
@@ -1524,7 +1879,15 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerMirror, A
 Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBionicArm, ACTIVE_BIONIC_ARM)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerAlastorsCandle, ACTIVE_ALASTORS_CANDLE)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBloodDrive, ACTIVE_BLOOD_DRIVE)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerChaliceOfBlood, ACTIVE_CHALICE_OF_BLOOD)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBlacklight, ACTIVE_BLACKLIGHT)
 
+
+-------------------
+-- Pocket Handleing
+-------------------
+
+Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_CARD, Alphabirth.triggerNaudizEffect, POCKETITEM_NAUDIZ)
 
 -------------------
 -- Passive Handling
@@ -1539,11 +1902,14 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_ITEM, Alphabirth.triggerBloodDriv
 -------------------
 Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerCrackedRockEffect)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHemophilia)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerAbyss)
+
 Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHostTakeDamage, EntityType.ENTITY_HOST)
 
 -------------------
 -- Entity Handling
 -------------------
+
 -- Alphabirth:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onBlooderflyInit, ENTITY_VARIANT_BLOODERFLY)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.blooderflyUpdate, ENTITY_VARIANT_BLOODERFLY)
 
@@ -1560,5 +1926,6 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onHostUpdate, 
 
 Alphabirth_mod:AddCallback(ModCallbacks.MC_POST_UPDATE, Alphabirth.modUpdate)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_POST_RENDER, Alphabirth.cauldronUpdate)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_POST_RENDER, Alphabirth.chaliceOfBloodUpdate)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_EVALUATE_CACHE, Alphabirth.evaluateCache)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_POST_PLAYER_INIT, Alphabirth.playerInit)

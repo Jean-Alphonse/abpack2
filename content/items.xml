@@ -1,24 +1,28 @@
 <items gfxroot = "gfx/items/" version = "1">
-    <active gfx="collectible_surgeonsimulator.png" maxcharges="0" name="Surgeon Simulator" />
-    <active gfx="collectible_empty.png" maxcharges="0" name="Cauldron" />
-    <active gfx="collectible_mirror.png" maxcharges="0" name="Mirror" />
-    <active gfx="collectible_bionicarm.png" maxcharges="12" name="Bionic Arm" />
+    <active gfx="collectible_surgeonsimulator.png" maxcharges="0" name="Surgeon Simulator" description="There's blood EVERYWHERE"/>
+    <active gfx="collectible_empty.png" maxcharges="0" name="Cauldron" description="It bubbles"/>
+    <active gfx="collectible_mirror.png" maxcharges="0" name="Mirror" description="Am...Am I? I? He? Me?"/>
+    <active gfx="collectible_bionicarm.png" maxcharges="12" name="Bionic Arm" description="An extension of me"/>
     <active gfx="collectible_alastorscandle.png" maxcharges="3" name="Alastor's Candle" devilprice="1" description ="The dark shines brightest"/>
-    <active gfx="collectible_blooddrive.png" maxcharges="0" name="Blood Drive" />
+    <active gfx="collectible_blacklight.png" maxcharges="0" name="Blacklight" />
+    <active gfx="collectible_blooddrive.png" maxcharges="0" name="Blood Drive" description="Blood for Blood"/>
+    <active gfx="collectible_empty.png" cache="damage shotspeed" maxcharges="1" devilprice="1" name="Chalice of Blood" description="Kills Fill" />
 
-    <passive gfx="collectible_crackedrock.png" cache="tearcolor" devilprice="1" name="Cracked Rock" />
+
+    <passive gfx="collectible_crackedrock.png" cache="tearcolor" devilprice="1" name="Cracked Rock" description="Shockwave Shots"/>
     <passive gfx="collectible_hemophilia.png" cache="tearcolor" name="Hemophilia" description="What a bloody mess..." />
     <passive gfx="collectible_gloomskull.png" cache="damage" name="Gloom Skull" devilprice="1" description="Damage up + Evil Up + You Feel Scared" />
-    <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Tech Alpha" />
+    <passive gfx="collectible_techalpha.png" cache="tearcolor" name="Tech Alpha" description="It's still being tested"/>
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Aimbot" description="H4x Sh0t"/>
-    <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Brunch" description="Some kind of holy amalgamate...!"/>
-    <passive gfx="collectible_birthcontrol.png" cache="all" name="Birth Control" />
-    <passive gfx="collectible_gloomskull.png" cache="tearcolor" name="Quill Feather"/>
-    <passive gfx="collectible_judasfez.png" cache="damage" devilprice="1" name = "Judas' Fez" />
-    <passive gfx="collectible_hotcoals.png" cache="damage tearcolor" name = "Hot Coals"/>
+    <passive gfx="collectible_brunch.png" cache="tearcolor" name="Brunch" description="Some kind of unholy amalgamate...!"/>
+    <passive gfx="collectible_birthcontrol.png" cache="all" name="Birth Control" description="Dmg Up + Abstinence"/>
+    <passive gfx="collectible_quillfeather.png" cache="tearcolor" name="Quill Feather" description="Inksplosive Tears"/>
+    <passive gfx="collectible_judasfez.png" cache="damage" devilprice="1" name="Judas' Fez" description="Become the Betrayer"/>
+    <passive gfx="collectible_hotcoals.png" cache="damage tearcolor" name="Hot Coals" description="Fire Feet! Kinetic Dmg Up"/>
+    <passive gfx="collectible_abyss.png" cache="tearcolor" name="Abyss" description="A Call Below"/>
 
-    <familiar gfx="collectible_blooderfly.png" cache="familiars" name="Blooderfly" description="Blood Friend" />
+    <familiar gfx="collectible_blooderfly.png" cache="familiars" name="Blooderfly" description="Bloody Friend" />
     <familiar gfx="collectible_spiriteye.png" cache="familiars" name="Spirit Eye" description="Spirit Friend" />
-    <familiar gfx="collectible_infestedbaby.png" cache="familiars" devilprice="1" name="Infested Baby" />
+    <familiar gfx="collectible_infestedbaby.png" cache="familiars" devilprice="1" name="Infested Baby" description="Rotten Friend"/>
 
 </items>
