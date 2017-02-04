@@ -20,6 +20,7 @@ local GLOOM_SKULL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/ac
 local AIMBOT_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_aimbot.anm2")
 local CYBORG_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_transformation_cyborg.anm2")
 local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hemophilia.anm2")
+local ABYSS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_abyss.anm2")
 local BIRTH_CONTROL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_birthcontrol.anm2")
 local JUDAS_FEZ_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_judasfez.anm2")
 local HOT_COALS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hotcoals.anm2")
@@ -32,9 +33,12 @@ local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/pla
 -- Entity Flag Declaration
 ---------------------------------------
 -- use FLAG_YOUR_FLAG = 1 << FlagID
+local FLAG_VOID = 1 << 37
 
 local FLAG_SPIRIT_EYE_SHOT = 1 << 38
 local FLAG_HEMOPHILIA_SHOT = 1 << 39
+local FLAG_ABYSS_SHOT = 1 << 42
+
 local FLAG_HEMOPHILIA_APPLIED = 1 << 40
 local FLAG_QUILL_FEATHER_APLLIED = 1 << 41
 
@@ -149,6 +153,7 @@ local PASSIVE_TECH_ALPHA = Isaac.GetItemIdByName("Tech Alpha")
 local PASSIVE_BRUNCH = Isaac.GetItemIdByName("Brunch")
 local PASSIVE_BIRTH_CONTROL = Isaac.GetItemIdByName("Birth Control")
 local PASSIVE_SPIRIT_EYE = Isaac.GetItemIdByName("Spirit Eye")
+local PASSIVE_ABYSS = Isaac.GetItemIdByName("Abyss")
 local PASSIVE_INFESTED_BABY = Isaac.GetItemIdByName("Infested Baby")
 local PASSIVE_JUDAS_FEZ = Isaac.GetItemIdByName("Judas' Fez")
 local PASSIVE_HOT_COALS = Isaac.GetItemIdByName("Hot Coals")
@@ -160,12 +165,12 @@ local PASSIVE_QUILL_FEATHER = Isaac.GetItemIdByName("Quill Feather")
 -- Familiars
 local ENTITY_VARIANT_BLOODERFLY = Isaac.GetEntityVariantByName("Blooderfly")
 local ENTITY_VARIANT_SPIRIT_EYE = Isaac.GetEntityVariantByName("Spirit Eye")
+local ENTITY_VARIANT_ABYSS_TEAR = Isaac.GetEntityVariantByName("Abyss Tear")
 local ENTITY_VARIANT_INFESTED_BABY = Isaac.GetEntityVariantByName("Infested Baby")
 
 -- Effects
 local ENTITY_VARIANT_ALASTORS_FLAME = Isaac.GetEntityVariantByName("Alastor's Flame")
 local ENTITY_VARIANT_CHALICE_OF_BLOOD = Isaac.GetEntityVariantByName("Chalice of Blood")
-
 ---------------------------------------
 -- Trinket Declaration
 ---------------------------------------
@@ -674,7 +679,6 @@ local function handleTechAlpha(player)
         if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
             roll_max = roll_max * 2
         end
-
         if entity.Type == EntityType.ENTITY_TEAR and not entity:HasEntityFlags(FLAG_HEMOPHILIA_SHOT) then
             entity_will_shoot = true
         elseif entity.Type == EntityType.ENTITY_BOMBDROP then
@@ -712,7 +716,7 @@ local function handleTechAlpha(player)
                 end
 
                 if closest_enemy then
-                    direction_vector = closest_enemy.Position - entity.Position
+                    local direction_vector = closest_enemy.Position - entity.Position
                     direction_vector = direction_vector:Normalized() * (player.ShotSpeed * 13)
                     if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
                         player:FireTechXLaser(entity.Position, direction_vector, 30)
@@ -729,6 +733,65 @@ local function applyTechAlphaCache ()
     local player = Isaac.GetPlayer(0)
     if player:HasCollectible(PASSIVE_TECH_ALPHA) then
         player:AddNullCostume(TECH_ALPHA_COSTUME)
+    end
+end
+
+---------------------------------------
+-- ABYSS Logic
+---------------------------------------
+function Alphabirth:triggerAbyss(damaged_entity, damage_amount, damage_flag, damage_source, invincible_frames)
+    local player = Isaac.GetPlayer(0)
+    if player:HasCollectible(PASSIVE_ABYSS) then
+        local damaged_npc = damaged_entity:ToNPC()
+        if damaged_npc then
+            if damaged_entity:IsActiveEnemy(false) and 
+                    damaged_entity:IsVulnerableEnemy() and not 
+                    damaged_npc:IsBoss() and 
+                    damage_source.Entity:HasEntityFlags(FLAG_ABYSS_SHOT) then
+                damaged_entity:AddEntityFlags(FLAG_VOID)
+                damaged_entity:AddEntityFlags(EntityFlag.FLAG_FREEZE)
+            end
+        end
+    end
+end
+
+local function handleAbyss()
+    local player = Isaac.GetPlayer(0)
+    local roll = math.random(1,80 - player.Luck*3)
+    for _, entity in ipairs(Isaac.GetRoomEntities()) do
+        if entity.Type == EntityType.ENTITY_TEAR and entity.Variant ~= ENTITY_VARIANT_ABYSS_TEAR and entity.FrameCount == 1 and roll < 11 then
+            entity:GetSprite():ReplaceSpritesheet(0, 'gfx/animations/effects/sheet_tears_abyss.png')
+            entity:GetSprite():LoadGraphics()
+            entity:AddEntityFlags(FLAG_ABYSS_SHOT)
+        end
+        if entity:HasEntityFlags(FLAG_VOID) then
+            entity.Friction = 0
+            entity.Velocity = Vector(0,0)
+            for _, entity2 in ipairs(Isaac.GetRoomEntities()) do
+                local entity2_npc = entity2:ToNPC()
+                if entity2_npc then
+                    if entity2:IsActiveEnemy(false) and entity2:IsVulnerableEnemy() and not entity2_npc:IsBoss() then
+                        if entity2.Position:Distance(entity.Position) < 120 then
+                            local direction_vector = entity.Position - entity2.Position
+                            direction_vector = direction_vector:Normalized() * 2
+                            entity2.Velocity = entity2.Velocity + direction_vector
+                        end
+                    end
+                end
+            end
+
+            lose_flag_roll = math.random(1,300)
+            if lose_flag_roll == 1 then
+                entity:ClearEntityFlags(FLAG_VOID)
+                entity:ClearEntityFlags(EntityFlag.FLAG_FREEZE)
+            end
+        end
+    end
+end
+
+local function applyAbyssCache(player, cache_flag)
+    if player:HasCollectible(PASSIVE_ABYSS) then
+        player:AddNullCostume(ABYSS_COSTUME)
     end
 end
 
@@ -1422,6 +1485,7 @@ function Alphabirth:modUpdate()
         cauldron_points = 0
         didMax = false
         hasCyborg = false
+        spirit_eye_exists = false
         cyborg_progress = {}
         birthControlStats = {
             HP = 0,
@@ -1519,6 +1583,9 @@ function Alphabirth:modUpdate()
         handleTechAlpha(player)
     end
 
+    if player:HasCollectible(PASSIVE_ABYSS) then
+        handleAbyss()
+    end
     if player:HasCollectible(PASSIVE_HOT_COALS) then
         handleHotCoals()
     end
@@ -1564,7 +1631,8 @@ function Alphabirth:modUpdate()
                     ACTIVE_ALASTORS_CANDLE, PASSIVE_AIMBOT, PASSIVE_BLOODERFLY, PASSIVE_CRACKED_ROCK,
                     PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL,
                     PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY, ACTIVE_BLOOD_DRIVE, PASSIVE_JUDAS_FEZ,
-                    PASSIVE_HOT_COALS, PASSIVE_QUILL_FEATHER, PASSIVE_BRUNCH, ACTIVE_CHALICE_OF_BLOOD
+                    PASSIVE_HOT_COALS, PASSIVE_QUILL_FEATHER, PASSIVE_BRUNCH, ACTIVE_CHALICE_OF_BLOOD,
+                    PASSIVE_ABYSS
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -1638,6 +1706,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyBirthControlCache(player, cache_flag)
     applyCyborgCache(player, cache_flag)
     applySpiritEyeCache(player, cache_flag)
+    applyAbyssCache(player, cache_flag)
     applyInfestedBabyCache(player, cache_flag)
     applyJudasFezCache(player, cache_flag)
     applyBrunchCache(player, cache_flag)
@@ -1690,6 +1759,7 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_CARD, Alphabirth.triggerNaudizEff
 -------------------
 Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerCrackedRockEffect)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHemophilia)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerAbyss)
 
 -------------------
 -- Entity Handling
