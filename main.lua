@@ -474,16 +474,12 @@ local chalice_souls = 0
 local soul_limit = 15
 local CHALICE_STATS = {
     DAMAGE = 1,
-    SPEED = 0,
     SHOTSPEED = 0
 }
 local function applyChaliceOfBloodCache(player, cache_flag)
     if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) then
         if cache_flag == CacheFlag.CACHE_DAMAGE then
             player.Damage = player.Damage * CHALICE_STATS.DAMAGE
-        end
-        if cache_flag == CacheFlag.CACHE_SPEED then
-            player.MoveSpeed = player.MoveSpeed + CHALICE_STATS.SPEED
         end
         if cache_flag == CacheFlag.CACHE_SHOTSPEED then
             player.ShotSpeed = player.ShotSpeed + CHALICE_STATS.SHOTSPEED
@@ -511,10 +507,8 @@ function Alphabirth:triggerChaliceOfBlood()
         )
     else
         CHALICE_STATS.DAMAGE = 2
-        CHALICE_STATS.SPEED = 1
-        CHALICE_STATS.SHOTSPEED = 1
+        CHALICE_STATS.SHOTSPEED = 0.4
         player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
-        player:AddCacheFlags(CacheFlag.CACHE_SPEED)
         player:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED)
         player:EvaluateItems()
         chalice_souls = 0
@@ -527,24 +521,11 @@ local function handleChaliceOfBlood()
     local player = Isaac.GetPlayer(0)
     local room = Game():GetRoom()
 
-    local soul_limit_modifier = player.Luck
-    -- Update soul limit value
-    if player.Luck >= 5 then
-        soul_limit_modifier = 5
-    end
-    if player.Luck <= -5 then
-        soul_limit_modifier = -5
-    end
-
-    soul_limit = 15 - soul_limit_modifier
-
     -- Remove Chalice if room is clear
     if room:GetFrameCount() == 1 then
         CHALICE_STATS.DAMAGE = 1
-        CHALICE_STATS.SPEED = 0
         CHALICE_STATS.SHOTSPEED = 0
         player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
-        player:AddCacheFlags(CacheFlag.CACHE_SPEED)
         player:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED)
         player:EvaluateItems()
     end
@@ -552,7 +533,7 @@ local function handleChaliceOfBlood()
     if room:IsClear() and chalice ~= nil then
         Isaac.Spawn(
             EntityType.ENTITY_EFFECT,
-            EffectVariant.POOF02,
+            EffectVariant.POOF01,
             0,            -- Entity Subtype
             chalice.Position,
             Vector(0, 0), -- Velocity
@@ -584,7 +565,7 @@ local function handleChaliceOfBlood()
         playSound(SoundEffect.SOUND_SUMMONSOUND, 0.5, 0, false, 0.9)
         Isaac.Spawn(
             EntityType.ENTITY_EFFECT,
-            EffectVariant.POOF02,
+            EffectVariant.POOF01,
             0,            -- Entity Subtype
             chalice.Position,
             Vector(0, 0), -- Velocity
@@ -600,11 +581,16 @@ function Alphabirth:chaliceOfBloodUpdate()
     if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) then
         local sprite = Sprite()
         sprite:Load("gfx/animations/animation_sprite_chaliceofblood.anm2", true)
-        if chalice_souls <= soul_limit then
+        if chalice_souls <= 5 then
             sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_chaliceofblood.png")
-        else
+        elseif chalice_souls <= 10 then
             sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_chaliceofblood2.png")
+        elseif chalice_souls < 15 then
+            sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_chaliceofblood3.png")
+        else
+            sprite:ReplaceSpritesheet(0,"gfx/Items/Collectibles/collectible_chaliceofblood4.png")
         end
+
         sprite:LoadGraphics()
         sprite:Play("Idle", true)
         sprite.Offset = Vector(16,16)
@@ -1479,14 +1465,19 @@ function Alphabirth:modUpdate()
             end
 			sprite:LoadGraphics()
         end
+
         if entity.Type == EntityType.ENTITY_PICKUP and
                 entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and
                 entity.SubType == ACTIVE_CHALICE_OF_BLOOD then
             local sprite = entity:GetSprite()
-            if chalice_souls <= soul_limit then
+            if chalice_souls <= 5 then
                 sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood.png")
-            else
+            elseif chalice_souls <= 10 then
                 sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood2.png")
+            elseif chalice_souls < 15 then
+                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood3.png")
+            else
+                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood4.png")
             end
             sprite:LoadGraphics()
         end
