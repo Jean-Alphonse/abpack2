@@ -3,6 +3,7 @@
     <costume anm2path="accessories/animation_costume_gloomskull.anm2" hasSkinAlt="true" priority="98" type="none" />
     <costume anm2path="accessories/animation_costume_aimbot.anm2" priority="98" type="none" />
     <costume anm2path="accessories/animation_transformation_cyborg.anm2" priority="98" type="none" />
+    <costume anm2path="accessories/animation_transformation_damned.anm2" isFlying="true" priority="98" type="none" />
     <costume anm2path="accessories/animation_costume_hemophilia.anm2" priority="98" type="none" />
     <costume anm2path="accessories/animation_costume_birthcontrol.anm2" priority="98" type="none" />
     <costume anm2path="accessories/animation_costume_hemophilia.anm2" priority="98" type="none" />
