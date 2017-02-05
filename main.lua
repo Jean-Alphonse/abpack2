@@ -859,6 +859,16 @@ function Alphabirth:triggerAbyss(damaged_entity, damage_amount, damage_flag, dam
                 end
 
                 if not entity_has_void then
+                    local effect = Isaac.Spawn(EntityType.ENTITY_EFFECT,
+                        EffectVariant.PULLING_EFFECT,
+                        0,
+                        damaged_entity.Position,
+                        damaged_entity.Velocity,
+                        damaged_entity
+                    )
+                    effect = effect:ToEffect()
+                    effect:FollowParent(damaged_entity)
+                    effect:SetTimeout(1000)
                     damaged_entity:AddEntityFlags(FLAG_VOID)
                     damaged_entity:AddEntityFlags(EntityFlag.FLAG_FREEZE)
                     damaged_entity:AddEntityFlags(EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
@@ -882,7 +892,10 @@ local function handleAbyss()
             entity:GetSprite():LoadGraphics()
             entity:AddEntityFlags(FLAG_ABYSS_SHOT)
         end
+        
+        local is_void_entity = false
         if entity:HasEntityFlags(FLAG_VOID) then
+            is_void_entity = true
             if entity.Color ~= Color(0,0,0,1,0,0,0) then
                 entity:GetData()[0] = entity.Color
                 entity.Color = Color(0,0,0,1,0,0,0)
@@ -916,6 +929,12 @@ local function handleAbyss()
                 entity:ClearEntityFlags(EntityFlag.FLAG_FREEZE)
                 entity:ClearEntityFlags(EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
             end
+        end
+        
+        if entity.Type == EntityType.ENTITY_EFFECT and
+                entity.Variant == EffectVariant.PULLING_EFFECT and not
+                is_void_entity then
+            entity:ToEffect():SetTimeout(0)
         end
     end
 end
