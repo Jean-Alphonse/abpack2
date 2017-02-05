@@ -23,7 +23,7 @@ local HEMOPHILIA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/acc
 local ABYSS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_abyss.anm2")
 local BIRTH_CONTROL_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_birthcontrol.anm2")
 local JUDAS_FEZ_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_judasfez.anm2")
---local HOT_COALS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hotcoals.anm2")
+local HOT_COALS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hotcoals.anm2")
 local TECH_ALPHA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_techalpha.anm2")
 local QUILL_FEATHER_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_quillfeather.anm2")
 
@@ -994,6 +994,8 @@ local frame_count = 0
 local function applyHotCoalsUpdate(player, cache_flag)
     if player:HasCollectible(PASSIVE_HOT_COALS) and cache_flag == CacheFlag.CACHE_DAMAGE then
         player.Damage = player.Damage * dmg_modifier
+    elseif player:HasCollectible(PASSIVE_HOT_COALS) and cache_flag == CacheFlag.CACHE_TEARCOLOR then
+        player:AddNullCostume(HOT_COALS_COSTUME)
     end
 end
 
@@ -1881,9 +1883,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyQuillFeatherCache(player, cache_flag)
     applyTechAlphaCache(player, cache_flag)
     if player:GetPlayerType() == endor_type then
-        Isaac.GetPlayer(0).CanFly = true
-        Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
-        Isaac.GetPlayer(0):AddNullCostume(ENDOR_HEAD_COSTUME)
+        player.CanFly = true
         if cache_flag == CacheFlag.CACHE_DAMAGE then
             player.Damage = player.Damage - 1.25
         elseif cache_flag == CacheFlag.CACHE_SPEED then
