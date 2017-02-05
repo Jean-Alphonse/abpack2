@@ -58,7 +58,7 @@ local CURSE_OF_THE_LONELY = 1 << (Isaac.GetCurseIdByName("Curse of the Lonely") 
 
 local function evalCurses(curse_flags)
     if curse_flags then
-        local curse_roll = math.random(1, 7)
+        local curse_roll = math.random(1, 16)
         if curse_roll == 7 then
             return CURSE_OF_THE_LONELY
         else
