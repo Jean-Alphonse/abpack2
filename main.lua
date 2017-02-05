@@ -189,6 +189,25 @@ local function atan2(a,b)
     return degToRad(Vector(a, b):GetAngleDegrees())
 end
 
+local function fireProjectiles(numProjectiles, projectileSpreadDegrees, shotSpeed, shotVariant, posFired, posTarget, parentEntity)
+    local base_direction = (posTarget - posFired):Normalized()
+    local base_degrees = base_direction:GetAngleDegrees()
+    local current_degree_offset = base_degrees + ((numProjectiles / 2) - 1) * projectileSpreadDegrees
+    local projectiles = {}
+    for i = 1, numProjectiles do
+        local shot_motion = Vector.FromAngle(current_degree_offset) * shotSpeed
+        projectiles[i] = Isaac.Spawn(EntityType.ENTITY_PROJECTILE,
+            shotVariant,
+            0,
+            posFired,
+            shot_motion,
+            parentEntity)
+        current_degree_offset = current_degree_offset - projectileSpreadDegrees
+    end
+    
+    return projectiles
+end
+
 ---------------------------------------
 -- Active Declaration
 ---------------------------------------
