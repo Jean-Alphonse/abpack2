@@ -86,6 +86,14 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_POST_CURSE_EVAL, evalCurses)
 ---------------------------------------
 -- Functions
 ---------------------------------------
+
+local function radToDeg (rad)
+	return ((rad * 180) / math.pi)
+end
+
+local function degToRad (deg)
+	return ((deg * math.pi) / 180)
+end
 local function findClosestEnemy(entity)
     local entities = Isaac.GetRoomEntities()
     local maxDistance = 999999
@@ -140,6 +148,45 @@ end
 
 local function colorRawData(color)
     return color.R, color.G, color.B, color.A, color.RO, color.GO, color.BO
+end
+
+local function directionToDegree(direction)
+    if direction >= 0 then
+        if direction == Direction.LEFT then
+            direction = 4
+        end
+        direction = direction - 1
+        return direction*90
+    end
+    return 0
+end
+
+local function degreeToDirection(angle)
+    while angle / 360 > 1 do
+        angle = angle - 360
+    end
+    if angle > 269 then
+        return angle/90 - 3
+    end
+    return angle/90 + 1
+end
+
+local function directionToRad(direction)
+    return directionToDegree(direction) * math.pi / 180
+end
+
+local function radToDirection(angle)
+    while angle > math.pi * 2 do
+        angle = angle - math.pi * 2
+    end
+    if angle > (math.pi * 3) / 2 then
+        return angle/(math.pi / 2) - 3
+    end
+    return angle/(math.pi / 2) + 1
+end
+
+local function atan2(a,b)
+    return degToRad(Vector(a, b):GetAngleDegrees())
 end
 
 ---------------------------------------
@@ -1496,7 +1543,7 @@ local function applyBlooderflyCache(player, cache_flag)
             end
         end
     end
-        
+
     if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_BLOODERFLY) then
         if not blooderfly_exists and not player:HasCollectible(PASSIVE_BIRTH_CONTROL) then
             Isaac.Spawn(EntityType.ENTITY_FAMILIAR,
@@ -1628,7 +1675,7 @@ local function applySpiritEyeCache(player, cache_flag)
             end
         end
     end
-        
+
     if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_SPIRIT_EYE) then
         if not spirit_eye_exists and not player:HasCollectible(PASSIVE_BIRTH_CONTROL) then
             Isaac.Spawn(EntityType.ENTITY_FAMILIAR,
