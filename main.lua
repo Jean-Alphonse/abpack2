@@ -1458,16 +1458,20 @@ function Alphabirth:blooderflyUpdate(blooderfly)
 end
 
 local function applyBlooderflyCache(player, cache_flag)
-    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_BLOODERFLY) then
-        local blooderfly_exists = false
-        for _, entity in ipairs(Isaac.GetRoomEntities()) do
-            if entity.Type == EntityType.ENTITY_FAMILIAR and
-                    entity.Variant == ENTITY_VARIANT_BLOODERFLY then
+    local blooderfly_exists = false
+    for _, entity in ipairs(Isaac.GetRoomEntities()) do
+        if entity.Type == EntityType.ENTITY_FAMILIAR and
+                entity.Variant == ENTITY_VARIANT_BLOODERFLY then
+            if player:HasCollectible(PASSIVE_BLOODERFLY) then
                 blooderfly_exists = true
+            else
+                entity:Remove()
             end
         end
-
-        if not blooderfly_exists then
+    end
+        
+    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_BLOODERFLY) then
+        if not blooderfly_exists and not player:HasCollectible(PASSIVE_BIRTH_CONTROL) then
             Isaac.Spawn(EntityType.ENTITY_FAMILIAR,
                 ENTITY_VARIANT_BLOODERFLY,
                 0,
@@ -1586,16 +1590,20 @@ function Alphabirth:onSpiritEyeUpdate(spirit_eye)
 end
 
 local function applySpiritEyeCache(player, cache_flag)
-    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_SPIRIT_EYE) then
-        local spirit_eye_exists = false
-        for _, entity in ipairs(Isaac.GetRoomEntities()) do
-            if entity.Type == EntityType.ENTITY_FAMILIAR and
-                    entity.Variant == ENTITY_VARIANT_SPIRIT_EYE then
+    local spirit_eye_exists = false
+    for _, entity in ipairs(Isaac.GetRoomEntities()) do
+        if entity.Type == EntityType.ENTITY_FAMILIAR and
+                entity.Variant == ENTITY_VARIANT_SPIRIT_EYE then
+            if player:HasCollectible(PASSIVE_SPIRIT_EYE) then
                 spirit_eye_exists = true
+            else
+                entity:Remove()
             end
         end
-
-        if not spirit_eye_exists then
+    end
+        
+    if cache_flag == CacheFlag.CACHE_FAMILIARS and player:HasCollectible(PASSIVE_SPIRIT_EYE) then
+        if not spirit_eye_exists and not player:HasCollectible(PASSIVE_BIRTH_CONTROL) then
             Isaac.Spawn(EntityType.ENTITY_FAMILIAR,
                 ENTITY_VARIANT_SPIRIT_EYE,
                 0,
