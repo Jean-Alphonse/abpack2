@@ -861,6 +861,7 @@ function Alphabirth:triggerAbyss(damaged_entity, damage_amount, damage_flag, dam
                 if not entity_has_void then
                     damaged_entity:AddEntityFlags(FLAG_VOID)
                     damaged_entity:AddEntityFlags(EntityFlag.FLAG_FREEZE)
+                    damaged_entity:AddEntityFlags(EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
                 end
             end
         end
@@ -882,10 +883,11 @@ local function handleAbyss()
             entity:AddEntityFlags(FLAG_ABYSS_SHOT)
         end
         if entity:HasEntityFlags(FLAG_VOID) then
-            entity.Friction = 0
-            entity.Velocity = Vector(0,0)
-            entity:GetData()[0] = entity.Color
-            entity.Color = Color(0,0,0,1,0,0,0)
+            if entity.Color ~= Color(0,0,0,1,0,0,0) then
+                entity:GetData()[0] = entity.Color
+                entity.Color = Color(0,0,0,1,0,0,0)
+            end
+            
             for _, entity2 in ipairs(Isaac.GetRoomEntities()) do
                 local entity2_npc = entity2:ToNPC()
                 if entity2_npc then
@@ -912,6 +914,7 @@ local function handleAbyss()
                 entity.Color = entity:GetData()[0]
                 entity:ClearEntityFlags(FLAG_VOID)
                 entity:ClearEntityFlags(EntityFlag.FLAG_FREEZE)
+                entity:ClearEntityFlags(EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
             end
         end
     end
