@@ -86,6 +86,14 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_POST_CURSE_EVAL, evalCurses)
 ---------------------------------------
 -- Functions
 ---------------------------------------
+
+local function radToDeg (rad)
+	return ((rad * 180) / math.pi)
+end
+
+local function degToRad (deg)
+	return ((deg * math.pi) / 180)
+end
 local function findClosestEnemy(entity)
     local entities = Isaac.GetRoomEntities()
     local maxDistance = 999999
@@ -178,23 +186,7 @@ local function radToDirection(angle)
 end
 
 local function atan2(a,b)
-	if a.X then --Vector Code
-		local x = a.X
-		local y = a.Y
-		return 2 * math.atan(y / (math.sqrt(x^2 + y^2) + x))
-	else --Coordenates code
-		local x = a
-		local y = b
-		return 2 * math.atan(y / (math.sqrt(x^2 + y^2) + x))
-	end
-end
-
-local function radToDeg (rad)
-	return ((rad * 180) / math.pi)
-end
-
-local function degToRad (deg)
-	return ((deg * math.pi) / 180)
+    return degToRad(Vector(a, b):GetAngleDegrees())
 end
 
 ---------------------------------------
