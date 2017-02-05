@@ -58,7 +58,7 @@ local CURSE_OF_THE_LONELY = 1 << (Isaac.GetCurseIdByName("Curse of the Lonely") 
 
 local function evalCurses(curse_flags)
     if curse_flags then
-        local curse_roll = math.random(1, 7)
+        local curse_roll = math.random(1, 16)
         if curse_roll == 7 then
             return CURSE_OF_THE_LONELY
         else
@@ -566,7 +566,7 @@ function Alphabirth:triggerChaliceOfBlood()
         player:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED)
         player:EvaluateItems()
         chalice_souls = 0
-        Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.PLAYER_CREEP_RED,0,player.Position,Vector(0, 0),player)
+        playSound(SoundEffect.SOUND_GULP, 0.5, 0, false, 1)
     end
     return true
 end
@@ -599,7 +599,10 @@ local function handleChaliceOfBlood()
 
     if chalice ~= nil then
         for _, entity in ipairs(Isaac.GetRoomEntities()) do
-            local entity_is_close = entity.Position:Distance(chalice.Position) <= 100
+            if entity.Type == EntityType.ENTITY_PLAYER and entity.Position:Distance(chalice.Position) <= 140 then
+                Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.PLAYER_CREEP_RED,0,player.Position,Vector(0, 0),player)
+            end
+            local entity_is_close = entity.Position:Distance(chalice.Position) <= 140
             if entity:IsDead() and entity:ToNPC() and entity_is_close and not entity:IsBoss() then
                 playSound(SoundEffect.SOUND_SUMMONSOUND, 0.5, 0, false, 0.8)
                 Isaac.Spawn(
@@ -1593,6 +1596,7 @@ end
 local infestedEntity
 local infestedBabySpider
 local animationCooldown = 0
+local spiderCooldown = 0
 
 function Alphabirth:onInfestedBabyUpdate(familiar)
     familiar:ToFamiliar():FollowParent()
@@ -1602,8 +1606,9 @@ function Alphabirth:onInfestedBabyUpdate(familiar)
     end
     if infestedBabySpider and infestedBabySpider:IsDead() then
         infestedBabySpider = nil
+        spiderCooldown = 25
     end
-    if Isaac.GetPlayer(0):GetFireDirection() ~= -1 and infestedBabySpider == nil then
+    if Isaac.GetPlayer(0):GetFireDirection() ~= -1 and infestedBabySpider == nil and spiderCooldown == 0 then
         infestedBabySpider = Isaac.Spawn(EntityType.ENTITY_FAMILIAR, FamiliarVariant.BLUE_SPIDER, 0, familiar.Position, Vector(0,0), familiar)
         if Isaac.GetPlayer(0):GetFireDirection() == Direction.UP then
             familiar:GetSprite():Play("ShootUp", 1)
@@ -1625,6 +1630,9 @@ function Alphabirth:onInfestedBabyUpdate(familiar)
     end
     if animationCooldown > 0 then
         animationCooldown = animationCooldown - 1
+    end
+    if spiderCooldown > 0 then
+        spiderCooldown = spiderCooldown - 1
     end
 end
 
