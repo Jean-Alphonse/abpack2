@@ -167,6 +167,7 @@ local PASSIVE_INFESTED_BABY = Isaac.GetItemIdByName("Infested Baby")
 local PASSIVE_JUDAS_FEZ = Isaac.GetItemIdByName("Judas' Fez")
 local PASSIVE_HOT_COALS = Isaac.GetItemIdByName("Hot Coals")
 local PASSIVE_QUILL_FEATHER = Isaac.GetItemIdByName("Quill Feather")
+local PASSIVE_HOARDER = Isaac.GetItemIdByName("Hoarder")
 
 ---------------------------------------
 -- Entity Variant Declaration
@@ -811,7 +812,7 @@ function Alphabirth:triggerAbyss(damaged_entity, damage_amount, damage_flag, dam
                         entity_has_void = true
                     end
                 end
-                
+
                 if not entity_has_void then
                     damaged_entity:AddEntityFlags(FLAG_VOID)
                     damaged_entity:AddEntityFlags(EntityFlag.FLAG_FREEZE)
@@ -827,7 +828,7 @@ local function handleAbyss()
     if luck_modifier < 2 then
         luck_modifier = 2
     end
-    
+
     local roll = math.random(1,luck_modifier)
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
         if entity.Type == EntityType.ENTITY_TEAR and entity.Variant ~= ENTITY_VARIANT_ABYSS_TEAR and entity.FrameCount == 1 and roll < 11 then
@@ -843,9 +844,9 @@ local function handleAbyss()
             for _, entity2 in ipairs(Isaac.GetRoomEntities()) do
                 local entity2_npc = entity2:ToNPC()
                 if entity2_npc then
-                    if entity2:IsActiveEnemy(false) and 
-                            entity2:IsVulnerableEnemy() and not 
-                            entity2_npc:IsBoss() and not 
+                    if entity2:IsActiveEnemy(false) and
+                            entity2:IsVulnerableEnemy() and not
+                            entity2_npc:IsBoss() and not
                             entity2:HasEntityFlags(FLAG_VOID) then
                         local direction_vector = entity.Position - entity2.Position
                         direction_vector = direction_vector:Normalized() * 3
@@ -1185,6 +1186,28 @@ local function handleQuillFeather()
     end
 end
 
+---------------------------------------
+-- Hoarder Logic
+---------------------------------------
+local hoarderDamage = 0
+local ratio = 1/25 --1 dmg up for 25 consumables
+
+local function handleHoarder()
+    local player = Isaac.GetPlayer(0)
+    local consumables = player:GetNumCoins() + player:GetNumBombs() + player:GetNumKeys()
+    if consumables * ratio ~= hoarderDamage then
+        hoarderDamage = consumables * ratio
+        player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
+        player:EvaluateItems()
+    end
+end
+
+local function applyHoarderCache(player, cache_flag)
+    if player:HasCollectible(PASSIVE_HOARDER) and cache_flag == CacheFlag.CACHE_DAMAGE then
+        player.Damage = player.Damage + hoarderDamage
+    end
+end
+
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
 -------------------------------------------------------------------------------
@@ -1239,7 +1262,7 @@ function Alphabirth:onHostUpdate(host)
                     local brimstone_laser = EntityLaser.ShootAngle(1, host.Position, direction_angle, 15, Vector(0,-10), host)
                     brimstone_laser.DepthOffset = 200
                 end
-                
+
                 for _, entity in ipairs(Isaac.GetRoomEntities()) do
                     if entity.Type == EntityType.ENTITY_PROJECTILE and
                             entity.Variant == 0 and
@@ -1256,7 +1279,7 @@ function Alphabirth:onHostUpdate(host)
             if not host_sprite:IsPlaying("Bombed") then
                 host_sprite:Play("Bombed", true)
             end
-            
+
             if host.StateFrame == 15 then
                 host.State = NpcState.STATE_IDLE
             end
@@ -1273,7 +1296,7 @@ function Alphabirth:onHostUpdate(host)
             elseif stage == LevelStage.STAGE5 and not level:IsAltStage() then
                 canreplace = true
             end
-            
+
             if canreplace then
                 Isaac.Spawn(EntityType.ENTITY_HOST,
                     ENTITY_VARIANT_BRIMSTONE_HOST,
@@ -1297,7 +1320,7 @@ function Alphabirth:triggerHostTakeDamage(dmg_target, dmg_amount, dmg_flags, dmg
             host.ProjectileCooldown = 30
             return false
         end
-        
+
         if host.State == NpcState.STATE_IDLE or host.State == NpcState.STATE_SPECIAL then
             return false
         end
@@ -1764,6 +1787,10 @@ function Alphabirth:modUpdate()
         handleBloodDrive()
     end
 
+    if player:HasCollectible(PASSIVE_HOARDER) then
+        handleHoarder()
+    end
+
     -- Chalice of blood handling
     if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) then
        handleChaliceOfBlood()
@@ -1798,7 +1825,7 @@ function Alphabirth:modUpdate()
                     PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL,
                     PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY, ACTIVE_BLOOD_DRIVE, PASSIVE_JUDAS_FEZ,
                     PASSIVE_HOT_COALS, PASSIVE_QUILL_FEATHER, PASSIVE_BRUNCH, ACTIVE_CHALICE_OF_BLOOD,
-                    PASSIVE_ABYSS, ACTIVE_BLACKLIGHT
+                    PASSIVE_ABYSS, ACTIVE_BLACKLIGHT, PASSIVE_HOARDER
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -1880,6 +1907,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyChaliceOfBloodCache(player, cache_flag)
     applyQuillFeatherCache(player, cache_flag)
     applyTechAlphaCache(player, cache_flag)
+    applyHoarderCache(player, cache_flag)
     if player:GetPlayerType() == endor_type then
         Isaac.GetPlayer(0).CanFly = true
         Isaac.GetPlayer(0):AddNullCostume(ENDOR_BODY_COSTUME)
