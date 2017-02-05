@@ -531,7 +531,7 @@ function Alphabirth:triggerChaliceOfBlood()
         player:AddCacheFlags(CacheFlag.CACHE_SHOTSPEED)
         player:EvaluateItems()
         chalice_souls = 0
-        Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.PLAYER_CREEP_RED,0,player.Position,Vector(0, 0),player)
+        playSound(SoundEffect.SOUND_GULP, 0.5, 0, false, 1)
     end
     return true
 end
@@ -564,7 +564,10 @@ local function handleChaliceOfBlood()
 
     if chalice ~= nil then
         for _, entity in ipairs(Isaac.GetRoomEntities()) do
-            local entity_is_close = entity.Position:Distance(chalice.Position) <= 100
+            if entity.Type == EntityType.ENTITY_PLAYER and entity.Position:Distance(chalice.Position) <= 140 then
+                Isaac.Spawn(EntityType.ENTITY_EFFECT,EffectVariant.PLAYER_CREEP_RED,0,player.Position,Vector(0, 0),player)
+            end
+            local entity_is_close = entity.Position:Distance(chalice.Position) <= 140
             if entity:IsDead() and entity:ToNPC() and entity_is_close and not entity:IsBoss() then
                 playSound(SoundEffect.SOUND_SUMMONSOUND, 0.5, 0, false, 0.8)
                 Isaac.Spawn(
