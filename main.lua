@@ -192,17 +192,39 @@ end
 local function fireProjectiles(numProjectiles, projectileSpreadDegrees, shotSpeed, shotVariant, posFired, posTarget, parentEntity)
     local base_direction = (posTarget - posFired):Normalized()
     local base_degrees = base_direction:GetAngleDegrees()
-    local current_degree_offset = base_degrees + ((numProjectiles / 2) - 1) * projectileSpreadDegrees
     local projectiles = {}
-    for i = 1, numProjectiles do
-        local shot_motion = Vector.FromAngle(current_degree_offset) * shotSpeed
-        projectiles[i] = Isaac.Spawn(EntityType.ENTITY_PROJECTILE,
-            shotVariant,
-            0,
-            posFired,
-            shot_motion,
-            parentEntity)
-        current_degree_offset = current_degree_offset - projectileSpreadDegrees
+    if numProjectiles % 2 ~= 0 then
+        local current_degree_offset = base_degrees + ((numProjectiles / 2) - 1) * projectileSpreadDegrees
+        for i = 1, numProjectiles do
+            local shot_motion = Vector.FromAngle(current_degree_offset) * shotSpeed
+            projectiles[i] = Isaac.Spawn(EntityType.ENTITY_PROJECTILE,
+                shotVariant,
+                0,
+                posFired,
+                shot_motion,
+                parentEntity)
+            current_degree_offset = current_degree_offset - projectileSpreadDegrees
+        end
+    else
+        local clockwise_degree_offset = base_degrees - projectileSpreadDegrees
+        local counterclockwise_degree_offset = base_degrees + projectileSpreadDegrees
+        for i =1, numProjectiles do
+            local shot_motion
+            if i % 2 == 0 then
+                shot_motion = Vector.FromAngle(clockwise_degree_offset) * shotSpeed
+                clockwise_degree_offset = clockwise_degree_offset - projectileSpreadDegrees
+            else
+                shot_motion = Vector.FromAngle(counterclockwise_degree_offset) * shotSpeed
+                counterclockwise_degree_offset = counterclockwise_degree_offset + projectileSpreadDegrees
+            end
+            
+            projectiles[i] = Isaac.Spawn(EntityType.ENTITY_PROJECTILE,
+                shotVariant,
+                0,
+                posFired,
+                shot_motion,
+                parentEntity)
+        end
     end
     
     return projectiles
