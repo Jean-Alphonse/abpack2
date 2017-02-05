@@ -167,6 +167,7 @@ local PASSIVE_INFESTED_BABY = Isaac.GetItemIdByName("Infested Baby")
 local PASSIVE_JUDAS_FEZ = Isaac.GetItemIdByName("Judas' Fez")
 local PASSIVE_HOT_COALS = Isaac.GetItemIdByName("Hot Coals")
 local PASSIVE_QUILL_FEATHER = Isaac.GetItemIdByName("Quill Feather")
+local PASSIVE_HOARDER = Isaac.GetItemIdByName("Hoarder")
 
 ---------------------------------------
 -- Entity Variant Declaration
@@ -1231,6 +1232,28 @@ local function handleQuillFeather()
     end
 end
 
+---------------------------------------
+-- Hoarder Logic
+---------------------------------------
+local hoarderDamage = 0
+local ratio = 1/25 --1 dmg up for 25 consumables
+
+local function handleHoarder()
+    local player = Isaac.GetPlayer(0)
+    local consumables = player:GetNumCoins() + player:GetNumBombs() + player:GetNumKeys()
+    if consumables * ratio ~= hoarderDamage then
+        hoarderDamage = consumables * ratio
+        player:AddCacheFlags(CacheFlag.CACHE_DAMAGE)
+        player:EvaluateItems()
+    end
+end
+
+local function applyHoarderCache(player, cache_flag)
+    if player:HasCollectible(PASSIVE_HOARDER) and cache_flag == CacheFlag.CACHE_DAMAGE then
+        player.Damage = player.Damage + hoarderDamage
+    end
+end
+
 -------------------------------------------------------------------------------
 ---- TRINKET LOGIC
 -------------------------------------------------------------------------------
@@ -1815,6 +1838,10 @@ function Alphabirth:modUpdate()
         handleBloodDrive()
     end
 
+    if player:HasCollectible(PASSIVE_HOARDER) then
+        handleHoarder()
+    end
+
     -- Chalice of blood handling
     if player:HasCollectible(ACTIVE_CHALICE_OF_BLOOD) then
        handleChaliceOfBlood()
@@ -1849,7 +1876,7 @@ function Alphabirth:modUpdate()
                     PASSIVE_GLOOM_SKULL, PASSIVE_HEMOPHILIA, PASSIVE_TECH_ALPHA, PASSIVE_BIRTH_CONTROL,
                     PASSIVE_SPIRIT_EYE, PASSIVE_INFESTED_BABY, ACTIVE_BLOOD_DRIVE, PASSIVE_JUDAS_FEZ,
                     PASSIVE_HOT_COALS, PASSIVE_QUILL_FEATHER, PASSIVE_BRUNCH, ACTIVE_CHALICE_OF_BLOOD,
-                    PASSIVE_ABYSS, ACTIVE_BLACKLIGHT
+                    PASSIVE_ABYSS, ACTIVE_BLACKLIGHT, PASSIVE_HOARDER
             }
             local row = 31
             for i, item in ipairs(new_items) do
@@ -1931,6 +1958,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyChaliceOfBloodCache(player, cache_flag)
     applyQuillFeatherCache(player, cache_flag)
     applyTechAlphaCache(player, cache_flag)
+    applyHoarderCache(player, cache_flag)
     if player:GetPlayerType() == endor_type then
         player.CanFly = true
         if cache_flag == CacheFlag.CACHE_DAMAGE then
