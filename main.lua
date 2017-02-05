@@ -811,7 +811,7 @@ function Alphabirth:triggerAbyss(damaged_entity, damage_amount, damage_flag, dam
                         entity_has_void = true
                     end
                 end
-                
+
                 if not entity_has_void then
                     damaged_entity:AddEntityFlags(FLAG_VOID)
                     damaged_entity:AddEntityFlags(EntityFlag.FLAG_FREEZE)
@@ -827,7 +827,7 @@ local function handleAbyss()
     if luck_modifier < 2 then
         luck_modifier = 2
     end
-    
+
     local roll = math.random(1,luck_modifier)
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
         if entity.Type == EntityType.ENTITY_TEAR and entity.Variant ~= ENTITY_VARIANT_ABYSS_TEAR and entity.FrameCount == 1 and roll < 11 then
@@ -843,9 +843,9 @@ local function handleAbyss()
             for _, entity2 in ipairs(Isaac.GetRoomEntities()) do
                 local entity2_npc = entity2:ToNPC()
                 if entity2_npc then
-                    if entity2:IsActiveEnemy(false) and 
-                            entity2:IsVulnerableEnemy() and not 
-                            entity2_npc:IsBoss() and not 
+                    if entity2:IsActiveEnemy(false) and
+                            entity2:IsVulnerableEnemy() and not
+                            entity2_npc:IsBoss() and not
                             entity2:HasEntityFlags(FLAG_VOID) then
                         local direction_vector = entity.Position - entity2.Position
                         direction_vector = direction_vector:Normalized() * 3
@@ -1241,7 +1241,7 @@ function Alphabirth:onHostUpdate(host)
                     local brimstone_laser = EntityLaser.ShootAngle(1, host.Position, direction_angle, 15, Vector(0,-10), host)
                     brimstone_laser.DepthOffset = 200
                 end
-                
+
                 for _, entity in ipairs(Isaac.GetRoomEntities()) do
                     if entity.Type == EntityType.ENTITY_PROJECTILE and
                             entity.Variant == 0 and
@@ -1258,7 +1258,7 @@ function Alphabirth:onHostUpdate(host)
             if not host_sprite:IsPlaying("Bombed") then
                 host_sprite:Play("Bombed", true)
             end
-            
+
             if host.StateFrame == 15 then
                 host.State = NpcState.STATE_IDLE
             end
@@ -1275,7 +1275,7 @@ function Alphabirth:onHostUpdate(host)
             elseif stage == LevelStage.STAGE5 and not level:IsAltStage() then
                 canreplace = true
             end
-            
+
             if canreplace then
                 Isaac.Spawn(EntityType.ENTITY_HOST,
                     ENTITY_VARIANT_BRIMSTONE_HOST,
@@ -1299,7 +1299,7 @@ function Alphabirth:triggerHostTakeDamage(dmg_target, dmg_amount, dmg_flags, dmg
             host.ProjectileCooldown = 30
             return false
         end
-        
+
         if host.State == NpcState.STATE_IDLE or host.State == NpcState.STATE_SPECIAL then
             return false
         end
@@ -1529,6 +1529,7 @@ end
 local infestedEntity
 local infestedBabySpider
 local animationCooldown = 0
+local spiderCooldown = 0
 
 function Alphabirth:onInfestedBabyUpdate(familiar)
     familiar:ToFamiliar():FollowParent()
@@ -1538,8 +1539,9 @@ function Alphabirth:onInfestedBabyUpdate(familiar)
     end
     if infestedBabySpider and infestedBabySpider:IsDead() then
         infestedBabySpider = nil
+        spiderCooldown = 25
     end
-    if Isaac.GetPlayer(0):GetFireDirection() ~= -1 and infestedBabySpider == nil then
+    if Isaac.GetPlayer(0):GetFireDirection() ~= -1 and infestedBabySpider == nil and spiderCooldown == 0 then
         infestedBabySpider = Isaac.Spawn(EntityType.ENTITY_FAMILIAR, FamiliarVariant.BLUE_SPIDER, 0, familiar.Position, Vector(0,0), familiar)
         if Isaac.GetPlayer(0):GetFireDirection() == Direction.UP then
             familiar:GetSprite():Play("ShootUp", 1)
@@ -1561,6 +1563,9 @@ function Alphabirth:onInfestedBabyUpdate(familiar)
     end
     if animationCooldown > 0 then
         animationCooldown = animationCooldown - 1
+    end
+    if spiderCooldown > 0 then
+        spiderCooldown = spiderCooldown - 1
     end
 end
 
