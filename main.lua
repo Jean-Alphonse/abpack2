@@ -38,6 +38,7 @@ local FLAG_VOID = 1 << 37
 local FLAG_SPIRIT_EYE_SHOT = 1 << 38
 local FLAG_HEMOPHILIA_SHOT = 1 << 39
 local FLAG_ABYSS_SHOT = 1 << 42
+local FLAG_QUILL_FEATHER_SHOT = 1 << 43
 
 local FLAG_HEMOPHILIA_APPLIED = 1 << 40
 local FLAG_QUILL_FEATHER_APLLIED = 1 << 41
@@ -46,6 +47,7 @@ local FLAG_QUILL_FEATHER_APLLIED = 1 << 41
 -- Tear Flag Easy Access
 ---------------------------------------
 local TEAR_FLAGS = {
+    FLAG_PIERCING = 1 << 1,
     FLAG_HOMING = 1 << 2,
     FLAG_IPECAC = 1 << 12
 }
@@ -1199,7 +1201,6 @@ end
 local function applyQuillFeatherCache(player, flag)
     if Isaac.GetPlayer(0):HasCollectible(PASSIVE_QUILL_FEATHER) and flag == CacheFlag.CACHE_TEARCOLOR then
         Isaac.GetPlayer(0):AddNullCostume(QUILL_FEATHER_COSTUME)
-        Isaac.GetPlayer(0).TearColor = Color(0,0,0,1,0,0,0)
     end
 end
 
@@ -1208,27 +1209,42 @@ local function handleQuillFeather()
     local player = Isaac.GetPlayer(0)
     local chance = 5 + player.Luck * 2
     for _,e in ipairs(Isaac.GetRoomEntities()) do
-        if e.Type == EntityType.ENTITY_TEAR and math.random(1,50) < chance and not e:HasEntityFlags(FLAG_QUILL_FEATHER_APLLIED) and e.FrameCount == 1 then
-            Isaac.DebugString("str")
-            tears = {}
-            for i=1,quillFeatherNumberOfTears do
-                local direction_vector = e.Velocity
-                local angle = 30
-                local random_angle = math.rad(math.random(-math.floor(angle), math.floor(angle)))
-                local cos_angle = math.cos(random_angle)
-                local sin_angle = math.sin(random_angle)
-                local shot_direction = Vector(cos_angle * direction_vector.X - sin_angle * direction_vector.Y,
-                    sin_angle * direction_vector.X + cos_angle * direction_vector.Y
-                )
-                local magnitude = {0.8,0.9,1,1.1,1.2}
-                local shot_vector = shot_direction:__mul(magnitude[math.random(#magnitude)*player.ShotSpeed])
-
-                tears[i] = player:FireTear(e.Position, shot_vector, false, false, true)
-                tears[i].Height = -20
-                tears[i]:AddEntityFlags(FLAG_QUILL_FEATHER_APLLIED)
-            end
-            e:Remove()
+        if e.Type == EntityType.ENTITY_TEAR and 
+                math.random(1,50) < chance and not 
+                e:HasEntityFlags(FLAG_QUILL_FEATHER_APLLIED) and 
+                e.FrameCount == 1 then
+            e.Color = Color(0,0,0,1,0,0,0)
+            e:AddEntityFlags(FLAG_QUILL_FEATHER_SHOT)
+            local tear_entity = e:ToTear()
+            tear_entity:ChangeVariant(TearVariant.CUPID_BLUE)
+            tear_entity.TearFlags = tear_entity.TearFlags + TEAR_FLAGS.FLAG_PIERCING
         end
+    end
+end
+
+function Alphabirth:triggerQuillFeather(dmg_target, dmg_amount, dmg_flags, dmg_source)
+    local player = Isaac.GetPlayer(0)
+    if dmg_source.Entity:HasEntityFlags(FLAG_QUILL_FEATHER_SHOT) then
+        for i=1,quillFeatherNumberOfTears do
+            local direction_vector = dmg_source.Entity.Velocity
+            local angle = 30
+            local random_angle = math.rad(math.random(-math.floor(angle), math.floor(angle)))
+            local cos_angle = math.cos(random_angle)
+            local sin_angle = math.sin(random_angle)
+            local shot_direction = Vector(cos_angle * direction_vector.X - sin_angle * direction_vector.Y,
+                sin_angle * direction_vector.X + cos_angle * direction_vector.Y
+            )
+            local magnitude = {0.8,0.9,1,1.1,1.2}
+            local shot_vector = shot_direction:__mul(magnitude[math.random(#magnitude)*player.ShotSpeed])
+                
+            tears[i] = player:FireTear(dmg_source.Position, shot_vector, false, false, true)
+            tears[i].Height = -20
+            tears[i].TearFlags = tears[i].TearFlags + TEAR_FLAGS.FLAG_PIERCING
+            tears[i]:ChangeVariant(TearVariant.CUPID_BLUE)
+            tears[i].Color = Color(0,0,0,1,0,0,0)
+            tears[i]:AddEntityFlags(FLAG_QUILL_FEATHER_APLLIED)
+        end
+        dmg_source.Entity:Remove()
     end
 end
 
@@ -1663,6 +1679,7 @@ local endor_type = Isaac.GetPlayerTypeByName("Endor")
 function Alphabirth:modUpdate()
     local player = Isaac.GetPlayer(0)
     local game = Game()
+    local level = game:GetLevel()
     local room = game:GetRoom()
     local frame = game:GetFrameCount()
     local player_type = player:GetPlayerType()
@@ -1755,34 +1772,36 @@ function Alphabirth:modUpdate()
     end
 
 	for _, entity in ipairs(Isaac.GetRoomEntities()) do
-		if entity.Type == EntityType.ENTITY_PICKUP and
-                entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and
-                entity.SubType == ACTIVE_CAULDRON then
-			local sprite = entity:GetSprite()
-            if cauldron_points <= 15 then
-                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_cauldron1.png")
-            elseif cauldron_points < 30 and cauldron_points > 15 then
-                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_cauldron2.png")
-            else
-                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_cauldron3.png")
+        if level:GetCurseName() ~= "Curse of the Blind" then
+            if entity.Type == EntityType.ENTITY_PICKUP and
+                    entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and
+                    entity.SubType == ACTIVE_CAULDRON then
+                local sprite = entity:GetSprite()
+                if cauldron_points <= 15 then
+                    sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_cauldron1.png")
+                elseif cauldron_points < 30 and cauldron_points > 15 then
+                    sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_cauldron2.png")
+                else
+                    sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_cauldron3.png")
+                end
+                sprite:LoadGraphics()
             end
-			sprite:LoadGraphics()
-        end
 
-        if entity.Type == EntityType.ENTITY_PICKUP and
-                entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and
-                entity.SubType == ACTIVE_CHALICE_OF_BLOOD then
-            local sprite = entity:GetSprite()
-            if chalice_souls <= 5 then
-                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood.png")
-            elseif chalice_souls <= 10 then
-                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood2.png")
-            elseif chalice_souls < 15 then
-                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood3.png")
-            else
-                sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood4.png")
+            if entity.Type == EntityType.ENTITY_PICKUP and
+                    entity.Variant == PickupVariant.PICKUP_COLLECTIBLE and
+                    entity.SubType == ACTIVE_CHALICE_OF_BLOOD then
+                local sprite = entity:GetSprite()
+                if chalice_souls <= 5 then
+                    sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood.png")
+                elseif chalice_souls <= 10 then
+                    sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood2.png")
+                elseif chalice_souls < 15 then
+                    sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood3.png")
+                else
+                    sprite:ReplaceSpritesheet(1,"gfx/Items/Collectibles/collectible_chaliceofblood4.png")
+                end
+                sprite:LoadGraphics()
             end
-            sprite:LoadGraphics()
         end
 	end
     --Cyborg Transformation Detector
@@ -2004,6 +2023,7 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_USE_CARD, Alphabirth.triggerNaudizEff
 Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerCrackedRockEffect)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHemophilia)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerAbyss)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerQuillFeather)
 
 Alphabirth_mod:AddCallback(ModCallbacks.MC_ENTITY_TAKE_DMG, Alphabirth.triggerHostTakeDamage, EntityType.ENTITY_HOST)
 
