@@ -280,9 +280,43 @@ function Alphabirth:triggerCauldron()
     else
         for _, entity in ipairs(Isaac.GetRoomEntities()) do
             if entity.Type == EntityType.ENTITY_PICKUP then
-                if entity.Variant ~= PickupVariant.PICKUP_COLLECTIBLE then
+                if entity.Variant ~= PickupVariant.PICKUP_COLLECTIBLE and 
+                        entity.Variant ~= PickupVariant.PICKUP_BIGCHEST and
+                        entity.Variant ~= PickupVariant.PICKUP_BED and
+                        entity.Variant ~= PickupVariant.PICKUP_TROPHY then
                     if entity.Variant == PickupVariant.PICKUP_TRINKET then
                         cauldron_points = cauldron_points + 5
+                    elseif entity.Variant == PickupVariant.PICKUP_COIN then
+                        if entity.SubType == CoinSubType.COIN_DIME then
+                            cauldron_points = cauldron_points + 10
+                        elseif entity.SubType == CoinSubType.COIN_DOUBLEPACK then
+                            cauldron_points = cauldron_points + 2
+                        elseif entity.SubType == CoinSubType.COIN_NICKEL or 
+                                entity.SubType == CoinSubType.COIN_STICKYNICKEL then
+                            cauldron_points = cauldron_points + 5
+                        else
+                            cauldron_points = cauldron_points + 1
+                        end
+                    elseif entity.Variant == PickupVariant.PICKUP_BOMB then
+                        if entity.SubType == BombSubType.BOMB_DOUBLEPACK then
+                            cauldron_points = cauldron_points + 2
+                        elseif entity.SubType == BombSubType.BOMB_GOLDEN then
+                            cauldron_points = cauldron_points + 3
+                        else
+                            cauldron_points = cauldron_points + 1
+                        end
+                    elseif entity.Variant == PickupVariant.PICKUP_KEY then
+                        if entity.SubType == KeySubType.KEY_DOUBLEPACK then
+                            cauldron_points = cauldron_points + 2
+                        elseif entity.SubType == KeySubType.KEY_GOLDEN then
+                            cauldron_points = cauldron_points + 3
+                        else
+                            cauldron_points = cauldron_points + 1
+                        end
+                    elseif entity.Variant == PickupVariant.PICKUP_ETERNALCHEST or 
+                            entity.Variant == PickupVariant.PICKUP_LOCKEDCHEST or 
+                            entity.Variant == PickupVariant.PICKUP_BOMBCHEST then
+                        cauldron_points = cauldron_points + 3
                     else
                         cauldron_points = cauldron_points + 1
                     end
@@ -732,10 +766,16 @@ end
 local function handleTechAlpha(player)
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
         local entity_will_shoot = nil
-        local roll_max = 30
+        local roll_max = 60 - player.Luck * 2
+        
+        if roll_max < 30 then
+            roll_max = 30
+        end
+        
         if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
             roll_max = roll_max * 2
         end
+        
         if entity.Type == EntityType.ENTITY_TEAR and not entity:HasEntityFlags(FLAG_HEMOPHILIA_SHOT) then
             entity_will_shoot = true
         elseif entity.Type == EntityType.ENTITY_BOMBDROP then
@@ -962,8 +1002,9 @@ local function applyJudasFezCache(player, cache_flag)
     if cache_flag == CacheFlag.CACHE_DAMAGE and player:HasCollectible(PASSIVE_JUDAS_FEZ) then
         player.Damage = player.Damage * 1.35
         if not health_reduction_applied then
-            local hearts = player:GetHearts() - 2
+            local hearts = player:GetMaxHearts() - 2
             player:AddMaxHearts(hearts * -1)
+            player:AddSoulHearts(hearts)
             health_reduction_applied = true
         end
     end
