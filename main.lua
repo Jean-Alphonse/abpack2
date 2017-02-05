@@ -873,6 +873,7 @@ function Alphabirth:triggerAbyss(damaged_entity, damage_amount, damage_flag, dam
                     effect = effect:ToEffect()
                     effect:FollowParent(damaged_entity)
                     effect:SetTimeout(1000)
+                    damaged_entity:GetData()["status_timer"] = 240
                     damaged_entity:AddEntityFlags(FLAG_VOID)
                     damaged_entity:AddEntityFlags(EntityFlag.FLAG_FREEZE)
                     damaged_entity:AddEntityFlags(EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
@@ -926,8 +927,8 @@ local function handleAbyss()
                 end
             end
 
-            lose_flag_roll = math.random(1,300)
-            if lose_flag_roll == 1 then
+            entity:GetData()["status_timer"] = entity:GetData()["status_timer"] - 1
+            if entity:GetData()["status_timer"] == 0 then
                 entity.Color = entity:GetData()["clr"]
                 entity:ClearEntityFlags(FLAG_VOID)
                 entity:ClearEntityFlags(EntityFlag.FLAG_FREEZE)
