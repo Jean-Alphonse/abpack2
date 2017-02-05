@@ -138,6 +138,10 @@ local function playSound(sfx, vol, delay, loop, pitch) --SFX: SoundEffect.SOUND_
     sound_entity:Remove()
 end
 
+local function colorRawData(color)
+    return color.R, color.G, color.B, color.A, color.RO, color.GO, color.BO
+end
+
 ---------------------------------------
 -- Active Declaration
 ---------------------------------------
@@ -283,7 +287,7 @@ function Alphabirth:triggerCauldron()
     else
         for _, entity in ipairs(Isaac.GetRoomEntities()) do
             if entity.Type == EntityType.ENTITY_PICKUP then
-                if entity.Variant ~= PickupVariant.PICKUP_COLLECTIBLE and 
+                if entity.Variant ~= PickupVariant.PICKUP_COLLECTIBLE and
                         entity.Variant ~= PickupVariant.PICKUP_BIGCHEST and
                         entity.Variant ~= PickupVariant.PICKUP_BED and
                         entity.Variant ~= PickupVariant.PICKUP_TROPHY then
@@ -294,7 +298,7 @@ function Alphabirth:triggerCauldron()
                             cauldron_points = cauldron_points + 10
                         elseif entity.SubType == CoinSubType.COIN_DOUBLEPACK then
                             cauldron_points = cauldron_points + 2
-                        elseif entity.SubType == CoinSubType.COIN_NICKEL or 
+                        elseif entity.SubType == CoinSubType.COIN_NICKEL or
                                 entity.SubType == CoinSubType.COIN_STICKYNICKEL then
                             cauldron_points = cauldron_points + 5
                         else
@@ -316,8 +320,8 @@ function Alphabirth:triggerCauldron()
                         else
                             cauldron_points = cauldron_points + 1
                         end
-                    elseif entity.Variant == PickupVariant.PICKUP_ETERNALCHEST or 
-                            entity.Variant == PickupVariant.PICKUP_LOCKEDCHEST or 
+                    elseif entity.Variant == PickupVariant.PICKUP_ETERNALCHEST or
+                            entity.Variant == PickupVariant.PICKUP_LOCKEDCHEST or
                             entity.Variant == PickupVariant.PICKUP_BOMBCHEST then
                         cauldron_points = cauldron_points + 3
                     else
@@ -773,15 +777,15 @@ local function handleTechAlpha(player)
     for _, entity in ipairs(Isaac.GetRoomEntities()) do
         local entity_will_shoot = nil
         local roll_max = 60 - player.Luck * 2
-        
+
         if roll_max < 30 then
             roll_max = 30
         end
-        
+
         if player:HasCollectible(CollectibleType.COLLECTIBLE_TECH_X) then
             roll_max = roll_max * 2
         end
-        
+
         if entity.Type == EntityType.ENTITY_TEAR and not entity:HasEntityFlags(FLAG_HEMOPHILIA_SHOT) then
             entity_will_shoot = true
         elseif entity.Type == EntityType.ENTITY_BOMBDROP then
@@ -892,15 +896,15 @@ local function handleAbyss()
             entity:GetSprite():LoadGraphics()
             entity:AddEntityFlags(FLAG_ABYSS_SHOT)
         end
-        
+
         local is_void_entity = false
         if entity:HasEntityFlags(FLAG_VOID) then
             is_void_entity = true
-            if entity.Color ~= Color(0,0,0,1,0,0,0) then
-                entity:GetData()[0] = entity.Color
+            if colorRawData(entity.Color) ~= colorRawData(Color(0,0,0,1,0,0,0)) then
+                entity:GetData()["clr"] = entity.Color
                 entity.Color = Color(0,0,0,1,0,0,0)
             end
-            
+
             for _, entity2 in ipairs(Isaac.GetRoomEntities()) do
                 local entity2_npc = entity2:ToNPC()
                 if entity2_npc then
@@ -924,17 +928,17 @@ local function handleAbyss()
 
             lose_flag_roll = math.random(1,300)
             if lose_flag_roll == 1 then
-                entity.Color = entity:GetData()[0]
+                entity.Color = entity:GetData()["clr"]
                 entity:ClearEntityFlags(FLAG_VOID)
                 entity:ClearEntityFlags(EntityFlag.FLAG_FREEZE)
                 entity:ClearEntityFlags(EntityFlag.FLAG_NO_PHYSICS_KNOCKBACK)
             end
         end
-        
+
         if entity.Type == EntityType.ENTITY_EFFECT and
                 entity.Variant == EffectVariant.PULLING_EFFECT and not
-                is_void_entity then
-            entity:ToEffect():SetTimeout(0)
+                entity.Parent:HasEntityFlags(FLAG_VOID) then
+            entity:Remove()
         end
     end
 end
@@ -1231,9 +1235,9 @@ local function handleQuillFeather()
     local player = Isaac.GetPlayer(0)
     local chance = 5 + player.Luck * 2
     for _,e in ipairs(Isaac.GetRoomEntities()) do
-        if e.Type == EntityType.ENTITY_TEAR and 
-                math.random(1,50) < chance and not 
-                e:HasEntityFlags(FLAG_QUILL_FEATHER_APLLIED) and 
+        if e.Type == EntityType.ENTITY_TEAR and
+                math.random(1,50) < chance and not
+                e:HasEntityFlags(FLAG_QUILL_FEATHER_APLLIED) and
                 e.FrameCount == 1 then
             e.Color = Color(0,0,0,1,0,0,0)
             e:AddEntityFlags(FLAG_QUILL_FEATHER_SHOT)
@@ -1258,7 +1262,7 @@ function Alphabirth:triggerQuillFeather(dmg_target, dmg_amount, dmg_flags, dmg_s
             )
             local magnitude = {0.8,0.9,1,1.1,1.2}
             local shot_vector = shot_direction:__mul(magnitude[math.random(#magnitude)*player.ShotSpeed])
-                
+
             tears[i] = player:FireTear(dmg_source.Position, shot_vector, false, false, true)
             tears[i].Height = -20
             tears[i].TearFlags = tears[i].TearFlags + TEAR_FLAGS.FLAG_PIERCING
