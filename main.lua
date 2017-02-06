@@ -4,7 +4,7 @@ Alphabirth_mod = RegisterMod("Alphabirth Pack 2", 1)
 ---------------------------------------
 -- Config
 ---------------------------------------
-local starting_room_enabled = false
+local starting_room_enabled = true
 
 ---------------------------------------
 -- Initialize the RNG
