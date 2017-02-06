@@ -1535,37 +1535,37 @@ end
 -- Zygote Logic
 ---------------------------------------
 
-function Alphabirth:onEmbryoUpdate(e)
-    if e.FrameCount > 1 or math.random(1, 3) ~= 1 then
+function Alphabirth:onEmbryoUpdate(entity)
+    if entity.FrameCount > 1 or math.random(1, 3) ~= 1 then
         return
     end
     -- Only one Zygote can exist in a room
-    local ee = Isaac.GetRoomEntities()
-    for i=1, #ee do
-        local e = ee[i]
-        if e.Type == ENTITY_TYPE_ZYGOTE and e.Variant == ENTITY_VARIANT_ZYGOTE then
+    local entities = Isaac.GetRoomEntities()
+    for i=1, #entities do
+        local room_entity = entities[i]
+        if room_entity.Type == ENTITY_TYPE_ZYGOTE and room_entity.Variant == ENTITY_VARIANT_ZYGOTE then
             return
         end
     end
-    e:Morph(ENTITY_TYPE_ZYGOTE, ENTITY_VARIANT_ZYGOTE, 0, 0)
+    entity:Morph(ENTITY_TYPE_ZYGOTE, ENTITY_VARIANT_ZYGOTE, 0, 0)
 end
 
-function Alphabirth:onZygoteUpdate(e)
-    if e.Variant == ENTITY_VARIANT_ZYGOTE then
-        local data = e:GetData()
-        if e.FrameCount == 1 then
+function Alphabirth:onZygoteUpdate(zygote)
+    if zygote.Variant == ENTITY_VARIANT_ZYGOTE then
+        local data = zygote:GetData()
+        if zygote.FrameCount == 1 then
             if not data.gen then
                 data.gen = 1
             end
             data.targetVel = Vector(0, 0)
         end
-        local sprite = e:GetSprite()
+        local sprite = zygote:GetSprite()
         if sprite:IsPlaying("Walk Neutral") then
             if data.gen < 4 and sprite:GetFrame() == 23 and math.random(1,4) == 1 then
                 sprite:Play("Walk Happy", true)
             end
             if sprite:GetFrame() == 0 then
-                data.targetVel = (Isaac.GetRandomPosition() - e.Position):Normalized()*3
+                data.targetVel = (Isaac.GetRandomPosition() - zygote.Position):Normalized()*3
             end
         elseif sprite:IsPlaying("Walk Happy") then
             if sprite:GetFrame() == 23 then
@@ -1573,18 +1573,18 @@ function Alphabirth:onZygoteUpdate(e)
             end
         elseif sprite:IsPlaying("Split") then
             if sprite:IsEventTriggered("Split") then
-                local clone = Isaac.Spawn(e.Type, e.Variant, e.SubType, e.Position + Vector(-7, 0), Vector(0, 0), e)
+                local clone = Isaac.Spawn(zygote.Type, zygote.Variant, zygote.SubType, zygote.Position + Vector(-7, 0), Vector(0, 0), zygote)
                 clone:ClearEntityFlags(EntityFlag.FLAG_APPEAR)
                 local cloneSprite = clone:GetSprite()
                 cloneSprite:Play("Clone", true)
                 local power = 20
                 local yVel = math.random()*power*2 - power
-                e.Position = e.Position + Vector(8, 0)
-                e.Velocity = e.Velocity + Vector(power, yVel)
+                zygote.Position = zygote.Position + Vector(8, 0)
+                zygote.Velocity = zygote.Velocity + Vector(power, yVel)
                 clone.Velocity = Vector(-power, -yVel)
                 data.gen = data.gen + 1
                 clone:GetData().gen = data.gen
-                clone.HitPoints = e.HitPoints
+                clone.HitPoints = zygote.HitPoints
             end
             if sprite:GetFrame() == 23 then
                 data.done = true
@@ -1599,13 +1599,13 @@ function Alphabirth:onZygoteUpdate(e)
         end
         if sprite:IsEventTriggered("Landed") then
             data.targetVel = Vector(0, 0)
-            e:PlaySound(SoundEffect.SOUND_GOOATTACH0, 1, 0, false, 1)
+            zygote:PlaySound(SoundEffect.SOUND_GOOATTACH0, 1, 0, false, 1)
         end
-        e.Velocity = e.Velocity*0.70 + data.targetVel*0.30
-        if e.Velocity.X < 0 then
-            e.FlipX = true
+        zygote.Velocity = zygote.Velocity*0.70 + data.targetVel*0.30
+        if zygote.Velocity.X < 0 then
+            zygote.FlipX = true
         else
-            e.FlipX = false
+            zygote.FlipX = false
         end
     end
 end
