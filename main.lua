@@ -275,6 +275,8 @@ local ENTITY_VARIANT_INFESTED_BABY = Isaac.GetEntityVariantByName("Infested Baby
 
 -- Enemies
 local ENTITY_VARIANT_BRIMSTONE_HOST = Isaac.GetEntityVariantByName("Brimstone Host")
+local ENTITY_TYPE_ZYGOTE = Isaac.GetEntityTypeByName("Zygote")
+local ENTITY_VARIANT_ZYGOTE = Isaac.GetEntityVariantByName("Zygote")
 
 -- Effects
 local ENTITY_VARIANT_ALASTORS_FLAME = Isaac.GetEntityVariantByName("Alastor's Flame")
@@ -1530,6 +1532,85 @@ function Alphabirth:triggerHostTakeDamage(dmg_target, dmg_amount, dmg_flags, dmg
 end
 
 ---------------------------------------
+-- Zygote Logic
+---------------------------------------
+
+function Alphabirth:onEmbryoUpdate(e)
+    if e.FrameCount > 1 or math.random(1, 3) ~= 1 then
+        return
+    end
+    -- Only one Zygote can exist in a room
+    local ee = Isaac.GetRoomEntities()
+    for i=1, #ee do
+        local e = ee[i]
+        if e.Type == ENTITY_TYPE_ZYGOTE and e.Variant == ENTITY_VARIANT_ZYGOTE then
+            return
+        end
+    end
+    e:Morph(ENTITY_TYPE_ZYGOTE, ENTITY_VARIANT_ZYGOTE, 0, 0)
+end
+
+function Alphabirth:onZygoteUpdate(e)
+    if e.Variant == ENTITY_VARIANT_ZYGOTE then
+        local data = e:GetData()
+        if e.FrameCount == 1 then
+            if not data.gen then
+                data.gen = 1
+            end
+            data.targetVel = Vector(0, 0)
+        end
+        local sprite = e:GetSprite()
+        if sprite:IsPlaying("Walk Neutral") then
+            if data.gen < 4 and sprite:GetFrame() == 23 and math.random(1,4) == 1 then
+                sprite:Play("Walk Happy", true)
+            end
+            if sprite:GetFrame() == 0 then
+                data.targetVel = (Isaac.GetRandomPosition() - e.Position):Normalized()*3
+            end
+        elseif sprite:IsPlaying("Walk Happy") then
+            if sprite:GetFrame() == 23 then
+                sprite:Play("Split", true)
+            end
+        elseif sprite:IsPlaying("Split") then
+            if sprite:IsEventTriggered("Split") then
+                local clone = Isaac.Spawn(e.Type, e.Variant, e.SubType, e.Position + Vector(-7, 0), Vector(0, 0), e)
+                clone:ClearEntityFlags(EntityFlag.FLAG_APPEAR)
+                local cloneSprite = clone:GetSprite()
+                cloneSprite:Play("Clone", true)
+                local power = 20
+                local yVel = math.random()*power*2 - power
+                e.Position = e.Position + Vector(8, 0)
+                e.Velocity = e.Velocity + Vector(power, yVel)
+                clone.Velocity = Vector(-power, -yVel)
+                data.gen = data.gen + 1
+                clone:GetData().gen = data.gen
+                clone.HitPoints = e.HitPoints
+            end
+            if sprite:GetFrame() == 23 then
+                data.done = true
+                sprite:Play("Walk Neutral", true)
+            end
+        elseif sprite:IsPlaying("Clone") then
+            if sprite:GetFrame() == 23 then
+                sprite:Play("Walk Neutral", true)
+            end
+        else
+            sprite:Play("Walk Neutral", true)
+        end
+        if sprite:IsEventTriggered("Landed") then
+            data.targetVel = Vector(0, 0)
+            e:PlaySound(SoundEffect.SOUND_GOOATTACH0, 1, 0, false, 1)
+        end
+        e.Velocity = e.Velocity*0.70 + data.targetVel*0.30
+        if e.Velocity.X < 0 then
+            e.FlipX = true
+        else
+            e.FlipX = false
+        end
+    end
+end
+
+---------------------------------------
 -- Blooderfly Logic
 ---------------------------------------
 local blooderfly_target = nil
@@ -2229,6 +2310,9 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_FAMILIAR_INIT, Alphabirth.onInfestedB
 Alphabirth_mod:AddCallback(ModCallbacks.MC_FAMILIAR_UPDATE, Alphabirth.onInfestedBabyUpdate, ENTITY_VARIANT_INFESTED_BABY)
 
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onHostUpdate, EntityType.ENTITY_HOST)
+
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onEmbryoUpdate, EntityType.ENTITY_EMBRYO)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onZygoteUpdate, ENTITY_TYPE_ZYGOTE)
 -------------------
 -- Mod Updates
 -------------------
