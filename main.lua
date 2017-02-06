@@ -1607,7 +1607,6 @@ function Alphabirth:onZygoteUpdate(e)
         else
             e.FlipX = false
         end
-        Isaac.DebugString("Update")
     end
 end
 
