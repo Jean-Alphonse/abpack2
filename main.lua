@@ -218,7 +218,7 @@ local function fireProjectiles(numProjectiles, projectileSpreadDegrees, shotSpee
                 shot_motion = Vector.FromAngle(counterclockwise_degree_offset) * shotSpeed
                 counterclockwise_degree_offset = counterclockwise_degree_offset + projectileSpreadDegrees
             end
-            
+
             projectiles[i] = Isaac.Spawn(EntityType.ENTITY_PROJECTILE,
                 shotVariant,
                 0,
@@ -227,7 +227,7 @@ local function fireProjectiles(numProjectiles, projectileSpreadDegrees, shotSpee
                 parentEntity)
         end
     end
-    
+
     return projectiles
 end
 
@@ -277,6 +277,7 @@ local ENTITY_VARIANT_INFESTED_BABY = Isaac.GetEntityVariantByName("Infested Baby
 local ENTITY_VARIANT_BRIMSTONE_HOST = Isaac.GetEntityVariantByName("Brimstone Host")
 local ENTITY_TYPE_ZYGOTE = Isaac.GetEntityTypeByName("Zygote")
 local ENTITY_VARIANT_ZYGOTE = Isaac.GetEntityVariantByName("Zygote")
+local ENTITY_VARIANT_HEADLESS_ROUND_WORM = Isaac.GetEntityVariantByName("Headless Round Worm")
 
 -- Effects
 local ENTITY_VARIANT_ALASTORS_FLAME = Isaac.GetEntityVariantByName("Alastor's Flame")
@@ -1611,6 +1612,31 @@ function Alphabirth:onZygoteUpdate(zygote)
 end
 
 ---------------------------------------
+-- Headless Round Worm Logic
+---------------------------------------
+
+function Alphabirth:handleHeadlessRoundWorm(entity)
+    if entity.FrameCount == 1 and math.random(5) == 1 then
+        entity:ToNPC():Morph(entity.Type, ENTITY_VARIANT_HEADLESS_ROUND_WORM, 0, 0)
+    end
+    if entity.Variant == ENTITY_VARIANT_HEADLESS_ROUND_WORM then
+
+        if entity:ToNPC().State == NpcState.STATE_JUMP then --for roundworms the jump state is going underground
+            Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.CREEP_RED, 0, entity.Position, Vector(0,0), entity)
+        end
+
+        if entity:ToNPC().State == NpcState.STATE_ATTACK then
+            for i, e in ipairs(Isaac.GetRoomEntities()) do
+                if e.Type == EntityType.ENTITY_PROJECTILE and e.FrameCount == 1 and e.SpawnerType == EntityType.ENTITY_ROUND_WORM and e.SpawnerVariant == ENTITY_VARIANT_HEADLESS_ROUND_WORM then
+                    e.Velocity = e.Velocity:__div(4)
+                end
+            end
+        end
+
+    end
+end
+
+---------------------------------------
 -- Blooderfly Logic
 ---------------------------------------
 local blooderfly_target = nil
@@ -2313,6 +2339,8 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onHostUpdate, 
 
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onEmbryoUpdate, EntityType.ENTITY_EMBRYO)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onZygoteUpdate, ENTITY_TYPE_ZYGOTE)
+
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.handleHeadlessRoundWorm, EntityType.ENTITY_ROUND_WORM)
 -------------------
 -- Mod Updates
 -------------------
