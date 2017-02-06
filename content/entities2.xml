@@ -32,4 +32,9 @@
         <gibs amount="4" blood="1" bone="0" eye="0" gut="1" large="0" />
         <preload-snd id="205" /> <!-- SOUND_GOOATTACH0 -->
     </entity>
+
+    <entity id="741" variant="2" anm2path="enemies/animation_enemy_lobotomy.anm2" reroll="true" baseHP="10" boss="0" champion="1" collisionDamage="1" collisionMass="5" collisionRadius="13" friction="1" name="Lobotomy" numGridCollisionPoints="12" shadowSize="14" stageHP="0">
+        <gibs amount="6" blood="1" bone="1" eye="1" gut="1" large="0" />
+        <preload-snd id="165" /> <!-- SOUND_ZOMBIE_WALKER_KID -->
+    </entity>
 </entities>
