@@ -1615,6 +1615,10 @@ end
 -- Headless Round Worm Logic
 ---------------------------------------
 
+--Enemy configuration
+local numberOfShotsHeadlessWorm = Vector(3, 5) --A number between 2 and 4
+local shotRadiusHeadlessWorm = 50 --Radius of the shots
+
 function Alphabirth:handleHeadlessRoundWorm(entity)
     if entity.FrameCount == 1 and math.random(5) == 1 then
         entity:ToNPC():Morph(entity.Type, ENTITY_VARIANT_HEADLESS_ROUND_WORM, 0, 0)
@@ -1628,7 +1632,14 @@ function Alphabirth:handleHeadlessRoundWorm(entity)
         if entity:ToNPC().State == NpcState.STATE_ATTACK then
             for i, e in ipairs(Isaac.GetRoomEntities()) do
                 if e.Type == EntityType.ENTITY_PROJECTILE and e.FrameCount == 1 and e.SpawnerType == EntityType.ENTITY_ROUND_WORM and e.SpawnerVariant == ENTITY_VARIANT_HEADLESS_ROUND_WORM then
-                    e.Velocity = e.Velocity:__div(4)
+
+                    local projectileNumber = math.random(numberOfShotsHeadlessWorm.X, numberOfShotsHeadlessWorm.Y)
+
+                    for i = 1, projectileNumber do
+                        local spread = math.random(1, 359) + (i - 1)*math.random(1, 560)
+                        local projectiles = fireProjectiles(1, spread, 3, e.Variant, e.Position, Vector(math.random(-shotRadiusHeadlessWorm, shotRadiusHeadlessWorm), math.random(-shotRadiusHeadlessWorm, shotRadiusHeadlessWorm)))
+                    end
+                    e:Remove()
                 end
             end
         end
