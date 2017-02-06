@@ -278,6 +278,8 @@ local ENTITY_VARIANT_BRIMSTONE_HOST = Isaac.GetEntityVariantByName("Brimstone Ho
 local ENTITY_TYPE_ZYGOTE = Isaac.GetEntityTypeByName("Zygote")
 local ENTITY_VARIANT_ZYGOTE = Isaac.GetEntityVariantByName("Zygote")
 local ENTITY_VARIANT_HEADLESS_ROUND_WORM = Isaac.GetEntityVariantByName("Headless Round Worm")
+local ENTITY_TYPE_LOBOTOMY = Isaac.GetEntityTypeByName("Lobotomy")
+local ENTITY_VARIANT_LOBOTOMY = Isaac.GetEntityVariantByName("Lobotomy")
 
 -- Effects
 local ENTITY_VARIANT_ALASTORS_FLAME = Isaac.GetEntityVariantByName("Alastor's Flame")
@@ -1643,7 +1645,57 @@ function Alphabirth:handleHeadlessRoundWorm(entity)
                 end
             end
         end
+    end
+end
 
+---------------------------------------
+-- Lobotomy logic
+---------------------------------------
+
+function Alphabirth:onGaperUpdate(entity)
+    if entity.FrameCount > 1 or math.random(1, 10) ~= 1 then
+        return
+    end
+    Isaac.Spawn(ENTITY_TYPE_LOBOTOMY, ENTITY_VARIANT_LOBOTOMY, 0, entity.Position, entity.Velocity, entity)
+    entity:Remove()
+end
+
+function Alphabirth:onLobotomyUpdate(lobotomy)
+    if lobotomy.Variant ~= ENTITY_VARIANT_LOBOTOMY then
+        return
+    end
+    local data = lobotomy:GetData()
+
+    if not data.initialized then
+        local sprite = lobotomy:GetSprite()
+        sprite:PlayOverlay("Head", true)
+        data.soundCountdown = 50
+        data.targetVel = Vector(0, 0)
+        data.died = false
+        data.initialized = true
+    end
+
+    if math.random(1, 10) == 1 then
+        data.targetVel = (Isaac.GetRandomPosition() - lobotomy.Position):Normalized()*3
+    end
+    lobotomy.Velocity = lobotomy.Velocity * 0.7 + data.targetVel * 0.3
+    lobotomy:AnimWalkFrame("WalkHori", "WalkVert", 0.1)
+    if data.soundCountdown < 0 then
+        lobotomy:PlaySound(SoundEffect.SOUND_ZOMBIE_WALKER_KID, 0.8, 0, false, 0.9+math.random()*0.1)
+        data.soundCountdown = math.random(40, 80)
+    end
+    data.soundCountdown = data.soundCountdown - 1
+    if lobotomy:IsDead() and not data.died then
+        -- using Game::Spawn instead of Isaac.Spawn so
+        -- that it never spawns the variant of the brain
+        local brain = Game():Spawn(32, 0, lobotomy.Position, Vector(0,0), lobotomy, 0, 1):ToNPC()
+
+        lobotomy:ClearEntityFlags(EntityFlag.FLAG_APPEAR)
+        brain.HitPoints = 8
+        brain.State = 0
+        brain:SetSize(10, Vector(1,1), 12)
+        brain.Scale = 0.9
+        data.died = true
     end
 end
 
@@ -2352,6 +2404,8 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onEmbryoUpdate
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onZygoteUpdate, ENTITY_TYPE_ZYGOTE)
 
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.handleHeadlessRoundWorm, EntityType.ENTITY_ROUND_WORM)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onGaperUpdate, EntityType.ENTITY_GAPER)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onLobotomyUpdate, ENTITY_TYPE_LOBOTOMY)
 -------------------
 -- Mod Updates
 -------------------
