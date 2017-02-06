@@ -26,6 +26,7 @@ local JUDAS_FEZ_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/acce
 local HOT_COALS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hotcoals.anm2")
 local TECH_ALPHA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_techalpha.anm2")
 local QUILL_FEATHER_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_quillfeather.anm2")
+local DAMNED_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_transformation_damned.anm2")
 
 local ENDOR_BODY_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorbody.anm2")
 local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorhead.anm2")
@@ -263,6 +264,17 @@ local cyborg_pool = {
 }
 
 local cyborg_progress = {}
+
+local damned_pool = {
+    PASSIVE_GLOOM_SKULL,
+    ACTIVE_CHALICE_OF_BLOOD,
+    CollectibleType.COLLECTIBLE_PENTAGRAM,
+    CollectibleType.COLLECTIBLE_CONTRACT_FROM_BELOW,
+    CollectibleType.COLLECTIBLE_PACT,
+    CollectibleType.COLLECTIBLE_MARK
+}
+
+local damned_progress = {}
 
 local birthControl_pool = {
     PASSIVE_INFESTED_BABY,
@@ -1184,6 +1196,19 @@ function applyCyborgCache(player, flag)
 end
 
 ---------------------------------------
+-- Damned Logic
+---------------------------------------
+
+local has_damned = false
+local damned_health_applied = false
+local damned_has_respawned = false
+local function applyDamnedCache(player, cache_flag)
+    if cache_flag == CacheFlag.CACHE_FLYING and has_damned then
+        player.CanFly = true
+    end
+end
+
+---------------------------------------
 -- Aimbot Logic
 ---------------------------------------
 
@@ -1821,8 +1846,11 @@ function Alphabirth:modUpdate()
         cauldron_points = 0
         didMax = false
         hasCyborg = false
-        spirit_eye_exists = false
         cyborg_progress = {}
+        has_damned = false
+        damned_progress = {}
+        damned_health_applied = false
+        damned_has_respawned = false
         birthControlStats = {
             HP = 0,
             Damage = 0,
@@ -1846,6 +1874,8 @@ function Alphabirth:modUpdate()
             player:AddSoulHearts(4)
             player:AddEternalHearts(1)
         end
+        player:AddCacheFlags(CacheFlag.CACHE_ALL)
+        player:EvaluateItems()
     end
 
     -- Max Deal with the Devil chance
@@ -1902,6 +1932,40 @@ function Alphabirth:modUpdate()
             end
         end
     end
+
+    --Damned Transformation Detector
+    if Game():GetFrameCount() % 60 == 0 then
+        if not has_damned then
+            for _, item in ipairs(damned_pool) do
+                if player:HasCollectible(item) and contains(damned_progress, item) == false then
+                    table.insert(damned_progress, item)
+                end
+            end
+            if #damned_progress >= 3 then
+                has_damned = true
+                player:AddNullCostume(DAMNED_COSTUME)
+                player:AddCacheFlags(CacheFlag.CACHE_ALL)
+                player:EvaluateItems()
+
+                if not damned_health_applied then
+                    damned_health_applied = true
+                    local hearts = player:GetMaxHearts()
+                    player:AddMaxHearts(hearts * -1, true)
+                    player:AddBlackHearts(24)
+                end
+            end
+        end
+    end
+
+    --Damned Respawn Logic
+    if player:IsDead() and has_damned and not damned_has_respawned then
+        damned_has_respawned = true
+        player:UseActiveItem(CollectibleType.COLLECTIBLE_FORGET_ME_NOW, false, true, true, false)
+        player:Revive()
+        player:AddBlackHearts(10)
+    end
+
+
 
     --Bionic Arm Extra Logic
     local charge = player:GetActiveCharge()
@@ -2060,6 +2124,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
     applyQuillFeatherCache(player, cache_flag)
     applyTechAlphaCache(player, cache_flag)
     applyHoarderCache(player, cache_flag)
+    applyDamnedCache(player, cache_flag)
     if player:GetPlayerType() == endor_type then
         player.CanFly = true
         if cache_flag == CacheFlag.CACHE_DAMAGE then
