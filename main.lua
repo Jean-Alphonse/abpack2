@@ -27,6 +27,7 @@ local HOT_COALS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/acce
 local TECH_ALPHA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_techalpha.anm2")
 local QUILL_FEATHER_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_quillfeather.anm2")
 local DAMNED_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_transformation_damned.anm2")
+local HOARDER_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hoarder.anm2")
 
 local ENDOR_BODY_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorbody.anm2")
 local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorhead.anm2")
@@ -1411,6 +1412,7 @@ end
 
 local function applyHoarderCache(player, cache_flag)
     if player:HasCollectible(PASSIVE_HOARDER) and cache_flag == CacheFlag.CACHE_DAMAGE then
+        player:AddNullCostume(HOARDER_COSTUME)
         player.Damage = player.Damage + hoarderDamage
     end
 end
