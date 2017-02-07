@@ -2254,7 +2254,7 @@ function Alphabirth:evaluateCache(player, cache_flag)
         elseif cache_flag == CacheFlag.CACHE_SPEED then
             player.MoveSpeed = player.MoveSpeed + 0.2
         elseif cache_flag == CacheFlag.CACHE_FIREDELAY then
-            player.FireDelay = player.FireDelay - 3
+            player.MaxFireDelay = player.MaxFireDelay - 3
         end
     end
 end
