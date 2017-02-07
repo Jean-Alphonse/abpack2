@@ -27,6 +27,7 @@ local HOT_COALS_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/acce
 local TECH_ALPHA_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_techalpha.anm2")
 local QUILL_FEATHER_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_quillfeather.anm2")
 local DAMNED_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_transformation_damned.anm2")
+local HOARDER_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/accessories/animation_costume_hoarder.anm2")
 
 local ENDOR_BODY_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorbody.anm2")
 local ENDOR_HEAD_COSTUME = Isaac.GetCostumeIdByPath("gfx/animations/costumes/players/animation_character_endorhead.anm2")
@@ -218,7 +219,7 @@ local function fireProjectiles(numProjectiles, projectileSpreadDegrees, shotSpee
                 shot_motion = Vector.FromAngle(counterclockwise_degree_offset) * shotSpeed
                 counterclockwise_degree_offset = counterclockwise_degree_offset + projectileSpreadDegrees
             end
-            
+
             projectiles[i] = Isaac.Spawn(EntityType.ENTITY_PROJECTILE,
                 shotVariant,
                 0,
@@ -227,7 +228,7 @@ local function fireProjectiles(numProjectiles, projectileSpreadDegrees, shotSpee
                 parentEntity)
         end
     end
-    
+
     return projectiles
 end
 
@@ -277,6 +278,9 @@ local ENTITY_VARIANT_INFESTED_BABY = Isaac.GetEntityVariantByName("Infested Baby
 local ENTITY_VARIANT_BRIMSTONE_HOST = Isaac.GetEntityVariantByName("Brimstone Host")
 local ENTITY_TYPE_ZYGOTE = Isaac.GetEntityTypeByName("Zygote")
 local ENTITY_VARIANT_ZYGOTE = Isaac.GetEntityVariantByName("Zygote")
+local ENTITY_VARIANT_HEADLESS_ROUND_WORM = Isaac.GetEntityVariantByName("Headless Round Worm")
+local ENTITY_TYPE_LOBOTOMY = Isaac.GetEntityTypeByName("Lobotomy")
+local ENTITY_VARIANT_LOBOTOMY = Isaac.GetEntityVariantByName("Lobotomy")
 
 -- Effects
 local ENTITY_VARIANT_ALASTORS_FLAME = Isaac.GetEntityVariantByName("Alastor's Flame")
@@ -1408,6 +1412,7 @@ end
 
 local function applyHoarderCache(player, cache_flag)
     if player:HasCollectible(PASSIVE_HOARDER) and cache_flag == CacheFlag.CACHE_DAMAGE then
+        player:AddNullCostume(HOARDER_COSTUME)
         player.Damage = player.Damage + hoarderDamage
     end
 end
@@ -1607,6 +1612,92 @@ function Alphabirth:onZygoteUpdate(zygote)
         else
             zygote.FlipX = false
         end
+    end
+end
+
+---------------------------------------
+-- Headless Round Worm Logic
+---------------------------------------
+
+--Enemy configuration
+local numberOfShotsHeadlessWorm = Vector(3, 5) --A number between 2 and 4
+local shotRadiusHeadlessWorm = 50 --Radius of the shots
+
+function Alphabirth:handleHeadlessRoundWorm(entity)
+    if entity.FrameCount == 1 and math.random(5) == 1 then
+        entity:ToNPC():Morph(entity.Type, ENTITY_VARIANT_HEADLESS_ROUND_WORM, 0, 0)
+    end
+    if entity.Variant == ENTITY_VARIANT_HEADLESS_ROUND_WORM then
+
+        if entity:ToNPC().State == NpcState.STATE_JUMP then --for roundworms the jump state is going underground
+            Isaac.Spawn(EntityType.ENTITY_EFFECT, EffectVariant.CREEP_RED, 0, entity.Position, Vector(0,0), entity)
+        end
+
+        if entity:ToNPC().State == NpcState.STATE_ATTACK then
+            for i, e in ipairs(Isaac.GetRoomEntities()) do
+                if e.Type == EntityType.ENTITY_PROJECTILE and e.FrameCount == 1 and e.SpawnerType == EntityType.ENTITY_ROUND_WORM and e.SpawnerVariant == ENTITY_VARIANT_HEADLESS_ROUND_WORM then
+
+                    local projectileNumber = math.random(numberOfShotsHeadlessWorm.X, numberOfShotsHeadlessWorm.Y)
+
+                    for i = 1, projectileNumber do
+                        local spread = math.random(1, 359) + (i - 1)*math.random(1, 560)
+                        local projectiles = fireProjectiles(1, spread, 3, e.Variant, e.Position, Vector(math.random(-shotRadiusHeadlessWorm, shotRadiusHeadlessWorm), math.random(-shotRadiusHeadlessWorm, shotRadiusHeadlessWorm)))
+                    end
+                    e:Remove()
+                end
+            end
+        end
+    end
+end
+
+---------------------------------------
+-- Lobotomy logic
+---------------------------------------
+
+function Alphabirth:onGaperUpdate(entity)
+    if entity.FrameCount > 1 or math.random(1, 10) ~= 1 then
+        return
+    end
+    Isaac.Spawn(ENTITY_TYPE_LOBOTOMY, ENTITY_VARIANT_LOBOTOMY, 0, entity.Position, entity.Velocity, entity)
+    entity:Remove()
+end
+
+function Alphabirth:onLobotomyUpdate(lobotomy)
+    if lobotomy.Variant ~= ENTITY_VARIANT_LOBOTOMY then
+        return
+    end
+    local data = lobotomy:GetData()
+
+    if not data.initialized then
+        local sprite = lobotomy:GetSprite()
+        sprite:PlayOverlay("Head", true)
+        data.soundCountdown = 50
+        data.targetVel = Vector(0, 0)
+        data.died = false
+        data.initialized = true
+    end
+
+    if math.random(1, 10) == 1 then
+        data.targetVel = (Isaac.GetRandomPosition() - lobotomy.Position):Normalized()*3
+    end
+    lobotomy.Velocity = lobotomy.Velocity * 0.7 + data.targetVel * 0.3
+    lobotomy:AnimWalkFrame("WalkHori", "WalkVert", 0.1)
+    if data.soundCountdown < 0 then
+        lobotomy:PlaySound(SoundEffect.SOUND_ZOMBIE_WALKER_KID, 0.8, 0, false, 0.9+math.random()*0.1)
+        data.soundCountdown = math.random(40, 80)
+    end
+    data.soundCountdown = data.soundCountdown - 1
+    if lobotomy:IsDead() and not data.died then
+        -- using Game::Spawn instead of Isaac.Spawn so
+        -- that it never spawns the variant of the brain
+        local brain = Game():Spawn(32, 0, lobotomy.Position, Vector(0,0), lobotomy, 0, 1):ToNPC()
+
+        lobotomy:ClearEntityFlags(EntityFlag.FLAG_APPEAR)
+        brain.HitPoints = 8
+        brain.State = 0
+        brain:SetSize(10, Vector(1,1), 12)
+        brain.Scale = 0.9
+        data.died = true
     end
 end
 
@@ -2313,6 +2404,10 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onHostUpdate, 
 
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onEmbryoUpdate, EntityType.ENTITY_EMBRYO)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onZygoteUpdate, ENTITY_TYPE_ZYGOTE)
+
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.handleHeadlessRoundWorm, EntityType.ENTITY_ROUND_WORM)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onGaperUpdate, EntityType.ENTITY_GAPER)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onLobotomyUpdate, ENTITY_TYPE_LOBOTOMY)
 -------------------
 -- Mod Updates
 -------------------
