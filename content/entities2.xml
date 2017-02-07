@@ -32,8 +32,13 @@
         <gibs amount="4" blood="1" bone="0" eye="0" gut="1" large="0" />
         <preload-snd id="205" /> <!-- SOUND_GOOATTACH0 -->
     </entity>
+
+    <entity anm2path="enemies/animation_enemy_roundtrio.anm2" id="244" variant="200" name="Round Worm Trio" reroll="true" baseHP="15" stageHP="0" boss="0" champion="0" collisionDamage="1" collisionMass="100" collisionRadius="13" friction="1" numGridCollisionPoints="12" shadowSize="0" portrait="97">
+        <gibs amount="6" blood="1" bone="0" eye="1" gut="1" large="0" />
+        <preload-snd id="318" /> <!-- SOUND_WORM_SPIT -->
+    </entity>
   
-    <entity id="244" variant="200" name="Headless Round Worm" reroll="true" baseHP="14" stageHP="0" boss="0" champion="0" collisionDamage="1" collisionMass="100" collisionRadius="13" friction="1" numGridCollisionPoints="12" shadowSize="0" portrait="97" anm2path="enemies/animation_enemy_roundwormheadless.anm2">
+    <entity id="244" variant="201" name="Headless Round Worm" reroll="true" baseHP="14" stageHP="0" boss="0" champion="0" collisionDamage="1" collisionMass="100" collisionRadius="13" friction="1" numGridCollisionPoints="12" shadowSize="0" portrait="97" anm2path="enemies/animation_enemy_roundwormheadless.anm2">
         <gibs amount="6" blood="1" bone="0" eye="1" gut="1" large="0" />
         <preload-snd id="318" /> <!-- SOUND_WORM_SPIT -->
     </entity>

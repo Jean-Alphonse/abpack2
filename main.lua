@@ -45,6 +45,8 @@ local FLAG_QUILL_FEATHER_SHOT = 1 << 43
 local FLAG_HEMOPHILIA_APPLIED = 1 << 40
 local FLAG_QUILL_FEATHER_APLLIED = 1 << 41
 
+local FLAG_MORPH_TRIED = 1 << 44 --For entities with a nil FrameCount value
+
 ---------------------------------------
 -- Tear Flag Easy Access
 ---------------------------------------
@@ -276,11 +278,15 @@ local ENTITY_VARIANT_INFESTED_BABY = Isaac.GetEntityVariantByName("Infested Baby
 
 -- Enemies
 local ENTITY_VARIANT_BRIMSTONE_HOST = Isaac.GetEntityVariantByName("Brimstone Host")
+
 local ENTITY_TYPE_ZYGOTE = Isaac.GetEntityTypeByName("Zygote")
 local ENTITY_VARIANT_ZYGOTE = Isaac.GetEntityVariantByName("Zygote")
 local ENTITY_VARIANT_HEADLESS_ROUND_WORM = Isaac.GetEntityVariantByName("Headless Round Worm")
 local ENTITY_TYPE_LOBOTOMY = Isaac.GetEntityTypeByName("Lobotomy")
 local ENTITY_VARIANT_LOBOTOMY = Isaac.GetEntityVariantByName("Lobotomy")
+
+local ENTITY_TYPE_ROUND_TRIO = Isaac.GetEntityTypeByName("Round Worm Trio")
+local ENTITY_VARIANT_ROUND_TRIO = Isaac.GetEntityVariantByName("Round Worm Trio")
 
 -- Effects
 local ENTITY_VARIANT_ALASTORS_FLAME = Isaac.GetEntityVariantByName("Alastor's Flame")
@@ -1457,6 +1463,36 @@ end
 ---- ENTITY LOGIC (Familiars, Enemies, Bosses)
 -------------------------------------------------------------------------------
 ---------------------------------------
+-- Round Worm Trio Logic
+---------------------------------------
+function Alphabirth:onRoundWormUpdate(worm)
+    -- Handle Round Worm Trio Logic
+    if worm.Variant == ENTITY_VARIANT_ROUND_TRIO then -- It's a Trio Worm!
+        local worm_sprite = worm:GetSprite()
+
+        if worm_sprite:GetFrame() == 38 then -- Attack Frame
+            for _, entity in ipairs(Isaac.GetRoomEntities()) do
+                if entity.Type == EntityType.ENTITY_PROJECTILE and
+                        entity.Variant == 0 and
+                        entity.SpawnerType == EntityType.ENTITY_ROUND_WORM and
+                        entity.SpawnerVariant == ENTITY_VARIANT_ROUND_TRIO then
+
+                    local target = worm:GetPlayerTarget()
+                    local projectiles = fireProjectiles(3, 15, 8, entity.Variant, entity.Position, target.Position, worm)
+                    entity:Remove()
+                end
+            end
+        end
+        -- Handle Round Worm Trio Spawning
+    elseif not worm:HasEntityFlags(FLAG_MORPH_TRIED) then
+        if math.random(5) == 1 then
+            worm:ToNPC():Morph(worm.Type, ENTITY_VARIANT_ROUND_TRIO, 0, 0)
+        end
+        worm:AddEntityFlags(FLAG_MORPH_TRIED)
+    end
+end
+
+---------------------------------------
 -- Host Logic
 ---------------------------------------
 function Alphabirth:onHostUpdate(host)
@@ -2405,6 +2441,7 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onHostUpdate, 
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onEmbryoUpdate, EntityType.ENTITY_EMBRYO)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onZygoteUpdate, ENTITY_TYPE_ZYGOTE)
 
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onRoundWormUpdate, EntityType.ENTITY_ROUND_WORM)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.handleHeadlessRoundWorm, EntityType.ENTITY_ROUND_WORM)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onGaperUpdate, EntityType.ENTITY_GAPER)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onLobotomyUpdate, ENTITY_TYPE_LOBOTOMY)
