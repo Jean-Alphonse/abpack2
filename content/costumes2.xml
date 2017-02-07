@@ -12,6 +12,7 @@
     <costume anm2path="accessories/animation_costume_techalpha.anm2" priority="98" type="none" />
     <costume anm2path="accessories/animation_costume_quillfeather.anm2" priority="98" type="none" />
     <costume anm2path="accessories/animation_costume_abyss.anm2" priority="98" type="none" />
+    <costume anm2path="accessories/animation_costume_hoarder.anm2" priority="98" type="none" />
 
     <costume anm2path="players/animation_character_endorbody.anm2" priority="200" isFlying="true" type="none" />
     <costume anm2path="players/animation_character_endorhead.anm2" priority="200" type="none" />
