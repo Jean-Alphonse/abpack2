@@ -17,10 +17,10 @@
     <passive gfx="collectible_brunch.png" cache="tearcolor" name="Brunch" description="Some kind of unholy amalgamate...!"/>
     <passive gfx="collectible_birthcontrol.png" cache="all" name="Birth Control" description="Dmg Up + Abstinence"/>
     <passive gfx="collectible_quillfeather.png" cache="tearcolor" name="Quill Feather" description="Inksplosive Tears"/>
-    <passive gfx="collectible_judasfez.png" cache="damage" devilprice="1" name="Judas' Fez" description="Become the Betrayer"/>
+    <passive gfx="collectible_judasfez.png" cache="damage tearcolor" devilprice="1" name="Judas' Fez" description="Become the Betrayer"/>
     <passive gfx="collectible_hotcoals.png" cache="damage tearcolor" name="Hot Coals" description="Fire Feet! Kinetic Dmg Up"/>
     <passive gfx="collectible_abyss.png" cache="tearcolor" name="Abyss" description="A Call Below"/>
-    <passive gfx="collectible_abyss.png" name="Hoarder" description="Mind if I roll need?"/>
+    <passive gfx="collectible_hoarder.png" name="Hoarder" description="Mind if I roll need?"/>
 
     <familiar gfx="collectible_blooderfly.png" cache="familiars" name="Blooderfly" description="Bloody Friend" />
     <familiar gfx="collectible_spiriteye.png" cache="familiars" name="Spirit Eye" description="Spirit Friend" />
