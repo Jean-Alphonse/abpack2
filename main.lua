@@ -275,8 +275,12 @@ local ENTITY_VARIANT_INFESTED_BABY = Isaac.GetEntityVariantByName("Infested Baby
 
 -- Enemies
 local ENTITY_VARIANT_BRIMSTONE_HOST = Isaac.GetEntityVariantByName("Brimstone Host")
+
 local ENTITY_TYPE_ZYGOTE = Isaac.GetEntityTypeByName("Zygote")
 local ENTITY_VARIANT_ZYGOTE = Isaac.GetEntityVariantByName("Zygote")
+
+local ENTITY_TYPE_ROUND_TRIO = Isaac.GetEntityTypeByName("Round Worm Trio")
+local ENTITY_VARIANT_ROUND_TRIO = Isaac.GetEntityVariantByName("Round Worm Trio")
 
 -- Effects
 local ENTITY_VARIANT_ALASTORS_FLAME = Isaac.GetEntityVariantByName("Alastor's Flame")
@@ -1452,6 +1456,31 @@ end
 ---- ENTITY LOGIC (Familiars, Enemies, Bosses)
 -------------------------------------------------------------------------------
 ---------------------------------------
+-- Round Worm Trio Logic
+---------------------------------------
+function Alphabirth:onRoundWormUpdate(worm)
+    if worm.Variant >= 200 then
+        local target = worm:GetPlayerTarget()
+        local worm_sprite = worm:GetSprite()
+
+        if worm_sprite:GetFrame() == 38 then -- Attack Frame
+
+        end
+    elseif worm.FrameCount() == 1 then
+        local spawn_roll = math.random(1,5)
+        if spawn_roll == 1 then
+            Isaac.Spawn(Entitytype.ENTITY_ROUND_WORM,
+                ENTITY_VARIANT_ROUND_TRIO,
+                0,
+                worm.Position,
+                worm.Velocity,
+                worm)
+            worm:Remove()
+        end
+    end
+end
+
+---------------------------------------
 -- Host Logic
 ---------------------------------------
 function Alphabirth:onHostUpdate(host)
@@ -1987,6 +2016,11 @@ function Alphabirth:modUpdate()
         blacklightUses = 0
         darkenCooldown = 0
 
+        --debug
+        Isaac.Spawn(ENTITY_TYPE_ROUND_TRIO, ENTITY_VARIANT_ROUND_TRIO, 0,
+            Isaac.GetRandomPosition(), Vector(0,0), nil)
+
+
         if player_type == endor_type then
             player:AddNullCostume(ENDOR_BODY_COSTUME)
             player:AddNullCostume(ENDOR_HEAD_COSTUME)
@@ -2313,6 +2347,8 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onHostUpdate, 
 
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onEmbryoUpdate, EntityType.ENTITY_EMBRYO)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onZygoteUpdate, ENTITY_TYPE_ZYGOTE)
+
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onRoundWormUpdate, EntityType.ENTITY_ROUND_WORM)
 -------------------
 -- Mod Updates
 -------------------
