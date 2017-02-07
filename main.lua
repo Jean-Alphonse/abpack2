@@ -44,6 +44,8 @@ local FLAG_QUILL_FEATHER_SHOT = 1 << 43
 local FLAG_HEMOPHILIA_APPLIED = 1 << 40
 local FLAG_QUILL_FEATHER_APLLIED = 1 << 41
 
+local FLAG_MORPH_TRIED = 1 << 44 --For entities with a nil FrameCount value
+
 ---------------------------------------
 -- Tear Flag Easy Access
 ---------------------------------------
@@ -1459,24 +1461,29 @@ end
 -- Round Worm Trio Logic
 ---------------------------------------
 function Alphabirth:onRoundWormUpdate(worm)
-    if worm.Variant >= 200 then
-        local target = worm:GetPlayerTarget()
+    -- Handle Round Worm Trio Logic
+    if worm.Variant == ENTITY_VARIANT_ROUND_TRIO then -- It's a Trio Worm!
         local worm_sprite = worm:GetSprite()
 
         if worm_sprite:GetFrame() == 38 then -- Attack Frame
+            for _, entity in ipairs(Isaac.GetRoomEntities()) do
+                if entity.Type == EntityType.ENTITY_PROJECTILE and
+                        entity.Variant == 0 and
+                        entity.SpawnerType == EntityType.ENTITY_ROUND_WORM and
+                        entity.SpawnerVariant == ENTITY_VARIANT_ROUND_TRIO then
 
+                    local target = worm:GetPlayerTarget()
+                    local projectiles = fireProjectiles(3, 15, 8, entity.Variant, entity.Position, target.Position, worm)
+                    entity:Remove()
+                end
+            end
         end
-    elseif worm.FrameCount() == 1 then
-        local spawn_roll = math.random(1,5)
-        if spawn_roll == 1 then
-            Isaac.Spawn(Entitytype.ENTITY_ROUND_WORM,
-                ENTITY_VARIANT_ROUND_TRIO,
-                0,
-                worm.Position,
-                worm.Velocity,
-                worm)
-            worm:Remove()
+        -- Handle Round Worm Trio Spawning
+    elseif not worm:HasEntityFlags(FLAG_MORPH_TRIED) then
+        if math.random(5) == 1 then
+            worm:ToNPC():Morph(worm.Type, ENTITY_VARIANT_ROUND_TRIO, 0, 0)
         end
+        worm:AddEntityFlags(FLAG_MORPH_TRIED)
     end
 end
 
@@ -2015,11 +2022,6 @@ function Alphabirth:modUpdate()
         chalice_souls = 0
         blacklightUses = 0
         darkenCooldown = 0
-
-        --debug
-        Isaac.Spawn(ENTITY_TYPE_ROUND_TRIO, ENTITY_VARIANT_ROUND_TRIO, 0,
-            Isaac.GetRandomPosition(), Vector(0,0), nil)
-
 
         if player_type == endor_type then
             player:AddNullCostume(ENDOR_BODY_COSTUME)
