@@ -48,6 +48,10 @@
         <preload-snd id="165" /> <!-- SOUND_ZOMBIE_WALKER_KID -->
     </entity>
 
+    <entity id="255" anm2path="enemies/animation_enemy_4eyednightcrawler.anm2" reroll="true" variant="1" name="4 Eyed Crawler" baseHP="35" stageHP="0" boss="0" champion="0" collisionDamage="1" collisionMass="100" collisionRadius="13" friction="1" numGridCollisionPoints="12" shadowSize="0" portrait="97">
+        <gibs amount="6" blood="1" bone="0" eye="1" gut="1" large="0" />
+    </entity>
+
     <entity id="289" variant="222" name="Dip Ulcer" reroll="true" baseHP="10" stageHP="0" boss="0" champion="0" collisionDamage="1" collisionMass="100" collisionRadius="13" friction="1" numGridCollisionPoints="12" shadowSize="0"  anm2path="enemies/animation_enemy_dipulcer.anm2">
         <gibs amount="6" blood="1" bone="0" eye="1" gut="1" large="0" />
     </entity>

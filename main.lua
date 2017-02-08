@@ -288,6 +288,9 @@ local ENTITY_VARIANT_LOBOTOMY = Isaac.GetEntityVariantByName("Lobotomy")
 local ENTITY_TYPE_ROUND_TRIO = Isaac.GetEntityTypeByName("Round Worm Trio")
 local ENTITY_VARIANT_ROUND_TRIO = Isaac.GetEntityVariantByName("Round Worm Trio")
 
+local ENTITY_TYPE_FOUR_EYE = Isaac.GetEntityTypeByName("4 Eyed Crawler")
+local ENTITY_VARIANT_FOUR_EYE = Isaac.GetEntityVariantByName("4 Eyed Crawler")
+
 local ENTITY_TYPE_DIP_ULCER = Isaac.GetEntityTypeByName("Dip Ulcer")
 local ENTITY_VARIANT_DIP_ULCER = Isaac.GetEntityVariantByName("Dip Ulcer")
 
@@ -1466,6 +1469,46 @@ end
 ---- ENTITY LOGIC (Familiars, Enemies, Bosses)
 -------------------------------------------------------------------------------
 ---------------------------------------
+-- 4 Eyed Crawler Logic
+---------------------------------------
+function Alphabirth:onCrawlerUpdate(night)
+    if night.Variant == ENTITY_VARIANT_FOUR_EYE then
+        local sprite = night:GetSprite()
+
+        if sprite:GetFrame() == 38 then -- Attack Frame
+            for _, entity in ipairs(Isaac.GetRoomEntities()) do
+                if entity.Type == EntityType.ENTITY_PROJECTILE and
+                        entity.Variant == 0 and
+                        entity.SpawnerType == ENTITY_TYPE_FOUR_EYE and
+                        entity.SpawnerVariant == ENTITY_VARIANT_FOUR_EYE then
+
+                    night:GetData()["TargetPos"] = night:GetPlayerTarget().Position
+                    night:GetData()["TearVariant"] = entity.Variant
+                    night:GetData()["CanShoot"] = true
+                    night:GetData()["ShotCooldown"] = 0
+
+                    entity:Remove()
+                end
+            end
+        end
+
+        if night:GetData()["CanShoot"] then
+            if night:GetData()["ShotCooldown"] >= 10 then
+                night:GetData()["CanShoot"] = false
+            elseif night:GetData()["ShotCooldown"] % 3 == 0 then
+                fireProjectiles(1, 0, 12, night:GetData()["TearVariant"], night.Position, night:GetData()["TargetPos"], night)
+            end
+        end
+        night:GetData()["ShotCooldown"] = night:GetData()["ShotCooldown"] + 1
+    elseif not night:HasEntityFlags(FLAG_MORPH_TRIED) then
+        if math.random(5) == 1 then
+            night:ToNPC():Morph(night.Type, ENTITY_VARIANT_FOUR_EYE, 0, 0)
+        end
+        night:AddEntityFlags(FLAG_MORPH_TRIED)
+    end
+end
+
+---------------------------------------
 -- Dip Ulcer Logic
 ---------------------------------------
 function Alphabirth:onUlcerUpdate(ulcer)
@@ -2142,6 +2185,8 @@ function Alphabirth:modUpdate()
         blacklightUses = 0
         darkenCooldown = 0
 
+        Isaac.Spawn(ENTITY_TYPE_FOUR_EYE, ENTITY_VARIANT_FOUR_EYE, 0, Isaac.GetRandomPosition(), Vector(0,0), nil)
+
         if player_type == endor_type then
             player:AddNullCostume(ENDOR_BODY_COSTUME)
             player:AddNullCostume(ENDOR_HEAD_COSTUME)
@@ -2472,6 +2517,7 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onZygoteUpdate
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onRoundWormUpdate, EntityType.ENTITY_ROUND_WORM)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.handleHeadlessRoundWorm, EntityType.ENTITY_ROUND_WORM)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onGaperUpdate, EntityType.ENTITY_GAPER)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onCrawlerUpdate, EntityType.ENTITY_NIGHT_CRAWLER)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onLobotomyUpdate, ENTITY_TYPE_LOBOTOMY)
 
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onUlcerUpdate, EntityType.ENTITY_ULCER)
