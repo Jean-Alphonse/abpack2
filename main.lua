@@ -302,6 +302,9 @@ local ENTITY_VARIANT_FOUR_EYE = Isaac.GetEntityVariantByName("4 Eyed Crawler")
 local ENTITY_TYPE_DIP_ULCER = Isaac.GetEntityTypeByName("Dip Ulcer")
 local ENTITY_VARIANT_DIP_ULCER = Isaac.GetEntityVariantByName("Dip Ulcer")
 
+local ENTITY_TYPE_LEECH_CREEP = Isaac.GetEntityTypeByName("Leech Creep")
+local ENTITY_VARIANT_LEECH_CREEP = Isaac.GetEntityVariantByName("Leech Creep")
+
 -- Effects
 local ENTITY_VARIANT_ALASTORS_FLAME = Isaac.GetEntityVariantByName("Alastor's Flame")
 local ENTITY_VARIANT_CHALICE_OF_BLOOD = Isaac.GetEntityVariantByName("Chalice of Blood")
@@ -1479,6 +1482,37 @@ end
 ---- ENTITY LOGIC (Familiars, Enemies, Bosses)
 -------------------------------------------------------------------------------
 ---------------------------------------
+-- Leech Creep Logic
+---------------------------------------
+function Alphabirth:onWallCreepUpdate(creep)
+    if creep.Variant == ENTITY_VARIANT_LEECH_CREEP then
+        if creep.State == NpcState.STATE_ATTACK then
+            for _, entity in ipairs(Isaac.GetRoomEntities()) do
+                if entity.Type == EntityType.ENTITY_PROJECTILE and
+                    entity.Variant == 0 and
+                    entity.SpawnerType == ENTITY_TYPE_LEECH_CREEP and
+                    entity.SpawnerVariant == ENTITY_VARIANT_LEECH_CREEP then
+
+                    creep:GetData()["SpawnFly"] = true
+                    creep:GetData()["SpawnPos"] = entity.Position
+                    creep:GetData()["SpawnVel"] = entity.Velocity
+                    entity:Remove()
+                end
+            end
+        end
+        if creep:GetData()["SpawnFly"] and creep:GetSprite():GetFrame() == 10 then
+            Isaac.Spawn(EntityType.ENTITY_DART_FLY, 0, 0, creep:GetData()["SpawnPos"], creep:GetData()["SpawnVel"], creep)
+            creep:GetData()["SpawnFly"] = false
+        end
+    elseif not creep:HasEntityFlags(FLAG_MORPH_TRIED) then
+        if math.random(7) == 1 then
+            creep:ToNPC():Morph(creep.Type, ENTITY_VARIANT_LEECH_CREEP, 0, 0)
+        end
+        creep:AddEntityFlags(FLAG_MORPH_TRIED)
+    end
+end
+
+---------------------------------------
 -- 4 Eyed Crawler Logic
 ---------------------------------------
 function Alphabirth:onCrawlerUpdate(night)
@@ -2195,8 +2229,6 @@ function Alphabirth:modUpdate()
         blacklightUses = 0
         darkenCooldown = 0
 
-        -- Isaac.Spawn(ENTITY_TYPE_FOUR_EYE, ENTITY_VARIANT_FOUR_EYE, 0, Isaac.GetRandomPosition(), Vector(0,0), nil)
-
         if player_type == endor_type then
             player:AddNullCostume(ENDOR_BODY_COSTUME)
             player:AddNullCostume(ENDOR_HEAD_COSTUME)
@@ -2531,6 +2563,8 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onCrawlerUpdat
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onLobotomyUpdate, ENTITY_TYPE_LOBOTOMY)
 
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onUlcerUpdate, EntityType.ENTITY_ULCER)
+
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onWallCreepUpdate, EntityType.ENTITY_BLIND_CREEP)
 -------------------
 -- Mod Updates
 -------------------

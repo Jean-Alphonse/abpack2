@@ -56,4 +56,8 @@
         <gibs amount="6" blood="1" bone="0" eye="1" gut="1" large="0" />
     </entity>
 
+    <entity id="242" variant="223" name="Leech Creep" baseHP="10" stageHP="0" boss="0" champion="0" collisionDamage="1" collisionMass="14" collisionRadius="13" friction="1" numGridCollisionPoints="12" shadowSize="0" portrait="95" anm2path="enemies/animation_enemy_leechcreep.anm2">
+        <gibs amount="4" blood="1" bone="0" eye="0" gut="1" large="0" />
+    </entity>
+
 </entities>
