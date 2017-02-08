@@ -291,6 +291,9 @@ local ENTITY_VARIANT_ROUND_TRIO = Isaac.GetEntityVariantByName("Round Worm Trio"
 local ENTITY_TYPE_FOUR_EYE = Isaac.GetEntityTypeByName("4 Eyed Crawler")
 local ENTITY_VARIANT_FOUR_EYE = Isaac.GetEntityVariantByName("4 Eyed Crawler")
 
+local ENTITY_TYPE_DIP_ULCER = Isaac.GetEntityTypeByName("Dip Ulcer")
+local ENTITY_VARIANT_DIP_ULCER = Isaac.GetEntityVariantByName("Dip Ulcer")
+
 -- Effects
 local ENTITY_VARIANT_ALASTORS_FLAME = Isaac.GetEntityVariantByName("Alastor's Flame")
 local ENTITY_VARIANT_CHALICE_OF_BLOOD = Isaac.GetEntityVariantByName("Chalice of Blood")
@@ -1504,6 +1507,32 @@ function Alphabirth:onCrawlerUpdate(night)
         night:AddEntityFlags(FLAG_MORPH_TRIED)
     end
 end
+
+---------------------------------------
+-- Dip Ulcer Logic
+---------------------------------------
+function Alphabirth:onUlcerUpdate(ulcer)
+    if ulcer.Variant == ENTITY_VARIANT_DIP_ULCER then
+        local ulcer_sprite = ulcer:GetSprite() -- 42
+
+        if ulcer_sprite:GetFrame() == 42 then
+            for _, entity in ipairs(Isaac.GetRoomEntities()) do
+                if entity.Type == EntityType.ENTITY_DART_FLY and
+                        entity.SpawnerType == EntityType.ENTITY_ULCER and
+                        entity.SpawnerVariant == ENTITY_VARIANT_DIP_ULCER then
+                    local type = math.random(0,1)
+                    entity:ToNPC():Morph(EntityType.ENTITY_DIP, type, 0, 0)
+                end
+            end
+        end
+    elseif not ulcer:HasEntityFlags(FLAG_MORPH_TRIED) then
+        if math.random(1,4) == 1 then
+            ulcer:ToNPC():Morph(ulcer.Type, ENTITY_VARIANT_DIP_ULCER, 0, 0)
+        end
+        ulcer:AddEntityFlags(FLAG_MORPH_TRIED)
+    end
+end
+
 ---------------------------------------
 -- Round Worm Trio Logic
 ---------------------------------------
@@ -2491,6 +2520,7 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onGaperUpdate,
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onCrawlerUpdate, EntityType.ENTITY_NIGHT_CRAWLER)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onLobotomyUpdate, ENTITY_TYPE_LOBOTOMY)
 
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onUlcerUpdate, EntityType.ENTITY_ULCER)
 -------------------
 -- Mod Updates
 -------------------
