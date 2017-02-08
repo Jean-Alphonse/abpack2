@@ -288,6 +288,9 @@ local ENTITY_VARIANT_LOBOTOMY = Isaac.GetEntityVariantByName("Lobotomy")
 local ENTITY_TYPE_ROUND_TRIO = Isaac.GetEntityTypeByName("Round Worm Trio")
 local ENTITY_VARIANT_ROUND_TRIO = Isaac.GetEntityVariantByName("Round Worm Trio")
 
+local ENTITY_TYPE_FOUR_EYE = Isaac.GetEntityTypeByName("4 Eyed Crawler")
+local ENTITY_VARIANT_FOUR_EYE = Isaac.GetEntityVariantByName("4 Eyed Crawler")
+
 -- Effects
 local ENTITY_VARIANT_ALASTORS_FLAME = Isaac.GetEntityVariantByName("Alastor's Flame")
 local ENTITY_VARIANT_CHALICE_OF_BLOOD = Isaac.GetEntityVariantByName("Chalice of Blood")
@@ -1463,32 +1466,86 @@ end
 ---- ENTITY LOGIC (Familiars, Enemies, Bosses)
 -------------------------------------------------------------------------------
 ---------------------------------------
--- Round Worm Trio Logic
+-- 4 Eyed Crawler Logic
 ---------------------------------------
-function Alphabirth:onRoundWormUpdate(worm)
-    -- Handle Round Worm Trio Logic
-    if worm.Variant == ENTITY_VARIANT_ROUND_TRIO then -- It's a Trio Worm!
-        local worm_sprite = worm:GetSprite()
+local can_shoot = false
+local frames_passed = 0
+function Alphabirth:onCrawlerUpdate(night)
+    local target = night:GetPlayerTarget()
+    local shot_position = Vector(0,0)
 
-        if worm_sprite:GetFrame() == 38 then -- Attack Frame
+    if night.Variant == ENTITY_VARIANT_FOUR_EYE then
+        local sprite = night:GetSprite()
+
+        if sprite:GetFrame() == 38 then -- Attack Frame
             for _, entity in ipairs(Isaac.GetRoomEntities()) do
                 if entity.Type == EntityType.ENTITY_PROJECTILE and
                         entity.Variant == 0 and
-                        entity.SpawnerType == EntityType.ENTITY_ROUND_WORM and
-                        entity.SpawnerVariant == ENTITY_VARIANT_ROUND_TRIO then
+                        entity.SpawnerType == ENTITY_TYPE_FOUR_EYE and
+                        entity.SpawnerVariant == ENTITY_VARIANT_FOUR_EYE then
 
-                    local target = worm:GetPlayerTarget()
-                    local projectiles = fireProjectiles(3, 15, 8, entity.Variant, entity.Position, target.Position, worm)
+                    night:GetData()[0] = night:GetPlayerTarget().Position
+                    night:GetData()[1] = entity.Variant
+
+                    can_shoot = true
                     entity:Remove()
                 end
             end
         end
-        -- Handle Round Worm Trio Spawning
-    elseif not worm:HasEntityFlags(FLAG_MORPH_TRIED) then
-        if math.random(5) == 1 then
-            worm:ToNPC():Morph(worm.Type, ENTITY_VARIANT_ROUND_TRIO, 0, 0)
+
+        if can_shoot then
+            if frames_passed % 15 == 0 then
+                can_shoot = false
+                frames_passed = 0
+            elseif frames_passed % 3 == 0 then
+                fireProjectiles(1, 0, 12, night:GetData()[1], night.Position, night:GetData()[0], night)
+            end
+            frames_passed = frames_passed + 1
         end
-        worm:AddEntityFlags(FLAG_MORPH_TRIED)
+
+    elseif not night:HasEntityFlags(FLAG_MORPH_TRIED) then
+
+    end
+end
+---------------------------------------
+-- Round Worm Trio Logic
+---------------------------------------
+local can_shoot = false
+local shot_cooldown = 0
+function Alphabirth:onCrawlerUpdate(night)
+    if night.Variant == ENTITY_VARIANT_FOUR_EYE then
+        local sprite = night:GetSprite()
+
+        if sprite:GetFrame() == 38 then -- Attack Frame
+            for _, entity in ipairs(Isaac.GetRoomEntities()) do
+                if entity.Type == EntityType.ENTITY_PROJECTILE and
+                        entity.Variant == 0 and
+                        entity.SpawnerType == ENTITY_TYPE_FOUR_EYE and
+                        entity.SpawnerVariant == ENTITY_VARIANT_FOUR_EYE then
+
+                    night:GetData()[0] = night:GetPlayerTarget().Position
+                    night:GetData()[1] = entity.Variant
+
+                    can_shoot = true
+                    shot_cooldown = 0
+                    entity:Remove()
+                end
+            end
+        end
+
+        if can_shoot then
+            if shot_cooldown >= 10 then
+                can_shoot = false
+            elseif shot_cooldown % 3 == 0 then
+                fireProjectiles(1, 0, 12, night:GetData()[1], night.Position, night:GetData()[0], night)
+            end
+        end
+        shot_cooldown = shot_cooldown + 1
+    elseif not night:HasEntityFlags(FLAG_MORPH_TRIED) then
+        if math.random(5) == 1 then
+            night:ToNPC():Morph(night.Type, ENTITY_VARIANT_FOUR_EYE, 0, 0)
+        end
+        night:AddEntityFlags(FLAG_MORPH_TRIED)
     end
 end
 
@@ -2113,6 +2170,7 @@ function Alphabirth:modUpdate()
         chalice_souls = 0
         blacklightUses = 0
         darkenCooldown = 0
+    
 
         if player_type == endor_type then
             player:AddNullCostume(ENDOR_BODY_COSTUME)
@@ -2444,7 +2502,9 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onZygoteUpdate
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onRoundWormUpdate, EntityType.ENTITY_ROUND_WORM)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.handleHeadlessRoundWorm, EntityType.ENTITY_ROUND_WORM)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onGaperUpdate, EntityType.ENTITY_GAPER)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onCrawlerUpdate, EntityType.ENTITY_NIGHT_CRAWLER)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onLobotomyUpdate, ENTITY_TYPE_LOBOTOMY)
+
 -------------------
 -- Mod Updates
 -------------------
