@@ -1468,8 +1468,6 @@ end
 ---------------------------------------
 -- 4 Eyed Crawler Logic
 ---------------------------------------
-local can_shoot = false
-local shot_cooldown = 0
 function Alphabirth:onCrawlerUpdate(night)
     if night.Variant == ENTITY_VARIANT_FOUR_EYE then
         local sprite = night:GetSprite()
@@ -1481,24 +1479,24 @@ function Alphabirth:onCrawlerUpdate(night)
                         entity.SpawnerType == ENTITY_TYPE_FOUR_EYE and
                         entity.SpawnerVariant == ENTITY_VARIANT_FOUR_EYE then
 
-                    night:GetData()[0] = night:GetPlayerTarget().Position
-                    night:GetData()[1] = entity.Variant
+                    night:GetData()["TargetPos"] = night:GetPlayerTarget().Position
+                    night:GetData()["TearVariant"] = entity.Variant
+                    night:GetData()["CanShoot"] = true
+                    night:GetData()["ShotCooldown"] = 0
 
-                    can_shoot = true
-                    shot_cooldown = 0
                     entity:Remove()
                 end
             end
         end
 
-        if can_shoot then
-            if shot_cooldown >= 10 then
-                can_shoot = false
-            elseif shot_cooldown % 3 == 0 then
-                fireProjectiles(1, 0, 12, night:GetData()[1], night.Position, night:GetData()[0], night)
+        if night:GetData()["CanShoot"] then
+            if night:GetData()["ShotCooldown"] >= 10 then
+                night:GetData()["CanShoot"] = false
+            elseif night:GetData()["ShotCooldown"] % 3 == 0 then
+                fireProjectiles(1, 0, 12, night:GetData()["TearVariant"], night.Position, night:GetData()["TargetPos"], night)
             end
         end
-        shot_cooldown = shot_cooldown + 1
+        night:GetData()["ShotCooldown"] = night:GetData()["ShotCooldown"] + 1
     elseif not night:HasEntityFlags(FLAG_MORPH_TRIED) then
         if math.random(5) == 1 then
             night:ToNPC():Morph(night.Type, ENTITY_VARIANT_FOUR_EYE, 0, 0)
