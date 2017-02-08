@@ -11,7 +11,7 @@
 
     <passive gfx="collectible_crackedrock.png" cache="tearcolor" devilprice="1" name="Cracked Rock" description="Shockwave Shots"/>
     <passive gfx="collectible_hemophilia.png" cache="tearcolor" name="Hemophilia" description="What a bloody mess..." />
-    <passive gfx="collectible_gloomskull.png" cache="damage" name="Gloom Skull" devilprice="1" description="Damage up + Evil Up + You Feel Scared" />
+    <passive gfx="collectible_gloomskull.png" cache="damage tearcolor" name="Gloom Skull" devilprice="1" description="Damage up + Evil Up + You Feel Scared" />
     <passive gfx="collectible_techalpha.png" cache="tearcolor" name="Tech Alpha" description="It's still being tested"/>
     <passive gfx="collectible_aimbot.png" cache="tearcolor" name="Aimbot" description="H4x Sh0t"/>
     <passive gfx="collectible_brunch.png" cache="tearcolor" name="Brunch" description="Some kind of unholy amalgamate...!"/>
@@ -20,7 +20,7 @@
     <passive gfx="collectible_judasfez.png" cache="damage tearcolor" devilprice="1" name="Judas' Fez" description="Become the Betrayer"/>
     <passive gfx="collectible_hotcoals.png" cache="damage tearcolor" name="Hot Coals" description="Fire Feet! Kinetic Dmg Up"/>
     <passive gfx="collectible_abyss.png" cache="tearcolor" name="Abyss" description="A Call Below"/>
-    <passive gfx="collectible_hoarder.png" name="Hoarder" description="Mind if I roll need?"/>
+    <passive gfx="collectible_hoarder.png" cache="tearcolor" name="Hoarder" description="Mind if I roll need?"/>
 
     <familiar gfx="collectible_blooderfly.png" cache="familiars" name="Blooderfly" description="Bloody Friend" />
     <familiar gfx="collectible_spiriteye.png" cache="familiars" name="Spirit Eye" description="Spirit Friend" />

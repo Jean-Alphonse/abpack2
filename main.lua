@@ -234,6 +234,14 @@ local function fireProjectiles(numProjectiles, projectileSpreadDegrees, shotSpee
     return projectiles
 end
 
+function hasbit(x, p)
+    return (x & p)
+end
+
+function setbit(x, p)
+    return x | p
+end
+
 ---------------------------------------
 -- Active Declaration
 ---------------------------------------
@@ -1120,7 +1128,7 @@ end
 local function applyHemophiliaCache(pl, fl)
     if pl:HasCollectible(PASSIVE_HEMOPHILIA) and fl == CacheFlag.CACHE_TEARCOLOR then
         pl:AddNullCostume(HEMOPHILIA_COSTUME)
-        pl.TearColor = Color(0.6,0,0,1,0,0,0)
+        pl.TearColor = Color(35,1,1,1,0,0,0)
     end
 end
 
@@ -1140,8 +1148,9 @@ local function applyGloomSkullCache(player, cache_flag)
         player.Damage = player.Damage + 1.5
         Game():GetLevel():AddCurse(Isaac.GetCurseIdByName("Curse of Darkness"), false)
 
-        player:AddNullCostume(GLOOM_SKULL_COSTUME)
         maxOutDevilDeal()
+    elseif cache_flag == CacheFlag.CACHE_TEARCOLOR and player:HasCollectible(PASSIVE_GLOOM_SKULL) then
+        player:AddNullCostume(GLOOM_SKULL_COSTUME)
     end
 end
 
@@ -1375,7 +1384,7 @@ local function handleQuillFeather()
             e:AddEntityFlags(FLAG_QUILL_FEATHER_SHOT)
             local tear_entity = e:ToTear()
             tear_entity:ChangeVariant(TearVariant.CUPID_BLUE)
-            tear_entity.TearFlags = tear_entity.TearFlags + TEAR_FLAGS.FLAG_PIERCING
+            tear_entity.TearFlags = setbit(tear_entity.TearFlags, TEAR_FLAGS.FLAG_PIERCING)
         end
     end
 end
@@ -1397,7 +1406,7 @@ function Alphabirth:triggerQuillFeather(dmg_target, dmg_amount, dmg_flags, dmg_s
 
             tears[i] = player:FireTear(dmg_source.Position, shot_vector, false, false, true)
             tears[i].Height = -20
-            tears[i].TearFlags = tears[i].TearFlags + TEAR_FLAGS.FLAG_PIERCING
+            tears[i].TearFlags = setbit(tears[i].TearFlags, TEAR_FLAGS.FLAG_PIERCING)
             tears[i]:ChangeVariant(TearVariant.CUPID_BLUE)
             tears[i].Color = Color(0,0,0,1,0,0,0)
             tears[i]:AddEntityFlags(FLAG_QUILL_FEATHER_APLLIED)
@@ -1424,8 +1433,9 @@ end
 
 local function applyHoarderCache(player, cache_flag)
     if player:HasCollectible(PASSIVE_HOARDER) and cache_flag == CacheFlag.CACHE_DAMAGE then
-        player:AddNullCostume(HOARDER_COSTUME)
         player.Damage = player.Damage + hoarderDamage
+    elseif player:HasCollectible(PASSIVE_HOARDER) and cache_flag == CacheFlag.CACHE_TEARCOLOR then
+        player:AddNullCostume(HOARDER_COSTUME)
     end
 end
 
@@ -1482,7 +1492,7 @@ function Alphabirth:onCrawlerUpdate(night)
                         entity.SpawnerType == ENTITY_TYPE_FOUR_EYE and
                         entity.SpawnerVariant == ENTITY_VARIANT_FOUR_EYE then
 
-                    night:GetData()["TargetPos"] = night:GetPlayerTarget().Position
+                    -- night:GetData()["TargetPos"] = night:GetPlayerTarget().Position
                     night:GetData()["TearVariant"] = entity.Variant
                     night:GetData()["CanShoot"] = true
                     night:GetData()["ShotCooldown"] = 0
@@ -1493,10 +1503,10 @@ function Alphabirth:onCrawlerUpdate(night)
         end
 
         if night:GetData()["CanShoot"] then
-            if night:GetData()["ShotCooldown"] >= 10 then
+            if night:GetData()["ShotCooldown"] >= 8 then
                 night:GetData()["CanShoot"] = false
-            elseif night:GetData()["ShotCooldown"] % 3 == 0 then
-                fireProjectiles(1, 0, 12, night:GetData()["TearVariant"], night.Position, night:GetData()["TargetPos"], night)
+            elseif night:GetData()["ShotCooldown"] % 2 == 0 then
+                fireProjectiles(1, 0, 12, night:GetData()["TearVariant"], night.Position, night:GetPlayerTarget().Position, night)
             end
         end
         night:GetData()["ShotCooldown"] = night:GetData()["ShotCooldown"] + 1
@@ -1941,7 +1951,7 @@ function Alphabirth:onSpiritEyeUpdate(spirit_eye)
         spirit_eye:MoveDiagonally(0.44)
         if Isaac.GetFrameCount() % 44 == 0 then
             local laser = player:FireTechXLaser(spirit_eye.Position, spirit_eye.Velocity:__mul(2), 10)
-            laser.TearFlags = TEAR_FLAGS.FLAG_HOMING
+            laser.TearFlags = setbit(laser.TearFlags, TEAR_FLAGS.FLAG_HOMING)
             laser:SetTimeout(10)
         end
     elseif player:HasCollectible(SPIRIT_SYNERGIES[3]) or player:HasCollectible(SPIRIT_SYNERGIES[4]) then --TECH_1 and TECH_2
@@ -1949,7 +1959,7 @@ function Alphabirth:onSpiritEyeUpdate(spirit_eye)
         if Isaac.GetFrameCount() % 61 == 0 then
             for i = 1, 3 do
                 local laser = player:FireTechLaser(spirit_eye.Position, 0, RandomVector(), false, false)
-                laser.TearFlags = TEAR_FLAGS.FLAG_HOMING
+                laser.TearFlags = setbit(laser.TearFlags, TEAR_FLAGS.FLAG_HOMING)
             end
         end
     elseif player:HasCollectible(SPIRIT_SYNERGIES[5]) then -- BRIMSTONE
@@ -1996,7 +2006,7 @@ function Alphabirth:onSpiritEyeUpdate(spirit_eye)
                     local shot_vector = shot_direction:__mul(magnitude[math.random(#magnitude)])
 
                     homing_tears[i] = player:FireTear(spirit_eye.Position, shot_vector, false, false, true)
-                    homing_tears[i].TearFlags = TEAR_FLAGS.FLAG_HOMING
+                    homing_tears[i].TearFlags = setbit(homing_tears[i].TearFlags, TEAR_FLAGS.FLAG_HOMING)
                     homing_tears[i]:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
                 end
             end
@@ -2185,7 +2195,7 @@ function Alphabirth:modUpdate()
         blacklightUses = 0
         darkenCooldown = 0
 
-        Isaac.Spawn(ENTITY_TYPE_FOUR_EYE, ENTITY_VARIANT_FOUR_EYE, 0, Isaac.GetRandomPosition(), Vector(0,0), nil)
+        -- Isaac.Spawn(ENTITY_TYPE_FOUR_EYE, ENTITY_VARIANT_FOUR_EYE, 0, Isaac.GetRandomPosition(), Vector(0,0), nil)
 
         if player_type == endor_type then
             player:AddNullCostume(ENDOR_BODY_COSTUME)
