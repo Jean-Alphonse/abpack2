@@ -2501,7 +2501,8 @@ function Alphabirth:modUpdate()
         damned_has_respawned = true
         player:UseActiveItem(CollectibleType.COLLECTIBLE_FORGET_ME_NOW, false, true, true, false)
         player:Revive()
-        player:AddBlackHearts(10)
+        plyaer:AddSoulHearts(-1)
+        player:AddBlackHearts(12)
     end
 
 
