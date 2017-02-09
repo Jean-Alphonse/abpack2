@@ -293,6 +293,15 @@ local ENTITY_VARIANT_ZYGOTE = Isaac.GetEntityVariantByName("Zygote")
 local ENTITY_TYPE_LOBOTOMY = Isaac.GetEntityTypeByName("Lobotomy")
 local ENTITY_VARIANT_LOBOTOMY = Isaac.GetEntityVariantByName("Lobotomy")
 
+local ENTITY_TYPE_STARGAZER = Isaac.GetEntityTypeByName("Star Gazer")
+local ENTITY_VARIANT_STARGAZER = Isaac.GetEntityVariantByName("Star Gazer")
+local ENTITY_TYPE_LASERUP = Isaac.GetEntityTypeByName("Laser Up")
+local ENTITY_VARIANT_LASERUP = Isaac.GetEntityVariantByName("Laser Up")
+local ENTITY_SUBTYPE_LASERUP = 1
+local ENTITY_TYPE_LASERDOWN = Isaac.GetEntityTypeByName("Laser Down")
+local ENTITY_VARIANT_LASERDOWN = Isaac.GetEntityVariantByName("Laser Down")
+local ENTITY_SUBTYPE_LASERDOWN = 2
+
 local ENTITY_TYPE_HEADLESS_ROUND_WORM = Isaac.GetEntityVariantByName("Headless Round Worm")
 local ENTITY_VARIANT_HEADLESS_ROUND_WORM = Isaac.GetEntityVariantByName("Headless Round Worm")
 
@@ -1859,6 +1868,121 @@ function Alphabirth:onLobotomyUpdate(lobotomy)
 end
 
 ---------------------------------------
+-- Star Gazer logic
+---------------------------------------
+
+function Alphabirth:onLaserUpUpdate(laserUp)
+    if laserUp.Variant ~= ENTITY_VARIANT_LASERUP or laserUp.SubType ~= ENTITY_SUBTYPE_LASERUP then
+        return
+    end
+    local data = laserUp:GetData()
+    local sprite = laserUp:GetSprite()
+    if sprite:IsFinished("Start") then
+        sprite:Play("Loop", true)
+    end
+    if sprite:IsFinished("End") then
+        laserUp:Remove()
+    end
+    laserUp.Velocity = (data.parent.Position+Vector(0, 2)) - laserUp.Position
+end
+
+function Alphabirth:onLaserDownUpdate(laserDown)
+    if laserDown.Variant ~= ENTITY_VARIANT_LASERDOWN or laserDown.SubType ~= ENTITY_SUBTYPE_LASERDOWN then
+        return
+    end
+    local sprite = laserDown:GetSprite()
+    if sprite:IsFinished("Start") then
+        sprite:Play("Loop", true)
+    end
+    if sprite:IsFinished("End") then
+        laserDown:Remove()
+    end
+    if not laserDown:IsDead() then
+        local player = Isaac.GetPlayer(0)
+        if (player.Position - laserDown.Position):LengthSquared() < 1000 then
+            player:TakeDamage(1, 0, EntityRef(laserDown), 1)
+        end
+    end
+end
+
+function Alphabirth:onStarGazerUpdate(starGazer)
+    if starGazer.Variant ~= ENTITY_VARIANT_STARGAZER then
+        return
+    end
+    local player = Isaac.GetPlayer(0)
+    local sprite = starGazer:GetSprite()
+    local data = starGazer:GetData()
+
+    if not data.initialized then
+        data.initialized = true
+        sprite:SetFrame("WalkVert", 0)
+        sprite:PlayOverlay("Head", true)
+        data.attackCountdown = 50
+        data.attacking = false
+        data.accel = Vector(0, 0)
+        starGazer.HitPoints = 30
+    end
+
+    if math.random(1, 50) == 1 then
+        data.accel = (Isaac.GetRandomPosition() - starGazer.Position):Normalized()*1
+    end
+    if math.random(1, 20) == 1 then
+        data.accel = data.accel + (starGazer.Position - player.Position):Normalized()*0.5
+    end
+    data.accel = data.accel * 0.9
+    starGazer.Velocity = (starGazer.Velocity + data.accel) * 0.9
+    starGazer:AnimWalkFrame("WalkHori", "WalkVert", 0.1)
+
+    if data.attackCountdown < 0 and not data.attacking and math.random(1, 20) == 1 then
+        data.attacking = true
+        sprite:PlayOverlay("Laser", true)
+    end
+    if sprite:IsOverlayPlaying("Laser") then
+        if sprite:GetOverlayFrame() == 10 then
+            data.attackPos = player.Position
+            data.laserUp = Isaac.Spawn(741, 3, 1, starGazer.Position+starGazer.Velocity, starGazer.Velocity, starGazer)
+            data.laserUp:ClearEntityFlags(EntityFlag.FLAG_APPEAR)
+            data.laserUp.GridCollisionClass = GridCollisionClass.COLLISION_NONE
+            data.laserUp.EntityCollisionClass = EntityCollisionClass.ENTCOLL_NONE
+            data.laserUp:GetData().parent = starGazer
+            data.laserUp:GetSprite():Play("Start")
+            data.laserUp.SpriteOffset = Vector(0, -33)
+            -- starGazer:PlaySound(SoundEffect.SOUND_BLOOD_LASER_LARGE, 1, 0, false, 1)
+        end
+    end
+    if sprite:IsOverlayFinished("Laser") then
+        sprite:PlayOverlay("Head", true)
+        data.attacking = false
+        data.attackCountdown = 50
+    end
+    if data.laserUp then
+        if data.laserUp.FrameCount == 22 then
+            data.laserDown = Isaac.Spawn(741, 3, 2, data.attackPos, Vector(0, 0), starGazer)
+            data.laserDown:ClearEntityFlags(EntityFlag.FLAG_APPEAR)
+            data.laserDown.GridCollisionClass = GridCollisionClass.COLLISION_NONE
+            data.laserDown.EntityCollisionClass = EntityCollisionClass.ENTCOLL_NONE
+            data.laserDown:GetSprite():Play("Start")
+        end
+        if data.laserUp.FrameCount == 55 then
+            data.laserUp:GetSprite():Play("End")
+            if data.laserDown then
+                data.laserDown:GetSprite():Play("End")
+            end
+        end
+    end
+    if data.laserDown then
+        data.laserDown.Velocity = (player.Position - data.laserDown.Position):Normalized()*3
+    end
+    if starGazer:IsDead() and data.laserUp then
+        data.laserUp:GetSprite():Play("End")
+        if data.laserDown then
+            data.laserDown:GetSprite():Play("End")
+        end
+    end
+    data.attackCountdown = data.attackCountdown - 1
+end
+
+---------------------------------------
 -- Blooderfly Logic
 ---------------------------------------
 local blooderfly_target = nil
@@ -2612,6 +2736,11 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.handleHeadless
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onGaperUpdate, EntityType.ENTITY_GAPER)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onCrawlerUpdate, EntityType.ENTITY_NIGHT_CRAWLER)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onLobotomyUpdate, ENTITY_TYPE_LOBOTOMY)
+
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onStarGazerUpdate, ENTITY_TYPE_STARGAZER)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onLaserUpUpdate, ENTITY_TYPE_LASERUP)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onLaserDownUpdate, ENTITY_TYPE_LASERDOWN)
+
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onKamikazeFly, ENTITY_TYPE_KAMIKAZE_FLY)
 
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onUlcerUpdate, EntityType.ENTITY_ULCER)
