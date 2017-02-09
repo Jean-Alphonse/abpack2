@@ -289,9 +289,12 @@ local ENTITY_VARIANT_BRIMSTONE_HOST = Isaac.GetEntityVariantByName("Brimstone Ho
 
 local ENTITY_TYPE_ZYGOTE = Isaac.GetEntityTypeByName("Zygote")
 local ENTITY_VARIANT_ZYGOTE = Isaac.GetEntityVariantByName("Zygote")
-local ENTITY_VARIANT_HEADLESS_ROUND_WORM = Isaac.GetEntityVariantByName("Headless Round Worm")
+
 local ENTITY_TYPE_LOBOTOMY = Isaac.GetEntityTypeByName("Lobotomy")
 local ENTITY_VARIANT_LOBOTOMY = Isaac.GetEntityVariantByName("Lobotomy")
+
+local ENTITY_TYPE_HEADLESS_ROUND_WORM = Isaac.GetEntityVariantByName("Headless Round Worm")
+local ENTITY_VARIANT_HEADLESS_ROUND_WORM = Isaac.GetEntityVariantByName("Headless Round Worm")
 
 local ENTITY_TYPE_ROUND_TRIO = Isaac.GetEntityTypeByName("Round Worm Trio")
 local ENTITY_VARIANT_ROUND_TRIO = Isaac.GetEntityVariantByName("Round Worm Trio")
@@ -304,6 +307,9 @@ local ENTITY_VARIANT_DIP_ULCER = Isaac.GetEntityVariantByName("Dip Ulcer")
 
 local ENTITY_TYPE_LEECH_CREEP = Isaac.GetEntityTypeByName("Leech Creep")
 local ENTITY_VARIANT_LEECH_CREEP = Isaac.GetEntityVariantByName("Leech Creep")
+
+local ENTITY_TYPE_KAMIKAZE_FLY = Isaac.GetEntityTypeByName("Kamikaze Fly")
+local ENTITY_VARIANT_KAMIKAZE_FLY = Isaac.GetEntityVariantByName("Kamikaze Fly")
 
 -- Effects
 local ENTITY_VARIANT_ALASTORS_FLAME = Isaac.GetEntityVariantByName("Alastor's Flame")
@@ -1946,6 +1952,45 @@ local function applyBlooderflyCache(player, cache_flag)
 end
 
 ---------------------------------------
+-- Kamikaze Fly Logic
+---------------------------------------
+
+--Entity Configuration
+local kamikazeFlyCooldown = Vector(100,260) --Value between 100 and 260
+
+function Alphabirth:onKamikazeFly(kamikazeFly)
+    if kamikazeFly.Variant == ENTITY_VARIANT_KAMIKAZE_FLY then
+        --Setup Cooldown
+        if not kamikazeFly:GetData()["shot_delay"] then
+            kamikazeFly:GetData()["shot_delay"] = math.random(kamikazeFlyCooldown.X, kamikazeFlyCooldown.Y)
+            Isaac.DebugString(kamikazeFly:GetData()["shot_delay"])
+        elseif kamikazeFly:GetData()["shot_delay"] > 0 then
+            kamikazeFly:GetData()["shot_delay"] = kamikazeFly:GetData()["shot_delay"] - 1
+            Isaac.DebugString(kamikazeFly:GetData()["shot_delay"])
+        end
+        if kamikazeFly:GetData()["shot_delay"] == 0 then
+            kamikazeFly:GetData()["shot_delay"] = math.random(kamikazeFlyCooldown.X, kamikazeFlyCooldown.Y)
+            kamikazeFly:GetData()["animation_timer"] = 28
+            kamikazeFly:GetSprite():Play("DropBomb", 1)
+        end
+
+        --Attack
+        if kamikazeFly:GetData()["animation_timer"] then
+            if kamikazeFly:GetData()["animation_timer"] > 0 then
+                kamikazeFly:SetSpriteFrame("DropBomb", 0 + math.abs(kamikazeFly:GetData()["animation_timer"] - 28))
+                Isaac.DebugString("Frame" .. 0 + math.abs(kamikazeFly:GetData()["animation_timer"] - 28))
+                if math.abs(kamikazeFly:GetData()["animation_timer"] - 28) == 21 then
+                    Isaac.Spawn(EntityType.ENTITY_BOMBDROP, 0, 0, kamikazeFly.Position:__sub(Vector(0,-30)), Vector(0,0), kamikazeFly)
+                end
+                kamikazeFly:GetData()["animation_timer"] = kamikazeFly:GetData()["animation_timer"] - 1
+            else
+                kamikazeFly:GetData()["animation_timer"] = nil
+            end
+        end
+    end
+end
+
+---------------------------------------
 -- Spirit Eye Logic
 ---------------------------------------
 local homing_tears = {}
@@ -2561,6 +2606,7 @@ Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.handleHeadless
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onGaperUpdate, EntityType.ENTITY_GAPER)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onCrawlerUpdate, EntityType.ENTITY_NIGHT_CRAWLER)
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onLobotomyUpdate, ENTITY_TYPE_LOBOTOMY)
+Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onKamikazeFly, ENTITY_TYPE_KAMIKAZE_FLY)
 
 Alphabirth_mod:AddCallback(ModCallbacks.MC_NPC_UPDATE, Alphabirth.onUlcerUpdate, EntityType.ENTITY_ULCER)
 
