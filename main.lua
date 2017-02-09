@@ -1959,6 +1959,12 @@ end
 local kamikazeFlyCooldown = Vector(100,260) --Value between 100 and 260
 
 function Alphabirth:onKamikazeFly(kamikazeFly)
+
+    --Spanw Mechanic
+    if kamikazeFly.FrameCount == 1 and kamikazeFly.Variant ~= ENTITY_VARIANT_KAMIKAZE_FLY and math.random(6) == 1 then
+        kamikazeFly:ToNPC():Morph(ENTITY_TYPE_KAMIKAZE_FLY, ENTITY_VARIANT_KAMIKAZE_FLY, 0, 0)
+    end
+
     if kamikazeFly.Variant == ENTITY_VARIANT_KAMIKAZE_FLY then
         --Setup Cooldown
         if not kamikazeFly:GetData()["shot_delay"] then
