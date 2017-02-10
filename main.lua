@@ -41,6 +41,7 @@ local FLAG_SPIRIT_EYE_SHOT = 1 << 38
 local FLAG_HEMOPHILIA_SHOT = 1 << 39
 local FLAG_ABYSS_SHOT = 1 << 42
 local FLAG_QUILL_FEATHER_SHOT = 1 << 43
+local FLAG_CRACKED_ROCK_SHOT = 1 << 45
 
 local FLAG_HEMOPHILIA_APPLIED = 1 << 40
 local FLAG_QUILL_FEATHER_APLLIED = 1 << 41
@@ -293,6 +294,8 @@ local ENTITY_VARIANT_BLOODERFLY = Isaac.GetEntityVariantByName("Blooderfly")
 local ENTITY_VARIANT_SPIRIT_EYE = Isaac.GetEntityVariantByName("Spirit Eye")
 local ENTITY_VARIANT_ABYSS_TEAR = Isaac.GetEntityVariantByName("Abyss Tear")
 local ENTITY_VARIANT_INFESTED_BABY = Isaac.GetEntityVariantByName("Infested Baby")
+
+local ENTITY_VARIANT_CRACKED_ROCK = Isaac.GetEntityVariantByName("Cracked Rock Tear")
 
 -- Enemies
 local ENTITY_VARIANT_BRIMSTONE_HOST = Isaac.GetEntityVariantByName("Brimstone Host")
@@ -871,39 +874,47 @@ end
 ---------------------------------------
 -- Cracked Rock Logic
 ---------------------------------------
-function Alphabirth:triggerCrackedRockEffect(dmg_target, dmg_amount, dmg_source, dmg_dealer)
+function Alphabirth:triggerCrackedRockEffect(damaged_entity, damage_amount, damage_flag, damage_source, invincible_frames)
     local player = Isaac.GetPlayer(0)
-    if player:HasCollectible(PASSIVE_CRACKED_ROCK) and dmg_source == 0 and dmg_target:IsActiveEnemy() then
-        local upper_limit_luck_modifier = 100 - math.ceil(player.Luck * 1.5)
-        if(math.random(1, upper_limit_luck_modifier) <= 10) then
-            Isaac.Spawn(
-                EntityType.ENTITY_EFFECT,
-                EffectVariant.SHOCKWAVE,
-                0,            -- Entity Subtype
-                dmg_target.Position,
-                Vector(0, 0), -- Velocity
-                player
+    if player:HasCollectible(PASSIVE_CRACKED_ROCK) and damage_source.Type == 2 and
+        damage_source.Entity:HasEntityFlags(FLAG_CRACKED_ROCK_SHOT) then
+        Isaac.Spawn(
+            EntityType.ENTITY_EFFECT,
+            EffectVariant.SHOCKWAVE,
+            0,            -- Entity Subtype
+            damaged_entity.Position,
+            Vector(0, 0), -- Velocity
+            player
             ):ToEffect():SetRadii(5,10)
-            Isaac.Spawn(
-                EntityType.ENTITY_EFFECT,
-                EffectVariant.SHOCKWAVE,
-                0,            -- Entity Subtype
-                dmg_target.Position,
-                Vector(0, 0), -- Velocity
-                player
+        Isaac.Spawn(
+            EntityType.ENTITY_EFFECT,
+            EffectVariant.SHOCKWAVE,
+            0,            -- Entity Subtype
+            damaged_entity.Position,
+            Vector(0, 0), -- Velocity
+            player
             ):ToEffect():SetRadii(2,8)
-        end
     end
 end
+
 
 local function applyCrackedRockCache(player, cache_flag)
     if player:HasCollectible(PASSIVE_CRACKED_ROCK) and cache_flag == CacheFlag.CACHE_TEARCOLOR then
         player:AddNullCostume(CRACKED_ROCK_COSTUME)
-        player.TearColor = Color(
-            0.666, 0.666, 0.666,    -- RGB
-            1, 		                -- Alpha
-            0, 0, 0                 -- RGB Offset
-        )
+    end
+end
+
+local function handleCrackedRockTears()
+    for _, entity in ipairs(Isaac.GetRoomEntities()) do
+        if entity.Type == EntityType.ENTITY_TEAR and entity.FrameCount == 1 and math.random(14) == 1 then
+            local sprite = entity:GetSprite():GetFilename()
+            if sprite ~= "gfx/animations/effects/animation_tears_crackedrock.anm2" then
+                rock_sprite = entity:GetSprite()
+                rock_sprite:Load("gfx/animations/effects/animation_tears_crackedrock.anm2", true)
+                rock_sprite:Play("Stone3Move", true)
+            end
+            entity:AddEntityFlags(FLAG_CRACKED_ROCK_SHOT)
+        end
     end
 end
 
@@ -2384,7 +2395,10 @@ function Alphabirth:modUpdate()
 
     if not player:HasCollectible(PASSIVE_CRACKED_ROCK) then
         handleCrackedRockSpawnChance()
+    elseif player:HasCollectible(PASSIVE_CRACKED_ROCK) then
+        handleCrackedRockTears()
     end
+
     triggerCurses(player)
 
     if player:HasCollectible(PASSIVE_QUILL_FEATHER) then
