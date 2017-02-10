@@ -244,6 +244,14 @@ function setbit(x, p)
     return x | p
 end
 
+function playTransformationOverlay(pillName)
+    local player = Isaac.GetPlayer(0)
+    local pillText = Isaac.GetPillEffectByName(pillName)
+    player:UsePill(pillText,PillColor.PILL_BLUE_BLUE)
+    player:StopExtraAnimation()                     
+    playSound(SoundEffect.SOUND_POWERUP_SPEWER, 1, 0, false, 1) 
+end
+
 ---------------------------------------
 -- Active Declaration
 ---------------------------------------
@@ -2471,6 +2479,8 @@ function Alphabirth:modUpdate()
                 player:AddNullCostume(CYBORG_COSTUME)
                 player:AddCacheFlags(CacheFlag.CACHE_ALL)
                 player:EvaluateItems()
+
+                playTransformationOverlay("CYBORG!")
             end
         end
     end
@@ -2488,6 +2498,8 @@ function Alphabirth:modUpdate()
                 player:AddNullCostume(DAMNED_COSTUME)
                 player:AddCacheFlags(CacheFlag.CACHE_ALL)
                 player:EvaluateItems()
+
+                playTransformationOverlay("DAMNED!")
 
                 if not damned_health_applied then
                     damned_health_applied = true
