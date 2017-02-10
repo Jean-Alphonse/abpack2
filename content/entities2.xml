@@ -74,4 +74,8 @@
         <gibs amount="4" blood="1" bone="0" eye="0" gut="1" large="0" />
     </entity>
 
+    <entity anm2path="effects/animation_tears_crackedrock.anm2" baseHP="0" boss="0" champion="0" collisionDamage="0" collisionMass="8" collisionRadius="8" friction="1" id="2" name="Cracked Rock Tear" numGridCollisionPoints="8" shadowSize="8" stageHP="0" variant="45">
+        <gibs amount="0" blood="0" bone="0" eye="0" gut="0" large="0" />
+    </entity>
+
 </entities>
