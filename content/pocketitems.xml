@@ -1,3 +1,5 @@
 <pocketitems>
     <rune description="Need" name="Naudiz" hud="alpha_rune" />
+    <pilleffect name="DAMNED!" />    
+    <pilleffect name="CYBORG!" />    
 </pocketitems>
