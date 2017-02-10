@@ -53,7 +53,9 @@ local FLAG_MORPH_TRIED = 1 << 44 --For entities with a nil FrameCount value
 local TEAR_FLAGS = {
     FLAG_PIERCING = 1 << 1,
     FLAG_HOMING = 1 << 2,
-    FLAG_IPECAC = 1 << 12
+    FLAG_PARASITE = 1<<6,
+    FLAG_IPECAC = 1 << 12,
+    FLAG_CRICKETS_BODY = 1<<18
 }
 
 ---------------------------------------
@@ -2217,6 +2219,7 @@ function Alphabirth:onSpiritEyeUpdate(spirit_eye)
                     homing_tears[i] = player:FireTear(spirit_eye.Position, shot_vector, false, false, true)
                     homing_tears[i].TearFlags = setbit(homing_tears[i].TearFlags, TEAR_FLAGS.FLAG_HOMING)
                     homing_tears[i]:AddEntityFlags(FLAG_SPIRIT_EYE_SHOT)
+                    homing_tears[i].TearFlags = homing_tears[i].TearFlags & (~(TEAR_FLAGS.FLAG_CRICKETS_BODY|TEAR_FLAGS.FLAG_PARASITE))
                 end
             end
         end
