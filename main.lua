@@ -1842,11 +1842,21 @@ end
 ---------------------------------------
 
 function Alphabirth:onGaperUpdate(entity)
-    if entity.FrameCount > 1 or math.random(1, 10) ~= 1 then
+    if entity.FrameCount > 1 or math.random(1, 7) ~= 1 then
         return
     end
-    Isaac.Spawn(ENTITY_TYPE_LOBOTOMY, ENTITY_VARIANT_LOBOTOMY, 0, entity.Position, entity.Velocity, entity)
-    entity:Remove()
+    if math.random(1, 3) >= 2 then
+        Isaac.Spawn(ENTITY_TYPE_LOBOTOMY, ENTITY_VARIANT_LOBOTOMY, 0, entity.Position, entity.Velocity, entity)
+        entity:Remove()
+    else
+        local roomShape = Game():GetRoom():GetRoomShape()
+        if roomShape == RoomShape.ROOMSHAPE_1x1
+        or roomShape == RoomShape.ROOMSHAPE_IV
+        or roomShape == RoomShape.ROOMSHAPE_IH then
+            Isaac.Spawn(ENTITY_TYPE_STARGAZER, ENTITY_VARIANT_STARGAZER, 0, entity.Position, entity.Velocity, entity)
+            entity:Remove()
+        end
+    end
 end
 
 function Alphabirth:onLobotomyUpdate(lobotomy)
@@ -1954,7 +1964,7 @@ function Alphabirth:onStarGazerUpdate(starGazer)
     starGazer.Velocity = (starGazer.Velocity + data.accel) * 0.9
     starGazer:AnimWalkFrame("WalkHori", "WalkVert", 0.1)
 
-    if data.attackCountdown < 0 and not data.attacking and math.random(1, 20) == 1 then
+    if data.attackCountdown < 0 and not data.attacking and math.random(1, 100) == 1 then
         data.attacking = true
         sprite:PlayOverlay("Laser", true)
     end
@@ -1974,7 +1984,7 @@ function Alphabirth:onStarGazerUpdate(starGazer)
     if sprite:IsOverlayFinished("Laser") then
         sprite:PlayOverlay("Head", true)
         data.attacking = false
-        data.attackCountdown = 50
+        data.attackCountdown = 100
     end
     if data.laserUp then
         if data.laserUp.FrameCount == 22 then
